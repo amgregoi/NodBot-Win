@@ -180,8 +180,8 @@ namespace NodBot.Code
 
         private int takeBreak()
         {
-            int lBreakTime = 1000;
-            int lRandomRoundSize = new Random().Next(1500, 4000);
+            int lBreakTime = 500;
+            int lRandomRoundSize = new Random().Next(15, 40);
             if(mKillCount > lRandomRoundSize)
             {
                 lBreakTime = new Random().Next(800, 4500);
