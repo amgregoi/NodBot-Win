@@ -55,7 +55,7 @@ namespace NodBot.Code
         /// <summary>
         /// Toggles PLAY to true, and starts game loop
         /// </summary>
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken aCt)
         {
             PLAY = true;
 
@@ -65,6 +65,8 @@ namespace NodBot.Code
             {
                 try
                 {
+                    aCt.ThrowIfCancellationRequested();
+
                     if (mCombatState >= CombatState.WAIT && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
                     {
                         await combatEndAsync();
@@ -83,46 +85,29 @@ namespace NodBot.Code
                     }
                 }catch(Exception ex)
                 {
-                    mLogger.sendMessage("Game.Start() :: " + ex.ToString(), LogType.WARNING);
-                    mLogger.sendMessage("Game.Start() :: " + ex.StackTrace, LogType.WARNING);
+                    mLogger.sendLog("Game.Start() :: " + ex.StackTrace, LogType.WARNING);
                 }
             }
         }
 
         /// <summary>
-        /// This function is called to update the exception counter, the current version may run into 
-        /// trouble with the libraries used if they toggle start/stop too quickly, this will stop the bot
-        /// from freezing up if this occurs.
         /// 
         /// </summary>
-        private void updateExceptionFailSafe()
-        {
-            if (mExceptionCounter == 0 || sw.ElapsedMilliseconds > 15000)
-            {
-                mExceptionCounter++;
-                sw.Reset();
-                sw.Start();
-            }else if(mExceptionCounter >= 10)
-            {
-                Stop();
-                sw.Stop();
-            }
-            else
-            {
-                mExceptionCounter++;
-            }
-        }
-
+        /// <returns></returns>
         private async Task combatInitAsync()
         {
             mCombatState = CombatState.INIT;
 
             mLogger.sendMessage("Starting Combat", LogType.INFO);
             mInputController.sendKeyboardClick(Input.Keyboard_Actions.START_FIGHT);
-            await delay(100 + generateOffset(100));
+            await delay(25);
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private async Task combatStartAsync()
         {
             // If bot is started and already in combat, skip starting combat
@@ -134,7 +119,7 @@ namespace NodBot.Code
             }
 
             mLogger.sendMessage("Starting Attack", LogType.INFO);
-            await delay(400 + generateOffset(500));
+            await delay(generateOffset(100));
 
             // start auto attack [A/S]
             if (Settings.MELEE)
@@ -146,7 +131,7 @@ namespace NodBot.Code
                 mInputController.sendKeyboardClick(Input.Keyboard_Actions.AUTO_SHOOT);
             }
 
-            await delay(2000 + generateOffset(2000));
+            await delay(1500 + generateOffset(2000));
 
             // start class ability [D/F]
             if (Settings.CA_PRIMARTY)
@@ -189,7 +174,7 @@ namespace NodBot.Code
                     mLogger.sendMessage("Lotting trophies", LogType.INFO);
                     mInputController.sendKeyboardClick(Input.Keyboard_Actions.LOOT);
                     await delay(2000 + generateOffset(2000));
-
+                    
                     // loot chest
                     if (Settings.CHESTS)
                     {
@@ -241,16 +226,19 @@ namespace NodBot.Code
                 return;
             }
 
-            if (mCombatState == CombatState.WAIT)
-                {
-                    mCombatState = CombatState.WAIT_2;
-                    mLogger.sendMessage("Waiting for known combat state.", LogType.INFO);
-                }
+            if (mCombatState > CombatState.WAIT)
+            {
+                mCombatState = CombatState.WAIT;
+                mLogger.sendMessage("Waiting for known combat state.", LogType.INFO);
+            }
 
-                await delay(3000);
-            
+            await delay(3000);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private int takeBreak()
         {
             int lBreakTime = 500;
@@ -273,6 +261,11 @@ namespace NodBot.Code
             PLAY = false;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="aTime"></param>
+        /// <returns></returns>
         private async Task delay(int aTime)
         {
             await Task.Delay(aTime);

@@ -15,6 +15,7 @@ using System.Drawing;
 using NodBot.Code;
 using Emgu.CV;
 using System.IO;
+using System.Threading;
 
 namespace NodBot
 {
@@ -29,6 +30,7 @@ namespace NodBot
         private Game mGame;
         private Logger mLogger;
         private int kill_count = 0, chest_count = 0;
+        private CancellationTokenSource cts;
 
 
         public MainWindow()
@@ -53,7 +55,6 @@ namespace NodBot
             mLogger = new Logger(progressLog);
             mGame = new Game(mLogger, progressKillCount, progressChestCount);
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-
         }
 
         private void TestButton_Click(object sender, RoutedEventArgs e)
@@ -72,16 +73,18 @@ namespace NodBot
                 Task.Delay(50).ContinueWith(_ => {
                     isRunning = false;
                     mGame.Stop();
+                    cts.Cancel();
                 });
             }
             else
             {
                 mLogger.sendMessage("Starting bot", LogType.INFO);
                 start_button.Content = "Stop";
-                Task.Delay(50).ContinueWith(async _ =>
+                Task.Run(async () =>
                 {
+                    cts = new CancellationTokenSource();
                     isRunning = true;
-                    await mGame.StartAsync();
+                    await mGame.StartAsync(cts.Token);
                 });
             }
             

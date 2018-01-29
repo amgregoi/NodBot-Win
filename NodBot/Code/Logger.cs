@@ -34,7 +34,33 @@ namespace NodBot.Code
             
         }
 
-        public void sendMessage(
+        public void sendLog(
+            String aMessage,
+            LogType aLogType,
+            [CallerMemberName] string callerName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = -1
+            )
+        {
+
+            // Build output string
+            StringBuilder sb = new StringBuilder();
+            sb.Append(aLogType);
+            sb.Append(" :: ");
+            sb.Append(Path.GetFileNameWithoutExtension(callerFilePath));
+            sb.Append(".");
+            sb.Append(callerName);
+            sb.Append("(");
+            sb.Append(callerLineNumber);
+            sb.Append(") :: ");
+            sb.Append(aMessage);
+
+
+            String lMessage = sb.ToString();
+            sw.WriteLine(lMessage);
+
+        }
+            public void sendMessage(
             String aMessage, 
             LogType aLogType, 
             [CallerMemberName] string callerName = "",
