@@ -231,8 +231,17 @@ namespace NodBot.Code
         /// <returns></returns>
         private async Task combatBetweenStateAsync()
         {
+            // If bot is started and no known state is found, we are stuck in the
+            // over world without the Dust Collecting icon, initiate first combat
+            // to keep bot state alive.
+            if(mCombatState == CombatState.BOT_START)
+            {
+                mLogger.sendMessage("Dust button not found after starting bot.", LogType.INFO);
+                await combatInitAsync();
+                return;
+            }
 
-                if (mCombatState == CombatState.WAIT)
+            if (mCombatState == CombatState.WAIT)
                 {
                     mCombatState = CombatState.WAIT_2;
                     mLogger.sendMessage("Waiting for known combat state.", LogType.INFO);
