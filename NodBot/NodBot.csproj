@@ -121,4 +121,8 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>XCOPY "$(SolutionDir)NodBot\Images" "$(TargetDir)\Images\" /S /Y
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>

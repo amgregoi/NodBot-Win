@@ -19,39 +19,47 @@ using System.IO;
 namespace NodBot
 {
 
-    public interface UIKillCounter
-    {
-        void updateKillCount();
-    }
-
-    public interface UILogMessenger
-    {
-        void updateLog(String aMessage);
-    }
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, UIKillCounter, UILogMessenger
+    public partial class MainWindow : Window
     {
         bool isRunning = false;
 
         private Game mGame;
         private Logger mLogger;
-        private int kill_count = 0;
+        private int kill_count = 0, chest_count = 0;
 
 
         public MainWindow()
         {
             InitializeComponent();
-            mLogger = new Logger(this);
-            mGame = new Game(this, mLogger);
+
+            var progressKillCount = new Progress<int>(value =>
+            {
+                updateKillCount();
+            });
+
+            var progressChestCount = new Progress<int>(value =>
+            {
+                updateChestCount();
+            });
+
+            var progressLog = new Progress<string>(value =>
+            {
+                updateLog(value);
+            });
+
+            mLogger = new Logger(progressLog);
+            mGame = new Game(mLogger, progressKillCount, progressChestCount);
+            log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+
         }
 
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
             ImageAnalyze test = new ImageAnalyze(mLogger);
-            bool result = test.FindImageMatchDebug(NodImages.Exit, NodImages.Test, true) != null;
+            bool result = test.FindImageMatchDebug(NodImages.Empty, NodImages.Test, true) != null;
             Console.Out.WriteLine(result);
         }
 
@@ -70,12 +78,11 @@ namespace NodBot
             {
                 mLogger.sendMessage("Starting bot", LogType.INFO);
                 start_button.Content = "Stop";
-                Task.Delay(50).ContinueWith(_ =>
+                Task.Delay(50).ContinueWith(async _ =>
                 {
                     isRunning = true;
-                    mGame.StartAsync();
+                    await mGame.StartAsync();
                 });
-
             }
             
         }
@@ -89,11 +96,11 @@ namespace NodBot
         {
             switch (((CheckBox)sender).Name)
             {
-                case "pilgrimage":
+                case "pilgrimage_checkbox":
                     Settings.PILGRIMAGE = true; // Is on a pilgrimage
                     mLogger.sendMessage("PILGRIMAGE ON", LogType.INFO);
                     break;
-                case "skip_chests":
+                case "chest_checkbox":
                     Settings.CHESTS = false; // Will not look for chests
                     mLogger.sendMessage("CHESTS OFF", LogType.INFO);
                     break;
@@ -167,15 +174,32 @@ namespace NodBot
         /// <summary>
         /// This function updates the UI kill counter.
         /// </summary>
-        public void updateKillCount()
+        private void updateKillCount()
         {
             kill_count++;
             kill_counter_label.Content = kill_count;
         }
 
+        /// <summary>
+        /// This function updates the UI chest counter.
+        /// </summary>
+        private void updateChestCount()
+        {
+            chest_count++;
+            chest_counter_label.Content = kill_count;
+        }
+
         public void updateLog(string aMessage)
         {
-            //log_textbox.Text += aMessage;
+            if (log_textbox.LineCount >= log_textbox.MaxLines) {
+                string[] lines = log_textbox.Text.Split(Environment.NewLine.ToCharArray()).Skip(1).ToArray();
+                log_textbox.Text = string.Join("\n", lines);
+            }
+
+            log_textbox.Text += aMessage + "\n";
+            log_textbox.ScrollToEnd();
+
+            
         }
     }
 }

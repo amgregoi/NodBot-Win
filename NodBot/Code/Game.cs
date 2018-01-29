@@ -7,33 +7,49 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Threading;
 using System.Drawing;
+using System.Diagnostics;
 
 namespace NodBot.Code
 {
+    /// <summary>
+    /// This is an enumerator defining the various combat states of the bot.
+    /// 
+    /// </summary>
+    enum CombatState
+    {
+        BOT_START = 99,
+        WAIT = 0,
+        WAIT_2 = 1,
+        ATTACK = 2,
+        END = 3,
+        INIT = 4,
+    }
+
     public class Game
     {
-        private bool PLAY, FIGHTING_STATE, KNOWN_STATE;
+        private bool PLAY;
+        private CombatState mCombatState;
         private Input mInputController;
         private Logger mLogger;
         private ImageAnalyze mImageAnalyze;
-        private UIKillCounter mListener;
 
-        private int mKillCount = 0;
+        private IProgress<int> mProgressKillCount, mProgressChestCount;
+
+        private int mKillCount = 0, mExceptionCounter = 0;
+        private Stopwatch sw;
 
         public static IntPtr GAME { get; set; }
 
-        public Game(UIKillCounter aListener, Logger aLogger)
+        public Game(Logger aLogger, IProgress<int> aProgressKill, IProgress<int> aProgressChest)
         {
-            mListener = aListener;
             mLogger = aLogger;
             mInputController = new Input("Nodiatis", mLogger); // init the input controller
             mImageAnalyze = new ImageAnalyze(mLogger);
             GAME = mInputController.GAME;
-        }
+            sw = new Stopwatch();
 
-        public void moveMouse(Point p)
-        {
-            mInputController.moveMouse(p.X, p.Y);
+            mProgressKillCount = aProgressKill;
+            mProgressChestCount = aProgressChest;
         }
 
         /// <summary>
@@ -41,19 +57,23 @@ namespace NodBot.Code
         /// </summary>
         public async Task StartAsync()
         {
-            FIGHTING_STATE = mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS);
             PLAY = true;
-            KNOWN_STATE = false;
+
+            mCombatState = CombatState.BOT_START;
 
             while (PLAY)
             {
                 try
                 {
-                    if (FIGHTING_STATE && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
+                    if (mCombatState >= CombatState.WAIT && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
                     {
                         await combatEndAsync();
                     }
-                    else if (!FIGHTING_STATE && mImageAnalyze.ContainsMatch(NodImages.Handbook, NodImages.CurrentSS))
+                    else if (mCombatState >= CombatState.END && mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
+                    {
+                        await combatInitAsync();
+                    }
+                    else if (mCombatState >= CombatState.INIT && mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
                     {
                         await combatStartAsync();
                     }
@@ -69,18 +89,52 @@ namespace NodBot.Code
             }
         }
 
+        /// <summary>
+        /// This function is called to update the exception counter, the current version may run into 
+        /// trouble with the libraries used if they toggle start/stop too quickly, this will stop the bot
+        /// from freezing up if this occurs.
+        /// 
+        /// </summary>
+        private void updateExceptionFailSafe()
+        {
+            if (mExceptionCounter == 0 || sw.ElapsedMilliseconds > 15000)
+            {
+                mExceptionCounter++;
+                sw.Reset();
+                sw.Start();
+            }else if(mExceptionCounter >= 10)
+            {
+                Stop();
+                sw.Stop();
+            }
+            else
+            {
+                mExceptionCounter++;
+            }
+        }
+
+        private async Task combatInitAsync()
+        {
+            mCombatState = CombatState.INIT;
+
+            mLogger.sendMessage("Starting Combat", LogType.INFO);
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.START_FIGHT);
+            await delay(100 + generateOffset(100));
+
+        }
+
         private async Task combatStartAsync()
         {
-            mLogger.sendMessage("Starting combat", LogType.INFO);
-            KNOWN_STATE = false;
-
-            do
+            // If bot is started and already in combat, skip starting combat
+            if (mCombatState == CombatState.BOT_START)
             {
-                mInputController.sendKeyboardClick(Input.Keyboard_Actions.START_FIGHT);
-                await Task.Delay(100 + generateOffset(100));
+                mCombatState = CombatState.ATTACK;
+                mLogger.sendMessage("Already in combat", LogType.DEBUG);
+                return;
             }
-            while (mImageAnalyze.ContainsMatch(NodImages.Handbook, NodImages.CurrentSS));
-            await Task.Delay(400 + generateOffset(500));
+
+            mLogger.sendMessage("Starting Attack", LogType.INFO);
+            await delay(400 + generateOffset(500));
 
             // start auto attack [A/S]
             if (Settings.MELEE)
@@ -92,7 +146,7 @@ namespace NodBot.Code
                 mInputController.sendKeyboardClick(Input.Keyboard_Actions.AUTO_SHOOT);
             }
 
-            await Task.Delay(2000 + generateOffset(2000));
+            await delay(2000 + generateOffset(2000));
 
             // start class ability [D/F]
             if (Settings.CA_PRIMARTY)
@@ -104,13 +158,10 @@ namespace NodBot.Code
                 mInputController.sendKeyboardClick(Input.Keyboard_Actions.CA_SECONDARY);
             }
 
-            FIGHTING_STATE = true;
-            await Task.Delay(5000 + generateOffset(25000));
+            // long wait at start of combat
+            await delay (20000 + generateOffset(15000));
 
-            while (!mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
-            {
-                await Task.Delay(2000 + generateOffset(2000)); // busy wait till end of combat
-            }
+            mCombatState = CombatState.ATTACK;
         }
 
         /// <summary>
@@ -119,47 +170,59 @@ namespace NodBot.Code
         /// <returns></returns>
         private async Task combatEndAsync()
         {
+            // In case bot is started at end of combat, it will still attempt to loot
+            if (mCombatState == CombatState.BOT_START)
+                mCombatState = CombatState.WAIT_2;
+
             mLogger.sendMessage("Ending combat", LogType.INFO);
-            KNOWN_STATE = false;
 
             if (!Settings.PILGRIMAGE)
             {
-                // loot trophies
-                mLogger.sendMessage("Lotting trophies", LogType.INFO);
-                mInputController.sendKeyboardClick(Input.Keyboard_Actions.LOOT);
-                await Task.Delay(2000 + generateOffset(2000));
-
-                // loot chest
-                if (Settings.CHESTS)
+                if (mCombatState <= CombatState.END)
                 {
-                    mLogger.sendMessage("Starting search for chests.", LogType.INFO);
-                    Point? coord = mImageAnalyze.FindChestCoord();
-                    if (coord != null) mInputController.sendLeftMouseClick(coord.Value.X, coord.Value.Y);
-                    await Task.Delay(2000 + generateOffset(1000));
+                    // Need to figure out how to make call on ui thread
+                    // mListener.updateKillCount();
+                    mKillCount++; //increment kill count
+                    mProgressKillCount.Report(1);
+
+                    // loot trophies
+                    mLogger.sendMessage("Lotting trophies", LogType.INFO);
+                    mInputController.sendKeyboardClick(Input.Keyboard_Actions.LOOT);
+                    await delay(2000 + generateOffset(2000));
+
+                    // loot chest
+                    if (Settings.CHESTS)
+                    {
+                        mLogger.sendMessage("Starting search for chests.", LogType.INFO);
+                        Point? coord = mImageAnalyze.FindChestCoord();
+                        if (coord != null)
+                        {
+                            mInputController.sendLeftMouseClick(coord.Value.X, coord.Value.Y);
+                            mProgressChestCount.Report(1); // update ui chest counter
+                        }
+                        await delay (2000 + generateOffset(1000));
+                    }
+                }
+                else
+                {
+                    mLogger.sendMessage("Already looted, trying to exit combat again..", LogType.DEBUG);
+                    await delay (250 + generateOffset(250));
                 }
             }
             else
             {
                 mLogger.sendMessage("Pilgrimage Active, skipping trophies and chests.", LogType.DEBUG);
-                await Task.Delay(250 + generateOffset(250));
+                await delay (250 + generateOffset(250));
             }
 
             // exit combat
-            do
-            {
-                mInputController.sendKeyboardClick(Input.Keyboard_Actions.EXIT);
-                await Task.Delay(1000 + generateOffset(1000));
-            }
-            while (!mImageAnalyze.ContainsMatch(NodImages.Handbook, NodImages.CurrentSS));
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.EXIT);
 
-            FIGHTING_STATE = false;
-
-            // Need to figure out how to make call on ui thread
-            // mListener.updateKillCount();
-            mKillCount++;
+            //update combat state
+            mCombatState = CombatState.END;
 
             // Check if we should take break after some random range of kills
-            await Task.Delay(takeBreak() + generateOffset(1000));
+            await delay(takeBreak() + generateOffset(1000));
         }
 
         /// <summary>
@@ -168,14 +231,15 @@ namespace NodBot.Code
         /// <returns></returns>
         private async Task combatBetweenStateAsync()
         {
-            if (!KNOWN_STATE)
-            {
-                KNOWN_STATE = true;
-                mLogger.sendMessage("Waiting for known combat state.", LogType.INFO);
-            }
 
-            await Task.Delay(2000);
+                if (mCombatState == CombatState.WAIT)
+                {
+                    mCombatState = CombatState.WAIT_2;
+                    mLogger.sendMessage("Waiting for known combat state.", LogType.INFO);
+                }
 
+                await delay(3000);
+            
         }
 
         private int takeBreak()
@@ -200,6 +264,11 @@ namespace NodBot.Code
             PLAY = false;
         }
 
+        private async Task delay(int aTime)
+        {
+            await Task.Delay(aTime);
+        }
+
 
         /// <summary>
         /// This function generates a delay offset to build a variance in the pauses of the application
@@ -220,7 +289,7 @@ namespace NodBot.Code
             }
             else
             {
-                offset = new Random().Next(0, 10000);
+                offset = new Random().Next(0, 7000);
             }
 
             return offset;

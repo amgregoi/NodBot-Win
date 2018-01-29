@@ -5,11 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NodBot"
         mc:Ignorable="d"
-        Title="MainWindow" Height="334.39" Width="427.326">
+        Title="MainWindow" Height="334.39" Width="456.469" ResizeMode="CanMinimize">
     <Grid RenderTransformOrigin="0.374,0.658" Margin="0,0,58.714,3.714">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="358*"/>
+            <ColumnDefinition Width="23*"/>
             <ColumnDefinition Width="0*"/>
         </Grid.ColumnDefinitions>
         <CheckBox x:Name="chest_checkbox" Content="Skip Chests" HorizontalAlignment="Left" Margin="155,17,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="81" />
@@ -22,7 +22,7 @@
         <Label Content="D" HorizontalAlignment="Left" Margin="6,83,0,0" VerticalAlignment="Top" Height="26" Width="18"/>
         <Label Content="Class Ability" HorizontalAlignment="Left" Margin="10,61,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.04,-0.323" Width="73" Height="26"/>
         <Button x:Name="start_button" Content="Start" HorizontalAlignment="Left" Margin="11,142,0,0" VerticalAlignment="Top" Width="75" Click="StartButton_Click" Height="20"/>
-        <Label Content="Notes: &#xA;1. Set loot key bind to 'L'.&#xA;2. Must have Botanist &#xD;&#xA;    Handbook" HorizontalAlignment="Left" Margin="286,72,-79.143,0" VerticalAlignment="Top" Width="128" Height="66" FontSize="10" RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="3">
+        <Label Content="Notes: &#xA;1. Set loot key bind to 'L'.&#xA;2. Must have Botanist &#xD;&#xA;    Handbook" HorizontalAlignment="Left" Margin="286,72,-32.857,0" VerticalAlignment="Top" Width="128" Height="66" FontSize="10" RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="3">
             <Label.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -32,13 +32,13 @@
                 </TransformGroup>
             </Label.RenderTransform>
         </Label>
-        <Label Content="Time Run:" HorizontalAlignment="Left" Margin="285,15,-13.143,0" VerticalAlignment="Top" Height="26" Width="63" Grid.ColumnSpan="3"/>
-        <Label Content="0" HorizontalAlignment="Left" Margin="0.143,15,-16.143,0" VerticalAlignment="Top" Height="26" Width="16" Grid.Column="2"/>
-        <Label Content="Kill Counter: " HorizontalAlignment="Left" Margin="285,43,-28.143,0" VerticalAlignment="Top" Height="26" Width="78" Grid.ColumnSpan="3"/>
-        <Label x:Name="kill_counter_label" Content="0" HorizontalAlignment="Left" Margin="0.143,43,-16.143,0" VerticalAlignment="Top" Height="26" Width="16" Grid.Column="2"/>
+        <Label Content="Chest Counter" HorizontalAlignment="Left" Margin="285,15,0,0" VerticalAlignment="Top" Height="26" Width="94"/>
+        <Label x:Name="chest_counter_label" Content="0" HorizontalAlignment="Left" Margin="1.714,15,-15.143,0" VerticalAlignment="Top" Height="26" Width="38" Grid.ColumnSpan="2" Grid.Column="1"  />
+        <Label Content="Kill Counter: " Margin="285,43,0,0" VerticalAlignment="Top" Height="26" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="99"/>
+        <Label x:Name="kill_counter_label" Content="0" HorizontalAlignment="Left" Margin="1.429,43,-16,0" VerticalAlignment="Top" Height="26" Width="38" Grid.Column="1" Grid.ColumnSpan="2"/>
         <CheckBox x:Name="pilgrimage_checkbox" Content="Pilgrimage" HorizontalAlignment="Left" Margin="155,41,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="77" />
         <Button x:Name="test_button" Content="Test(s)" HorizontalAlignment="Left" Margin="155,141,0,0" VerticalAlignment="Top" Width="75" Click="TestButton_Click" Height="21"/>
         <CheckBox x:Name="debug_checkbox" Content="Debug" HorizontalAlignment="Left" Margin="155,67,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="55" />
-        <TextBox x:Name="log_textbox" Height="109" Margin="10,183,-50.143,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" MaxLines="10" IsReadOnly="True" IsReadOnlyCaretVisible="True" Grid.ColumnSpan="3"/>
+        <TextBox x:Name="log_textbox" Height="109" Margin="10,183,-49.857,0" TextWrapping="Wrap" VerticalAlignment="Top" MaxLines="1000" IsReadOnly="True" Grid.ColumnSpan="3" FontSize="11" FontFamily="Trebuchet MS"/>
     </Grid>
 </Window>

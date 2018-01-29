@@ -90,7 +90,7 @@ namespace NodBot.Code
             {
                 rctForm = Rectangle.Round(grfx.VisibleClipBounds);
             }
-            Bitmap pImage = new Bitmap((int)(rctForm.Width / 1.5), rctForm.Height);  // Clip off the right side of the screen capture to remove inventory
+            Bitmap pImage = new Bitmap((int)(rctForm.Width /*/ 1.5*/), rctForm.Height);  // Clip off the right side of the screen capture to remove inventory
                                                                                      // This is useful for not getting false positives when looking for 
                                                                                      // similar symbols for combat state.
             Graphics graphics = Graphics.FromImage(pImage);
@@ -119,10 +119,10 @@ namespace NodBot.Code
         /// <param name="matches"></param>
         /// <param name="mask"></param>
         /// <param name="homography"></param>
-        private void FindMatch(Mat modelImage, Mat observedImage, out long matchTime, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography)
+        private void FindMatchSURF(Mat modelImage, Mat observedImage, out long matchTime, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography)
         {
             int k = 2;
-            double uniquenessThreshold = 0.5;
+            double uniquenessThreshold = 0.4;
             double hessianThresh = 500;
 
             Stopwatch watch;
@@ -153,11 +153,11 @@ namespace NodBot.Code
                     Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
 
                     int nonZeroCount = CvInvoke.CountNonZero(mask);
-                    if (nonZeroCount >= 4)
+                    if (nonZeroCount >= 3)
                     {
                         nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints,
                            matches, mask, 1.5, 20);
-                        if (nonZeroCount >= 4)
+                        if (nonZeroCount >= 3)
                             homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints,
                                observedKeyPoints, matches, mask, 2);
                     }
@@ -167,6 +167,58 @@ namespace NodBot.Code
             }
             matchTime = watch.ElapsedMilliseconds;
         }
+
+
+        private void FindMatchSIFT(Mat modelImage, Mat observedImage, out long matchTime, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography)
+        {
+            int k = 2;
+            double uniquenessThreshold = 0.4;
+            double hessianThresh = 500;
+
+            Stopwatch watch;
+            homography = null;
+
+            modelKeyPoints = new VectorOfKeyPoint();
+            observedKeyPoints = new VectorOfKeyPoint();
+            {
+                using (UMat uModelImage = modelImage.GetUMat(AccessType.Read))
+                using (UMat uObservedImage = observedImage.GetUMat(AccessType.Read))
+                {
+                    SIFT surfCPU = new SIFT();
+                    //extract features from the object image
+                    UMat modelDescriptors = new UMat();
+                    surfCPU.DetectAndCompute(uModelImage, null, modelKeyPoints, modelDescriptors, false);
+
+                    watch = Stopwatch.StartNew();
+
+                    // extract features from the observed image
+                    UMat observedDescriptors = new UMat();
+                    surfCPU.DetectAndCompute(uObservedImage, null, observedKeyPoints, observedDescriptors, false);
+                    BFMatcher matcher = new BFMatcher(DistanceType.L2);
+                    matcher.Add(modelDescriptors);
+
+                    matcher.KnnMatch(observedDescriptors, matches, k, null);
+                    mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
+                    mask.SetTo(new MCvScalar(255));
+                    Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
+
+                    int nonZeroCount = CvInvoke.CountNonZero(mask);
+                    if (nonZeroCount >= 3)
+                    {
+                        nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints,
+                           matches, mask, 1.5, 20);
+                        if (nonZeroCount >= 3)
+                            homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints,
+                               observedKeyPoints, matches, mask, 2);
+                    }
+
+                    watch.Stop();
+                }
+            }
+            matchTime = watch.ElapsedMilliseconds;
+        }
+
+
 
         /// <summary>
         /// Draw the model image and observed image, the matched features and homography projection.
@@ -189,7 +241,7 @@ namespace NodBot.Code
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
                 Mat mask;
-                FindMatch(modelImage, observedImage, out matchTime, out modelKeyPoints, out observedKeyPoints, matches,
+                FindMatchSIFT(modelImage, observedImage, out matchTime, out modelKeyPoints, out observedKeyPoints, matches,
                    out mask, out homography);
 
                 //Draw the matched keypoints
