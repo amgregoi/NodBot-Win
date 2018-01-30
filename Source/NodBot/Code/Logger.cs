@@ -26,11 +26,11 @@ namespace NodBot.Code
         private StreamWriter sw;
 
         public Logger(IProgress<String> aProgress)
-        {
-            sw = new StreamWriter(new FileStream("log.txt", FileMode.Truncate, FileAccess.Write, FileShare.Read));
+        {            
+            sw = new StreamWriter(new FileStream("log.txt", FileMode.Create, FileAccess.Write, FileShare.Read));
             sw.AutoFlush = true;
 
-            mProgress = aProgress;
+            mProgress = aProgress; 
             
         }
 

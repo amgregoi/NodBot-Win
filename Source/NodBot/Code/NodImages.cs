@@ -21,8 +21,14 @@ namespace NodBot.Code
         public static String Recall { get { return new NodImages("recall.png").PATH; } }
         public static String Handbook { get { return new NodImages("handbook.png").PATH; } }
         public static String Dust { get { return new NodImages("dust.png").PATH; } }
+        public static String TownWalk { get { return new NodImages("tw_message.png").PATH; } }
+
 
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }
+
+
+        public static String Town4 { get { return new NodImages("town4.png").PATH; } }
+        public static String Town5 { get { return new NodImages("town5.png").PATH; } }
 
 
         public static String Trophy1 { get { return new NodImages("t1.png").PATH; } }

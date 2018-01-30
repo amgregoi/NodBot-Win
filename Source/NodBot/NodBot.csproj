@@ -66,11 +66,13 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Code\Game.cs" />
+    <Compile Include="Code\NodiatisInput.cs" />
+    <Compile Include="Code\SeqGrind.cs" />
     <Compile Include="Code\ImageAnalyze.cs" />
     <Compile Include="Code\Logger.cs" />
     <Compile Include="Code\NodImages.cs" />
     <Compile Include="Code\Input.cs" />
+    <Compile Include="Code\SeqTownWalk.cs" />
     <Compile Include="Code\Settings.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

@@ -1,0 +1,28 @@
+INFO :: MainWindow.xaml.Slider_ValueChanged(166) :: CLASS ABILITY SET [F]
+INFO :: MainWindow.xaml.Slider_ValueChanged(171) :: ATTACK SET [D]
+INFO :: MainWindow.xaml.Slider_ValueChanged(166) :: CLASS ABILITY SET [F]
+INFO :: MainWindow.xaml.CheckBox_Checked(112) :: DEBUG ON
+INFO :: MainWindow.xaml.CheckBox_UnChecked(136) :: DEBUG OFF
+INFO :: MainWindow.xaml.StartButton_Click(81) :: Starting bot
+INFO :: MainWindow.xaml.CheckBox_Checked(112) :: DEBUG ON
+INFO :: Game.combatBetweenStateAsync(224) :: Dust button not found after starting bot.
+INFO :: Game.combatInitAsync(101) :: Starting Combat
+DEBUG :: Input.sendKeyboardClick(88) :: Sending keyboard input: [F]
+INFO :: Game.combatBetweenStateAsync(232) :: Waiting for known combat state.
+INFO :: MainWindow.xaml.CheckBox_UnChecked(136) :: DEBUG OFF
+INFO :: Game.combatEndAsync(162) :: Ending combat
+INFO :: Game.combatEndAsync(174) :: Lotting trophies
+DEBUG :: Input.sendKeyboardClick(88) :: Sending keyboard input: [L]
+INFO :: Game.combatEndAsync(181) :: Starting search for chests.
+DEBUG :: ImageAnalyze.FindChestCoord(40) :: Scanning: Images\chest1.png
+DEBUG :: ImageAnalyze.FindChestCoord(40) :: Scanning: Images\chest2.png
+DEBUG :: ImageAnalyze.FindChestCoord(40) :: Scanning: Images\chest3.png
+DEBUG :: Input.sendLeftMouseClick(47) :: Sending left mouse click: (376, 242)
+DEBUG :: Input.sendKeyboardClick(88) :: Sending keyboard input: [E]
+INFO :: Game.combatBetweenStateAsync(232) :: Waiting for known combat state.
+DEBUG :: ImageAnalyze.FindImageMatchDebug(66) :: Scanning: Images\empty.png
+WARNING :: ImageAnalyze.FindImageMatchDebug(72) :: System.ArgumentException: File Images\empty.png do not exist
+   at Emgu.CV.Mat..ctor(String fileName, ImreadModes loadType)
+   at Emgu.CV.CvInvoke.Imread(String filename, ImreadModes loadType)
+   at NodBot.Code.ImageAnalyze.Draw(String modelImagePath, String observedImagePath, Mat& result) in C:\Users\Andy\Desktop\NodBot\NodBot\Code\ImageAnalyze.cs:line 234
+   at NodBot.Code.ImageAnalyze.FindImageMatchDebug(String model, String obs, Boolean debug) in C:\Users\Andy\Desktop\NodBot\NodBot\Code\ImageAnalyze.cs:line 67

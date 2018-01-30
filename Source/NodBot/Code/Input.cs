@@ -28,6 +28,11 @@ namespace NodBot.Code
             mLogger = aLogger;
         }
 
+        public static IntPtr getNodiatisWindowHandle()
+        {
+            return FindWindow(null, "Nodiatis");
+        }
+
         // Moves mouse
         public void moveMouse(int x, int y)
         {

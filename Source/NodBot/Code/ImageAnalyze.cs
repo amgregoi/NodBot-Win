@@ -57,14 +57,21 @@ namespace NodBot.Code
             return Draw(modelImagePath, observedImagePath, out lImage) != null;
         }
 
-        public Point? FindImageMatchDebug(String model, String obs, bool debug = false)
+        public Point? getMatchCoord(String modelImagePath, String observedImagePath)
+        {
+            Mat lImage;
+            CaptureScreen(); //Take Screenshot
+            return Draw(modelImagePath, observedImagePath, out lImage, false);
+        }
+
+        public Point? FindImageMatchDebug(String model, String obs, bool debug = false, bool random = false)
         {
             Mat lImage;
             Point? result = null;
             try
             {
                 mLogger.sendMessage("Scanning: " + model, LogType.DEBUG);
-                result = Draw(model, obs, out lImage);
+                result = Draw(model, obs, out lImage, random);
                 if (debug) CvInvoke.Imshow(model, lImage);
             }
             catch (Exception ex)
@@ -81,7 +88,7 @@ namespace NodBot.Code
         /// </summary>
         public static void CaptureScreen()
         {
-            IntPtr hWnd = Game.GAME;
+            IntPtr hWnd = Input.getNodiatisWindowHandle();
 
             Rectangle rctForm = new Rectangle();
             GetWindowRect(hWnd, ref rctForm);
@@ -173,7 +180,6 @@ namespace NodBot.Code
         {
             int k = 2;
             double uniquenessThreshold = 0.4;
-            double hessianThresh = 500;
 
             Stopwatch watch;
             homography = null;
@@ -227,7 +233,7 @@ namespace NodBot.Code
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        private Point? Draw(String modelImagePath, String observedImagePath, out Mat result)
+        private Point? Draw(String modelImagePath, String observedImagePath, out Mat result, bool random = true)
         {
             Point? resultPoint = null;
 
@@ -270,7 +276,8 @@ namespace NodBot.Code
                        CvInvoke.Polylines(result, vp, true, new MCvScalar(255, 0, 0, 255), 5);
 
                         // return random point to click
-                        int rand = new Random().Next(0, points.Length - 1);
+                        int rand = points.Length-1; // retrieve last point
+                        if(random) rand = new Random().Next(0, points.Length - 1); // random point
                         resultPoint =  points[rand];
                     }
 

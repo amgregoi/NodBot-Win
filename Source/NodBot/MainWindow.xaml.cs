@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Drawing;
 using NodBot.Code;
-using Emgu.CV;
-using System.IO;
 using System.Threading;
 
 namespace NodBot
@@ -27,10 +16,13 @@ namespace NodBot
     {
         bool isRunning = false;
 
-        private Game mGame;
+        private SeqGrind mGrindSequence;
+        private SeqTownWalk mTownWalkSequence;
         private Logger mLogger;
         private int kill_count = 0, chest_count = 0;
         private CancellationTokenSource cts;
+
+        private string[] mNodBotOptions = { "Farm", "Town Walk" };
 
 
         public MainWindow()
@@ -53,45 +45,80 @@ namespace NodBot
             });
 
             mLogger = new Logger(progressLog);
-            mGame = new Game(mLogger, progressKillCount, progressChestCount);
+            mGrindSequence = new SeqGrind(mLogger, progressKillCount, progressChestCount);
+            mTownWalkSequence = new SeqTownWalk(mLogger);
+
+            // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-        }
-
-        private void TestButton_Click(object sender, RoutedEventArgs e)
-        {
-            ImageAnalyze test = new ImageAnalyze(mLogger);
-            bool result = test.FindImageMatchDebug(NodImages.Empty, NodImages.Test, true) != null;
-            Console.Out.WriteLine(result);
-        }
-
-        private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (isRunning)
-            {
-                mLogger.sendMessage("Stopping bot", LogType.INFO);
-                start_button.Content = "Start";
-                Task.Delay(50).ContinueWith(_ => {
-                    isRunning = false;
-                    mGame.Stop();
-                    cts.Cancel();
-                });
-            }
-            else
-            {
-                mLogger.sendMessage("Starting bot", LogType.INFO);
-                start_button.Content = "Stop";
-                Task.Run(async () =>
-                {
-                    cts = new CancellationTokenSource();
-                    isRunning = true;
-                    await mGame.StartAsync(cts.Token);
-                });
-            }
-            
+            options_combo.Items.Add(mNodBotOptions[0]);
+            options_combo.Items.Add(mNodBotOptions[1]);
+            options_combo.SelectedIndex = 0;
         }
 
         /// <summary>
-        /// This event handler toggles the Settings based on the events of from the various CheckBoxes in the UI.
+        /// This function handles click events for the UI Test button.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TestButton_Click(object sender, RoutedEventArgs e)
+        {
+            ImageAnalyze test = new ImageAnalyze(mLogger);
+            ImageAnalyze.CaptureScreen();
+            System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Town5, NodImages.CurrentSS, false);
+
+            Console.Out.WriteLine(result);
+        }
+
+        /// <summary>
+        /// This function handles click events for the UI Start button.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (isRunning) stopGrind();
+            else startGrind();
+        }
+
+        /// <summary>
+        /// This function handles starting the selected bot sequence to execute.
+        /// 
+        /// </summary>
+        private void startGrind()
+        {
+            mLogger.sendMessage("Starting bot", LogType.INFO);
+            start_button.Content = "Stop";
+            int optionsIndex = options_combo.SelectedIndex;
+            Task.Run(async () =>
+            {
+                cts = new CancellationTokenSource();
+                isRunning = true;
+                if(optionsIndex == 0) await mGrindSequence.Start(cts.Token);
+                else if(optionsIndex == 1) await mTownWalkSequence.Start(cts.Token);
+            });
+        }
+
+        /// <summary>
+        /// This function handles stopping the currently running bot sequence.
+        /// 
+        /// </summary>
+        private void stopGrind()
+        {
+            mLogger.sendMessage("Stopping bot", LogType.INFO);
+            start_button.Content = "Start";
+            Task.Delay(50).ContinueWith(_ =>
+            {
+                isRunning = false;
+                cts.Cancel();
+            });
+        }
+
+        /// <summary>
+        /// This event handler toggles the Settings based on the events 
+        /// of from the various CheckBoxes in the UI.
+        /// 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -115,7 +142,9 @@ namespace NodBot
         }
 
         /// <summary>
-        /// This event handler toggles the Settings based on the events of from the various CheckBoxes in the UI.
+        /// This event handler toggles the Settings based on the events of from 
+        /// the various CheckBoxes in the UI.
+        /// 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -140,6 +169,7 @@ namespace NodBot
 
         /// <summary>
         /// This event handler toggles the Auto Attack and Class Ability options.
+        /// 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -176,6 +206,7 @@ namespace NodBot
 
         /// <summary>
         /// This function updates the UI kill counter.
+        /// 
         /// </summary>
         private void updateKillCount()
         {
@@ -185,6 +216,7 @@ namespace NodBot
 
         /// <summary>
         /// This function updates the UI chest counter.
+        /// 
         /// </summary>
         private void updateChestCount()
         {
@@ -192,6 +224,22 @@ namespace NodBot
             chest_counter_label.Content = kill_count;
         }
 
+        /// <summary>
+        /// This function clears the textbox log of all its content.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            log_textbox.Clear();
+        }
+
+        /// <summary>
+        /// This function adds messages to the textbox log on the GUI.
+        /// 
+        /// </summary>
+        /// <param name="aMessage"></param>
         public void updateLog(string aMessage)
         {
             if (log_textbox.LineCount >= log_textbox.MaxLines) {
