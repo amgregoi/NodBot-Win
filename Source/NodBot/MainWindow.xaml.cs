@@ -22,7 +22,7 @@ namespace NodBot
         private int kill_count = 0, chest_count = 0;
         private CancellationTokenSource cts;
 
-        private string[] mNodBotOptions = { "Farm", "Town Walk" };
+        private string[] mNodBotOptions = { "Farm", "Town Walk(T4)" , "Town Walk(T5)"};
 
 
         public MainWindow()
@@ -52,6 +52,7 @@ namespace NodBot
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
             options_combo.Items.Add(mNodBotOptions[0]);
             options_combo.Items.Add(mNodBotOptions[1]);
+            options_combo.Items.Add(mNodBotOptions[2]);
             options_combo.SelectedIndex = 0;
         }
 
@@ -68,6 +69,7 @@ namespace NodBot
             System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Town5, NodImages.CurrentSS, false);
 
             Console.Out.WriteLine(result);
+            mLogger.sendLog(result.ToString(), LogType.INFO);
         }
 
         /// <summary>
@@ -96,7 +98,8 @@ namespace NodBot
                 cts = new CancellationTokenSource();
                 isRunning = true;
                 if(optionsIndex == 0) await mGrindSequence.Start(cts.Token);
-                else if(optionsIndex == 1) await mTownWalkSequence.Start(cts.Token);
+                else if (optionsIndex == 1) await mTownWalkSequence.Start(cts.Token, false); // start north towards T4
+                else if (optionsIndex == 2) await mTownWalkSequence.Start(cts.Token, true); // start south towards T5
             });
         }
 

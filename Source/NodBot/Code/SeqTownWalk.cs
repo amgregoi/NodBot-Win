@@ -87,11 +87,12 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="aCt"></param>
         /// <returns></returns>
-        public async Task Start(CancellationToken aCt)
+        public async Task Start(CancellationToken aCt, bool aDirection)
         {
-            bool seenT4 = false;
-
             Point? aTown = null;
+            bool seenT4 = false;
+            mTravelNorth = aDirection;
+
             while (true)
             {
                 aCt.ThrowIfCancellationRequested();

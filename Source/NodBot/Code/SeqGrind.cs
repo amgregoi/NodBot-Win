@@ -63,11 +63,10 @@ namespace NodBot.Code
         /// </summary>
         public async Task Start(CancellationToken aCt)
         {
-            PLAY = true;
 
             mCombatState = CombatState.BOT_START;
 
-            while (PLAY)
+            while (true)
             {
                 try
                 {
@@ -91,6 +90,8 @@ namespace NodBot.Code
                     }
                 }catch(Exception ex)
                 {
+                    if (ex is OperationCanceledException) break;
+
                     mLogger.sendLog(ex.StackTrace, LogType.WARNING);
                 }
             }
