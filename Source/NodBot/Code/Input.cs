@@ -74,6 +74,7 @@ namespace NodBot.Code
                 SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
                 SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
 
+
                 // Brings back the previous forground window, if not game handle window
                 if (lCurrentWindow != game_hwnd)
                     SetForegroundWindow(lCurrentWindow);

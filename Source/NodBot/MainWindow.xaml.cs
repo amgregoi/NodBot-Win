@@ -224,7 +224,7 @@ namespace NodBot
         private void updateChestCount()
         {
             chest_count++;
-            chest_counter_label.Content = kill_count;
+            chest_counter_label.Content = chest_count;
         }
 
         /// <summary>

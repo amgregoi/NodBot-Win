@@ -174,7 +174,7 @@ namespace NodBot.Code
 
             if (!Settings.PILGRIMAGE)
             {
-                if (mCombatState <= CombatState.END)
+                if (mCombatState < CombatState.END)
                 {
                     //increment kill count
                     mKillCount++; 

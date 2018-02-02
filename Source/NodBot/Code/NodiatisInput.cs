@@ -82,7 +82,7 @@ namespace NodBot.Code
 
         public void ClickOnPoint(int aX, int aY)
         {
-            mInputController.moveMouse(aX, aY);
+            mInputController.sendLeftMouseClick(aX, aY);
         }
 
         public void InitiateFight()
