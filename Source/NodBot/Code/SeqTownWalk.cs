@@ -90,7 +90,7 @@ namespace NodBot.Code
         public async Task Start(CancellationToken aCt, bool aDirection)
         {
             Point? aTown = null;
-            bool seenT4 = false;
+            bool seenT4 = false, seenT5 = false;
             mTravelNorth = aDirection;
 
             while (true)
@@ -100,6 +100,14 @@ namespace NodBot.Code
                 if (mTravelNorth)
                 {
                     aTown = mImageAnalyze.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
+                    if (!seenT5) seenT5 = aTown != null;
+
+                    if (seenT5 && aTown == null)
+                    {
+                        mTravelNorth = !mTravelNorth;
+                        seenT5 = false;
+                        continue;
+                    }
 
                     if (aTown == null) makeCorrectMove(new Point(), false);
                     else makeCorrectMove(aTown.Value, true);

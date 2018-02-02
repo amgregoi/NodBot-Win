@@ -66,7 +66,7 @@ namespace NodBot
         {
             ImageAnalyze test = new ImageAnalyze(mLogger);
             ImageAnalyze.CaptureScreen();
-            System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Town5, NodImages.CurrentSS, false);
+            System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Town5, NodImages.CurrentSS, true);
 
             Console.Out.WriteLine(result);
             mLogger.sendLog(result.ToString(), LogType.INFO);
