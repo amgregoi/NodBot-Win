@@ -80,9 +80,14 @@ namespace NodBot.Code
             mInputController.sendKeyboardClick(Input.Keyboard_Actions.LOOT);
         }
 
-        public void ClickOnPoint(int aX, int aY)
+        public void ClickOnPoint(int aX, int aY, bool aLeftClick)
         {
-            mInputController.sendLeftMouseClick(aX, aY);
+            mInputController.sendLeftMouseClick(aX, aY, aLeftClick);
+        }
+
+        public void MoveCursorTo(int aX, int aY)
+        {
+            mInputController.moveMouse(aX, aY);
         }
 
         public void InitiateFight()

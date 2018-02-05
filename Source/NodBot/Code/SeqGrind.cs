@@ -11,32 +11,15 @@ using System.Diagnostics;
 
 namespace NodBot.Code
 {
-    /// <summary>
-    /// This is an enumerator defining the various combat states of the bot.
-    /// 
-    /// </summary>
-    enum CombatState
-    {
-        BOT_START = 99,
-        WAIT = 0,
-        WAIT_2 = 1,
-        ATTACK = 2,
-        END = 3,
-        INIT = 4,
-    }
 
-    public class SeqGrind
+    public class SeqGrind : SeqBase
     {
-        private bool PLAY;
-        private CombatState mCombatState;
-        private Logger mLogger;
-        private ImageAnalyze mImageAnalyze;
-        private NodiatisInput mInput;
-
         private IProgress<int> mProgressKillCount, mProgressChestCount;
 
         private int mKillCount = 0;
         private Stopwatch sw;
+
+        SeqArena mArena;
 
         /// <summary>
         /// Constructor for the game Grinding Sequence.
@@ -45,13 +28,10 @@ namespace NodBot.Code
         /// <param name="aLogger"></param>
         /// <param name="aProgressKill"></param>
         /// <param name="aProgressChest"></param>
-        public SeqGrind(Logger aLogger, IProgress<int> aProgressKill, IProgress<int> aProgressChest)
+        public SeqGrind(Logger aLogger, IProgress<int> aProgressKill, IProgress<int> aProgressChest) : base(aLogger)
         {
-            mLogger = aLogger;
-            mImageAnalyze = new ImageAnalyze(mLogger);
             sw = new Stopwatch();
-
-            mInput = new NodiatisInput(mLogger);
+            mArena = new SeqArena(mLogger);
 
             mProgressKillCount = aProgressKill;
             mProgressChestCount = aProgressChest;
@@ -61,28 +41,39 @@ namespace NodBot.Code
         /// Toggles PLAY to true, and starts game loop
         /// 
         /// </summary>
-        public async Task Start(CancellationToken aCt)
+        public override async Task Start(CancellationToken aCt)
         {
 
-            mCombatState = CombatState.BOT_START;
-
+            mCombatState = SequenceState.BOT_START;
+            bool WAITING_FOR_ARENA = false;
             while (true)
             {
                 try
                 {
                     aCt.ThrowIfCancellationRequested();
 
-                    if (mCombatState >= CombatState.WAIT && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
+                    if(Settings.ARENA && !WAITING_FOR_ARENA)
+                    {
+                        await mArena.EnterQueue();
+                        WAITING_FOR_ARENA = true;
+                    }
+
+                    if (mCombatState >= SequenceState.WAIT && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
                     {
                         await combatEndAsync();
                     }
-                    else if (mCombatState >= CombatState.END && mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
+                    else if (mCombatState >= SequenceState.ATTACK && mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
                     {
                         await combatInitAsync();
                     }
-                    else if (mCombatState >= CombatState.INIT && mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
+                    else if (mCombatState >= SequenceState.INIT && mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
                     {
                         await combatStartAsync();
+                    }
+                    else if (mImageAnalyze.ContainsMatch(NodImages.Arena, NodImages.CurrentSS))
+                    {
+                        await mArena.StartArenaCombat();
+                        WAITING_FOR_ARENA = false;
                     }
                     else
                     {
@@ -97,6 +88,12 @@ namespace NodBot.Code
             }
         }
 
+        private async Task CombatArenaStart()
+        {
+            await delay(13000); // wait 13 seconds for count down;
+            mInput.SettingsAttack();
+        }
+
         /// <summary>
         /// This function initiates combat from the over world map.
         /// 
@@ -104,11 +101,11 @@ namespace NodBot.Code
         /// <returns></returns>
         private async Task combatInitAsync()
         {
-            mCombatState = CombatState.INIT;
+            mCombatState = SequenceState.INIT;
 
             mLogger.sendMessage("Starting Combat", LogType.INFO);
             mInput.InitiateFight();
-            await delay(25);
+            await delay(1500);
 
         }
 
@@ -121,9 +118,9 @@ namespace NodBot.Code
         private async Task combatStartAsync()
         {
             // If bot is started and already in combat, skip starting combat
-            if (mCombatState == CombatState.BOT_START)
+            if (mCombatState == SequenceState.BOT_START)
             {
-                mCombatState = CombatState.ATTACK;
+                mCombatState = SequenceState.ATTACK;
                 mLogger.sendMessage("Already in combat", LogType.DEBUG);
                 return;
             }
@@ -154,9 +151,9 @@ namespace NodBot.Code
             }
 
             // long wait at start of combat
-            await delay (20000 + generateOffset(15000));
+            //await delay (20000 + generateOffset(15000));
 
-            mCombatState = CombatState.ATTACK;
+            mCombatState = SequenceState.ATTACK;
         }
 
         /// <summary>
@@ -167,14 +164,14 @@ namespace NodBot.Code
         private async Task combatEndAsync()
         {
             // In case bot is started at end of combat, it will still attempt to loot
-            if (mCombatState == CombatState.BOT_START)
-                mCombatState = CombatState.WAIT_2;
+            if (mCombatState == SequenceState.BOT_START)
+                mCombatState = SequenceState.WAIT_2;
 
             mLogger.sendMessage("Ending combat", LogType.INFO);
 
             if (!Settings.PILGRIMAGE)
             {
-                if (mCombatState < CombatState.END)
+                if (mCombatState < SequenceState.END)
                 {
                     //increment kill count
                     mKillCount++; 
@@ -192,7 +189,7 @@ namespace NodBot.Code
                         Point? coord = mImageAnalyze.FindChestCoord();
                         if (coord != null)
                         {
-                            mInput.ClickOnPoint(coord.Value.X, coord.Value.Y);
+                            mInput.ClickOnPoint(coord.Value.X, coord.Value.Y, true);
                             mProgressChestCount.Report(1); // update ui chest counter
                         }
                         await delay (2000 + generateOffset(1000));
@@ -214,7 +211,7 @@ namespace NodBot.Code
             mInput.Exit();
 
             //update combat state
-            mCombatState = CombatState.END;
+            mCombatState = SequenceState.END;
 
             // Check if we should take break after some random range of kills
             await delay(takeBreak() + generateOffset(1000));
@@ -230,14 +227,14 @@ namespace NodBot.Code
             // If bot is started and no known state is found, we are stuck in the
             // over world without the Dust Collecting icon, initiate first combat
             // to keep bot state alive.
-            if(mCombatState == CombatState.BOT_START)
+            if(mCombatState == SequenceState.BOT_START)
             {
                 mLogger.sendMessage("Dust button not found after starting bot.", LogType.INFO);
                 await combatInitAsync();
                 return;
             }
 
-            if (mCombatState > CombatState.WAIT)
+            if (mCombatState > SequenceState.WAIT)
             {
                 mLogger.sendMessage("Waiting for known combat state.", LogType.DEBUG);
             }
@@ -255,7 +252,7 @@ namespace NodBot.Code
         {
             int lBreakTime = 500;
             int lRandomRoundSize = new Random().Next(15, 40);
-            if(mKillCount > lRandomRoundSize)
+            if (mKillCount > lRandomRoundSize)
             {
                 lBreakTime = new Random().Next(800, 4500);
                 mKillCount = 0;
@@ -264,18 +261,6 @@ namespace NodBot.Code
 
             return lBreakTime;
         }
-
-        /// <summary>
-        /// This function delays the current task by the specified time (ms).
-        /// 
-        /// </summary>
-        /// <param name="aTime"></param>
-        /// <returns></returns>
-        private async Task delay(int aTime)
-        {
-            await Task.Delay(aTime);
-        }
-
 
         /// <summary>
         /// This function generates a delay offset to build a variance in the pauses of the application

@@ -25,6 +25,7 @@ namespace NodBot.Code
 
 
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }
+        public static String Arena { get { return new NodImages("arena.png").PATH; } }
 
 
         public static String Town4 { get { return new NodImages("town4.png").PATH; } }

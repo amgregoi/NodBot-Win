@@ -46,7 +46,7 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void sendLeftMouseClick(int x, int y)
+        public void sendLeftMouseClick(int x, int y, bool aLeftClick)
         {
             String coord = "(" + x + ", " + y + ")";
             mLogger.sendMessage("Sending left mouse click: " + coord, LogType.DEBUG);
@@ -71,8 +71,16 @@ namespace NodBot.Code
 
             Task.Delay(50).ContinueWith(_ =>
             {
-                SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-                SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+                if (aLeftClick)
+                {
+                    SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+                    SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+                }
+                else
+                {
+                    SendMessage(game_hwnd, WM_RBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+                    SendMessage(game_hwnd, WM_RBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+                }
 
 
                 // Brings back the previous forground window, if not game handle window

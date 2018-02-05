@@ -64,12 +64,20 @@ namespace NodBot
         /// <param name="e"></param>
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
+            SeqArena test = new SeqArena(mLogger);
+            Task.Delay(25).ContinueWith(async _ =>
+            {
+                await test.EnterQueue();
+            });
+
+            /*
             ImageAnalyze test = new ImageAnalyze(mLogger);
             ImageAnalyze.CaptureScreen();
-            System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Town5, NodImages.CurrentSS, true);
+            System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Arena, NodImages.Test, true);
 
             Console.Out.WriteLine(result);
             mLogger.sendLog(result.ToString(), LogType.INFO);
+            */
         }
 
         /// <summary>
@@ -141,6 +149,9 @@ namespace NodBot
                     Settings.DEBUG = true;
                     mLogger.sendMessage("DEBUG ON", LogType.INFO);
                     break;
+                case "arena_checkbox":
+                    Settings.ARENA = true;
+                    break;
             }
         }
 
@@ -166,6 +177,9 @@ namespace NodBot
                 case "debug_checkbox":
                     Settings.DEBUG = false;
                     mLogger.sendMessage("DEBUG OFF", LogType.INFO);
+                    break;
+                case "arena_checkbox":
+                    Settings.ARENA = false;
                     break;
             }
         }

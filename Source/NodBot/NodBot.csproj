@@ -67,6 +67,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Code\NodiatisInput.cs" />
+    <Compile Include="Code\SeqArena.cs" />
+    <Compile Include="Code\SeqBase.cs" />
     <Compile Include="Code\SeqGrind.cs" />
     <Compile Include="Code\ImageAnalyze.cs" />
     <Compile Include="Code\Logger.cs" />

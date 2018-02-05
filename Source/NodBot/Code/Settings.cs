@@ -12,6 +12,8 @@ namespace NodBot.Code
         public static bool CHESTS { get; set; } = true;
         public static bool PILGRIMAGE { get; set; } = false;
 
+        public static bool ARENA { get; set; } = false;
+
         public static bool MELEE { get; set; } = true;
         public static bool CA_PRIMARTY { get; set; } = true;
     }

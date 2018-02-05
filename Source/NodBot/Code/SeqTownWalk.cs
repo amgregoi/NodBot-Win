@@ -4,13 +4,8 @@ using System.Threading.Tasks;
 
 namespace NodBot.Code
 {
-    public class SeqTownWalk
+    public class SeqTownWalk : SeqBase
     {
-
-        private Logger mLogger;
-        private ImageAnalyze mImageAnalyze;
-        private NodiatisInput mInput;
-
         private bool mTravelNorth = false;
 
         /// <summary>
@@ -27,11 +22,106 @@ namespace NodBot.Code
         /// 
         /// </summary>
         /// <param name="aLogger"></param>
-        public SeqTownWalk(Logger aLogger)
+        public SeqTownWalk(Logger aLogger) : base(aLogger)
         {
-            mLogger = aLogger;
-            mImageAnalyze = new ImageAnalyze(mLogger);
-            mInput = new NodiatisInput(mLogger);
+            // Relevant constructor operations done in base class.
+        }
+
+        /// <summary>
+        /// This is the public Start call, that also sets the intended direction of 
+        /// the Town Walking sequence.
+        /// 
+        /// </summary>
+        /// <param name="aCt"></param>
+        /// <param name="aDirection"></param>
+        /// <returns></returns>
+        public async Task Start(CancellationToken aCt, bool aDirection)
+        {
+            mTravelNorth = aDirection;
+            await Start(aCt);
+        }
+
+        /// <summary>
+        /// This function runs the town walking sequence between town4 and town5.
+        /// 
+        /// Note: If this method is called directly, the direction 
+        /// defaults to south (T4).
+        /// </summary>
+        /// <param name="aCt"></param>
+        /// <returns></returns>
+        public override async Task Start(CancellationToken aCt)
+        {
+            Point? aTown = null, aPrev = null;
+            bool seenT4 = false, seenT5 = false;
+
+            while (true)
+            {
+                aCt.ThrowIfCancellationRequested();
+
+                if (mTravelNorth)
+                {
+                    aTown = mImageAnalyze.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
+                    if (!seenT5) seenT5 = aTown != null;
+
+                    if (seenT5 && aTown == null && aPrev.Value.X > mTown5Max.X)
+                    {
+                        mTravelNorth = !mTravelNorth;
+                        seenT5 = false;
+                        continue;
+                    }
+
+                    if (aTown == null) makeCorrectMove(new Point(), false);
+                    else makeCorrectMove(aTown.Value, true);
+                }
+                else
+                {
+
+                    aTown = mImageAnalyze.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
+                    if (!seenT4) seenT4 = aTown != null;
+
+                    if (seenT4 && aTown == null)
+                    {
+                        mTravelNorth = !mTravelNorth;
+                        seenT4 = false;
+                        continue;
+                    }
+
+                    if (aTown == null) makeCorrectMove(new Point(), false);
+                    else makeCorrectMove(aTown.Value, true);
+                }
+
+                await checkForCombat();
+                if (aTown != null)
+                    aPrev = aTown;
+            }
+        }
+
+        /// <summary>
+        /// This function checks for combat after moving, and if combat has started
+        /// attacks and exits accordingly to continue town walking.
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private async Task checkForCombat()
+        {
+            await delay(1750);
+
+            if (mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
+            {
+                mInput.SettingsAttack();
+                await delay(1000);
+
+                while (!mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS)) ;
+
+                while(mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
+                {
+                    mInput.Exit();
+                    await delay(1000);
+                }
+
+                await delay(3500);
+            }
+
         }
 
         /// <summary>
@@ -56,7 +146,8 @@ namespace NodBot.Code
                         else if (p.X <= mTown5Min.X) mInput.moveLeft();
                         else mTravelNorth = !mTravelNorth;
                     }
-                } else
+                }
+                else
                 {
                     mInput.moveUp();
                 }
@@ -79,94 +170,6 @@ namespace NodBot.Code
                     mInput.moveDown();
                 }
             }
-        }
-
-        /// <summary>
-        /// This function runs the town walking sequence between town4 and town5.
-        /// 
-        /// </summary>
-        /// <param name="aCt"></param>
-        /// <returns></returns>
-        public async Task Start(CancellationToken aCt, bool aDirection)
-        {
-            Point? aTown = null;
-            bool seenT4 = false, seenT5 = false;
-            mTravelNorth = aDirection;
-
-            while (true)
-            {
-                aCt.ThrowIfCancellationRequested();
-
-                if (mTravelNorth)
-                {
-                    aTown = mImageAnalyze.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
-                    if (!seenT5) seenT5 = aTown != null;
-
-                    if (seenT5 && aTown == null)
-                    {
-                        mTravelNorth = !mTravelNorth;
-                        seenT5 = false;
-                        continue;
-                    }
-
-                    if (aTown == null) makeCorrectMove(new Point(), false);
-                    else makeCorrectMove(aTown.Value, true);
-                }else
-                {
-                    
-                    aTown = mImageAnalyze.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
-                    if (!seenT4) seenT4 = aTown != null;
-
-                    if (seenT4 && aTown == null)
-                    {
-                        mTravelNorth = !mTravelNorth;
-                        seenT4 = false;
-                        continue;
-                    }
-
-                    if (aTown == null) makeCorrectMove(new Point(), false);
-                    else makeCorrectMove(aTown.Value, true);
-                }
-
-                await checkForCombat();
-            }
-        }
-
-        /// <summary>
-        /// This function checks for combat after moving, and if combat has started
-        /// attacks and exits accordingly to continue town walking.
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private async Task checkForCombat()
-        {
-            await delay(1750);
-
-            if (mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
-            {
-                mInput.SettingsAttack();
-                await delay(1000);
-
-                while (!mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS)) ;
-
-                mInput.Exit();
-                await delay(3500);
-            }
-
-        }
-
-        /// <summary>
-        /// This function delays the town walking task by the specified time (ms).
-        /// 
-        /// </summary>
-        /// <param name="aTime"></param>
-        /// <returns></returns>
-        private async Task delay(int aTime)
-        {
-            await Task.Run(async () =>
-            {
-                await Task.Delay(aTime);
-            });
         }
     }
 }
