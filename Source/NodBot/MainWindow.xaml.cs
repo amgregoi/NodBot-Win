@@ -152,6 +152,9 @@ namespace NodBot
                 case "arena_checkbox":
                     Settings.ARENA = true;
                     break;
+                case "bossing_checkbox":
+                    Settings.BOSSING = true;
+                    break;
             }
         }
 
@@ -180,6 +183,9 @@ namespace NodBot
                     break;
                 case "arena_checkbox":
                     Settings.ARENA = false;
+                    break;
+                case "bossing_checkbox":
+                    Settings.BOSSING = false;
                     break;
             }
         }

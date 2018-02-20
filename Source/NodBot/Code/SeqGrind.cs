@@ -178,10 +178,13 @@ namespace NodBot.Code
                     mProgressKillCount.Report(1);
 
                     // loot trophies
-                    mLogger.sendMessage("Lotting trophies", LogType.INFO);
-                    mInput.LootTrophies();
-                    await delay(2000 + generateOffset(2000));
-                    
+                    if (!Settings.BOSSING) // SKIP loot if bossing
+                    {
+                        mLogger.sendMessage("Lotting trophies", LogType.INFO);
+                        mInput.LootTrophies();
+                        await delay(2000 + generateOffset(2000));
+                    }
+
                     // loot chest
                     if (Settings.CHESTS)
                     {
