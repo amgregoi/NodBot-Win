@@ -18,11 +18,12 @@ namespace NodBot
 
         private SeqGrind mGrindSequence;
         private SeqTownWalk mTownWalkSequence;
+        private SeqArena mArenaSequence;
         private Logger mLogger;
         private int kill_count = 0, chest_count = 0;
         private CancellationTokenSource cts;
 
-        private string[] mNodBotOptions = { "Farm", "Town Walk(T4)" , "Town Walk(T5)"};
+        private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)" , "Town Walk(T5)"};
 
 
         public MainWindow()
@@ -47,12 +48,14 @@ namespace NodBot
             mLogger = new Logger(progressLog);
             mGrindSequence = new SeqGrind(mLogger, progressKillCount, progressChestCount);
             mTownWalkSequence = new SeqTownWalk(mLogger);
+            mArenaSequence = new SeqArena(mLogger);
 
             // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
             options_combo.Items.Add(mNodBotOptions[0]);
             options_combo.Items.Add(mNodBotOptions[1]);
             options_combo.Items.Add(mNodBotOptions[2]);
+            options_combo.Items.Add(mNodBotOptions[3]);
             options_combo.SelectedIndex = 0;
         }
 
@@ -106,8 +109,9 @@ namespace NodBot
                 cts = new CancellationTokenSource();
                 isRunning = true;
                 if(optionsIndex == 0) await mGrindSequence.Start(cts.Token);
-                else if (optionsIndex == 1) await mTownWalkSequence.Start(cts.Token, false); // start north towards T4
-                else if (optionsIndex == 2) await mTownWalkSequence.Start(cts.Token, true); // start south towards T5
+                else if (optionsIndex == 1) await mArenaSequence.Start(cts.Token); // start arena
+                else if (optionsIndex == 2) await mTownWalkSequence.Start(cts.Token, false); // start north towards T4
+                else if (optionsIndex == 3) await mTownWalkSequence.Start(cts.Token, true); // start south towards T5
             });
         }
 

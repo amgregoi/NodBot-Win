@@ -17,15 +17,16 @@ namespace NodBot.Code
 
         public override async Task Start(CancellationToken aCt)
         {
+            mCombatState = SequenceState.ARENA;
             while (true)
             {
                 aCt.ThrowIfCancellationRequested();
 
-                if (mCombatState >= SequenceState.ARENA && mImageAnalyze.ContainsMatch(NodImages.Arena, NodImages.CurrentSS))
+                if (mCombatState >= SequenceState.ARENA_WAIT_QUEUE && mImageAnalyze.ContainsMatch(NodImages.Arena, NodImages.CurrentSS))
                 {
                     await StartArenaCombat();
                 }
-                else if (mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
+                else if (mCombatState >= SequenceState.ARENA_WAIT_COMBAT && mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
                 {
                     await EnterQueue();
                 }
@@ -39,9 +40,9 @@ namespace NodBot.Code
         public async Task StartArenaCombat()
         {
             mLogger.sendMessage("Starting ARENA combat in 13(s)", LogType.INFO);
-            await delay(13000);
+            await delay(14000);
             mInput.SettingsAttack();
-            mCombatState = SequenceState.ARENA_WAIT; // waiting for arena to end
+            mCombatState = SequenceState.ARENA_WAIT_COMBAT; // waiting for arena to end
 
             while (!mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
             {
@@ -51,6 +52,9 @@ namespace NodBot.Code
 
         public async Task EnterQueue()
         {
+
+            mCombatState = SequenceState.ARENA_WAIT_QUEUE;
+
             Random rand = new Random();
 
             int xOffset = rand.Next(500);

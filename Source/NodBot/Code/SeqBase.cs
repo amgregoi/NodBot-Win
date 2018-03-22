@@ -60,8 +60,9 @@ namespace NodBot.Code
             INIT = 4,
 
             //Arena States
-            ARENA_WAIT = 20,
-            ARENA = 21,
+            ARENA_WAIT_QUEUE = 20,
+            ARENA_WAIT_COMBAT = 21,
+            ARENA = 22,
 
             //TW States
             TOWN_WALKING = 30,
