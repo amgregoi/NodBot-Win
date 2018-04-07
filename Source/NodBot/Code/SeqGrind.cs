@@ -182,8 +182,9 @@ namespace NodBot.Code
                     {
                         mLogger.sendMessage("Lotting trophies", LogType.INFO);
                         mInput.LootTrophies();
-                        await delay(2000 + generateOffset(2000));
                     }
+
+                    await delay(2000 + generateOffset(2000));
 
                     // loot chest
                     if (Settings.CHESTS)
