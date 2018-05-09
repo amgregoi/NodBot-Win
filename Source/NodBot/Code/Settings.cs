@@ -17,5 +17,7 @@ namespace NodBot.Code
 
         public static bool MELEE { get; set; } = true;
         public static bool CA_PRIMARTY { get; set; } = true;
+
+        public static String WINDOW_NAME { get; set; } = "Nodiatis";
     }
 }

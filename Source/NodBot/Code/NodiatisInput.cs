@@ -13,7 +13,7 @@ namespace NodBot.Code
         public NodiatisInput(Logger aLogger)
         {
             LOG = aLogger;
-            mInputController = new Input("Nodiatis", LOG);
+            mInputController = new Input(Settings.WINDOW_NAME, LOG);
         }
 
         public Logger LOG { get; set; }

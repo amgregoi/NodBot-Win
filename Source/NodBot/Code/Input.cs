@@ -30,7 +30,7 @@ namespace NodBot.Code
 
         public static IntPtr getNodiatisWindowHandle()
         {
-            return FindWindow(null, "Nodiatis");
+            return FindWindow(null, Settings.WINDOW_NAME);
         }
 
         // Moves mouse

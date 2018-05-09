@@ -29,6 +29,7 @@ namespace NodBot
         public MainWindow()
         {
             InitializeComponent();
+            readSettingFile();
 
             var progressKillCount = new Progress<int>(value =>
             {
@@ -57,6 +58,39 @@ namespace NodBot
             options_combo.Items.Add(mNodBotOptions[2]);
             options_combo.Items.Add(mNodBotOptions[3]);
             options_combo.SelectedIndex = 0;
+        }
+
+
+        private void readSettingFile()
+        {
+            try
+            {
+                string[] lines = System.IO.File.ReadAllLines(@"Settings/settings.txt");
+
+                // Display the file contents by using a foreach loop.
+                System.Console.WriteLine("Contents of WriteLines2.txt = ");
+                foreach (string line in lines)
+                {
+                    if (line.Contains("WINDOW_NAME"))
+                    {
+                        String lLine = line.Replace("WINDOW_NAME", "").Replace(":", "").Trim();
+                        if (lLine == null || lLine.Length == 0)
+                        {
+                            mLogger.sendMessage("You must define window name in the settings file", LogType.ERROR);
+                        }
+                        else
+                        {
+                            Console.WriteLine("\t" + lLine);
+                            Settings.WINDOW_NAME = lLine;
+                        }
+                    }
+                    // Use a tab to indent each line of the file.
+                    Console.WriteLine("\t" + line);
+                }
+            }catch(Exception ex)
+            {
+                mLogger.sendMessage(ex.Message, LogType.ERROR);
+            }
         }
 
         /// <summary>

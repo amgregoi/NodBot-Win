@@ -110,6 +110,9 @@
   <ItemGroup>
     <Content Include="libs\concrt140.dll" />
     <Content Include="libs\cvextern.dll" />
+    <None Include="Settings\settings.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="libs\Emgu.CV.World.dll" />
     <Content Include="libs\msvcp140.dll" />
     <Content Include="libs\opencv_ffmpeg330.dll" />
