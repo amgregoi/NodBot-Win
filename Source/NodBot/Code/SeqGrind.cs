@@ -131,6 +131,9 @@ namespace NodBot.Code
             // start auto attack [A/S]
             if (Settings.MELEE)
             {
+                // TODO :: Verify  this autoshoot function works
+                mInput.AutoShoot();
+                await delay(2000 + generateOffset(500));
                 mInput.AutoAttack();
             }
             else

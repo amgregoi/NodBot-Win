@@ -67,6 +67,7 @@ namespace NodBot.Code
                     {
                         mTravelNorth = !mTravelNorth;
                         seenT5 = false;
+                        mTownSeenLast = false;
                         continue;
                     }
 
@@ -75,14 +76,15 @@ namespace NodBot.Code
                 }
                 else
                 {
-
+                
                     aTown = mImageAnalyze.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
                     if (!seenT4) seenT4 = aTown != null;
 
-                    if (seenT4 && aTown == null)
+                    if (seenT4 && aTown == null && mTownSeenLast)
                     {
                         mTravelNorth = !mTravelNorth;
                         seenT4 = false;
+                        mTownSeenLast = false;
                         continue;
                     }
 
@@ -124,6 +126,7 @@ namespace NodBot.Code
 
         }
 
+        bool mTownSeenLast = false;
         /// <summary>
         /// This function decides which direction to move based on the specified point
         /// and which direction we are trying to travel towards.
@@ -133,7 +136,7 @@ namespace NodBot.Code
         /// <param name="aTownSeen"></param>
         private void makeCorrectMove(Point p, bool aTownSeen)
         {
-
+           
             if (mTravelNorth)
             {
                 if (aTownSeen)
@@ -146,6 +149,10 @@ namespace NodBot.Code
                         else if (p.X <= mTown5Min.X) mInput.moveLeft();
                         else mTravelNorth = !mTravelNorth;
                     }
+                }
+                else if(mTownSeenLast && !aTownSeen)
+                {
+                    mTravelNorth = !mTravelNorth;
                 }
                 else
                 {
@@ -165,11 +172,16 @@ namespace NodBot.Code
                         else mTravelNorth = !mTravelNorth;
                     }
                 }
+                else if (mTownSeenLast && !aTownSeen)
+                {
+                    mTravelNorth = !mTravelNorth;
+                }
                 else
                 {
                     mInput.moveDown();
                 }
             }
+            mTownSeenLast = aTownSeen;
         }
     }
 }
