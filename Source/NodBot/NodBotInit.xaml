@@ -1,0 +1,17 @@
+﻿<Window x:Class="NodBot.NodBotInit"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NodBot"
+        mc:Ignorable="d"
+        Title="NodBot" Height="249.541" Width="277.982">
+    <Grid Margin="0,0,2,-1">
+        <Button x:Name="create_profile" Content="Load profile" HorizontalAlignment="Left" Margin="21,32,0,0" VerticalAlignment="Top" Width="97" Click="LoadButton_Click" Height="21" RenderTransformOrigin="-0.228,-4.254"/>
+        <Button x:Name="neutral_position" Content="Neutral Position" HorizontalAlignment="Left" Margin="21,94,0,0" VerticalAlignment="Top" Width="97" Click="NeutralButton_Click" Height="21" RenderTransformOrigin="-0.228,-4.254"/>
+        <Label x:Name="label" Content="You must take a screenshot of your neutral &#xD;&#xA;position out of combat to inform NodBot &#xD;&#xA;when it has successfully left combat" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="21,115,0,0" Width="242" Height="56" FontSize="10"/>
+        <Button x:Name="done" Content="Done" HorizontalAlignment="Left" Margin="21,187,0,0" VerticalAlignment="Top" Width="97" Click="DoneButton_Click" Height="21" RenderTransformOrigin="-0.228,-4.254"/>
+        <Label x:Name="label_profile" Content="No profile loaded" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="21,53,0,0" Width="234" Height="28" FontSize="10"/>
+
+    </Grid>
+</Window>

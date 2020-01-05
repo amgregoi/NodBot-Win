@@ -1,1 +1,16 @@
-﻿WINDOW_NAME:Dthon
+﻿{ 
+   "playerName":"DTM",
+   "isMelee":true,
+   "isRange":false,
+   "useMagic":false,
+   "startCombatRangeSwapMelee":true,
+   "usePrimaryClassAbility":false,
+   "useSecondaryClassAbility":true,
+   "magic":{ 
+      "usesStaff":false,
+      "cycleAllGemSlots":false,
+      "isStandard":true,
+      "isPremium":false,
+      "usesAuras":false
+   }
+}

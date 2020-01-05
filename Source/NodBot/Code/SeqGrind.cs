@@ -8,7 +8,77 @@ using System.Threading;
 using System.Windows.Threading;
 using System.Drawing;
 using System.Diagnostics;
+/*
+using OpenCvSharp;
+using OpenCvSharp.Util;
+static void RunTemplateMatch(string reference, string template)
+{
+    using (Mat refMat = new Mat(reference))
+    using (Mat tplMat = new Mat(template))
+    using (Mat res = new Mat(refMat.Rows - tplMat.Rows + 1, refMat.Cols - tplMat.Cols + 1, MatType.CV_32FC1))
+    {
+        //Convert input images to gray
+        Mat gref = refMat.CvtColor(ColorConversionCodes.BGR2GRAY);
+        Mat gtpl = tplMat.CvtColor(ColorConversionCodes.BGR2GRAY);
 
+        Cv2.MatchTemplate(gref, gtpl, res, TemplateMatchModes.CCoeffNormed);
+        Cv2.Threshold(res, res, 0.8, 1.0, ThresholdTypes.Tozero);
+
+        while (true)
+        {
+            double minval, maxval, threshold = 0.8;
+            Point minloc, maxloc;
+            Cv2.MinMaxLoc(res, out minval, out maxval, out minloc, out maxloc);
+
+            if (maxval >= threshold)
+            {
+                //Setup the rectangle to draw
+                Rect r = new Rect(new Point(maxloc.X, maxloc.Y), new Size(tplMat.Width, tplMat.Height));
+
+                //Draw a rectangle of the matching area
+                Cv2.Rectangle(refMat, r, Scalar.LimeGreen, 2);
+
+                //Fill in the res Mat so you don't find the same area again in the MinMaxLoc
+                Rect outRect;
+                Cv2.FloodFill(res, maxloc, new Scalar(0), out outRect, new Scalar(0.1), new Scalar(1.0));
+            }
+            else
+                break;
+        }
+
+        Cv2.ImShow("Matches", refMat);
+        Cv2.WaitKey();
+    }
+}*/
+
+
+// OR
+/* NOTE: This one seems more promising
+ using (Image<Bgr, byte> imgSrc = BaseImage.Copy())
+    {
+        while (true)
+        {
+           //updated and changed TemplateMatchingType- CcoeffNormed.
+            using (Image<Gray, float> result = imgSrc.MatchTemplate(SubImage, TemplateMatchingType.CcoeffNormed)) 
+            {
+                CvInvoke.Threshold(result, result, 0.7, 1, ThresholdType.ToZero);
+                double[] minValues, maxValues;
+                Point[] minLocations, maxLocations;
+                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                if (maxValues[0] > Threashold)
+                {
+                    Rectangle match = new Rectangle(maxLocations[0], SubImage.Size);
+                    imgSrc.Draw(match, new Bgr(Color.Blue), -1);
+                    rectangles.Add(match);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+ */
 namespace NodBot.Code
 {
 
@@ -18,8 +88,14 @@ namespace NodBot.Code
 
         private int mKillCount = 0;
         private Stopwatch sw;
+        GemSlot currentGemSlot = GemSlot.Five;
 
         SeqArena mArena;
+
+        enum GemSlot
+        {
+            One, Two, Three, Four, Five, Six
+        }
 
         /// <summary>
         /// Constructor for the game Grinding Sequence.
@@ -52,7 +128,7 @@ namespace NodBot.Code
                 {
                     aCt.ThrowIfCancellationRequested();
 
-                    if(Settings.ARENA && !WAITING_FOR_ARENA)
+                    if (Settings.ARENA && !WAITING_FOR_ARENA)
                     {
                         await mArena.EnterQueue();
                         WAITING_FOR_ARENA = true;
@@ -62,7 +138,7 @@ namespace NodBot.Code
                     {
                         await combatEndAsync();
                     }
-                    else if (mCombatState >= SequenceState.ATTACK && mImageAnalyze.ContainsMatch(NodImages.Dust, NodImages.CurrentSS))
+                    else if (mCombatState >= SequenceState.ATTACK && mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) != null)
                     {
                         await combatInitAsync();
                     }
@@ -79,7 +155,7 @@ namespace NodBot.Code
                     {
                         await combatBetweenStateAsync();
                     }
-                }catch(Exception ex)
+                } catch (Exception ex)
                 {
                     if (ex is OperationCanceledException) break;
 
@@ -129,11 +205,14 @@ namespace NodBot.Code
             await delay(generateOffset(100));
 
             // start auto attack [A/S]
-            if (Settings.MELEE)
+            if (Settings.Player.isMelee)
             {
                 // TODO :: Verify  this autoshoot function works
-                mInput.AutoShoot();
-                await delay(2000 + generateOffset(500));
+                if (Settings.Player.startCombatRangeSwapMelee)
+                {
+                    mInput.AutoShoot();
+                    await delay(2000 + generateOffset(500));
+                }
                 mInput.AutoAttack();
             }
             else
@@ -144,11 +223,11 @@ namespace NodBot.Code
             await delay(1500 + generateOffset(2000));
 
             // start class ability [D/F]
-            if (Settings.CA_PRIMARTY)
+            if (Settings.Player.usePrimaryClassAbility)
             {
                 mInput.PrimaryClassAbility();
             }
-            else
+            else if (Settings.Player.useSecondaryClassAbility)
             {
                 mInput.SecondaryClassAbility();
             }
@@ -177,7 +256,7 @@ namespace NodBot.Code
                 if (mCombatState < SequenceState.END)
                 {
                     //increment kill count
-                    mKillCount++; 
+                    mKillCount++;
                     mProgressKillCount.Report(1);
 
                     // loot trophies
@@ -199,19 +278,19 @@ namespace NodBot.Code
                             mInput.ClickOnPoint(coord.Value.X, coord.Value.Y, true);
                             mProgressChestCount.Report(1); // update ui chest counter
                         }
-                        await delay (2000 + generateOffset(1000));
+                        await delay(2000 + generateOffset(1000));
                     }
                 }
                 else
                 {
                     mLogger.sendMessage("Already looted, trying to exit combat again..", LogType.DEBUG);
-                    await delay (250 + generateOffset(250));
+                    await delay(250 + generateOffset(250));
                 }
             }
             else
             {
                 mLogger.sendMessage("Pilgrimage Active, skipping trophies and chests.", LogType.DEBUG);
-                await delay (250 + generateOffset(250));
+                await delay(250 + generateOffset(250));
             }
 
             // exit combat
@@ -234,7 +313,7 @@ namespace NodBot.Code
             // If bot is started and no known state is found, we are stuck in the
             // over world without the Dust Collecting icon, initiate first combat
             // to keep bot state alive.
-            if(mCombatState == SequenceState.BOT_START)
+            if (mCombatState == SequenceState.BOT_START)
             {
                 mLogger.sendMessage("Dust button not found after starting bot.", LogType.INFO);
                 await combatInitAsync();
@@ -246,6 +325,11 @@ namespace NodBot.Code
                 mLogger.sendMessage("Waiting for known combat state.", LogType.DEBUG);
             }
 
+            if (Settings.Player.useMagic)
+            {
+                useGemSlot();
+                UpdateNextGemSlot();
+            }
             await delay(3000);
         }
 
@@ -295,5 +379,64 @@ namespace NodBot.Code
             return offset;
         }
 
+
+        private void useGemSlot()
+        {
+            switch (currentGemSlot)
+            {
+                case GemSlot.One:
+                    mInput.GemSlot1();
+                    break;
+                case GemSlot.Two:
+                    mInput.GemSlot2();
+                    break;
+                case GemSlot.Three:
+                    mInput.GemSlot3();
+                    break;
+                case GemSlot.Four:
+                    mInput.GemSlot4();
+                    break;
+                case GemSlot.Five:
+                    mInput.GemSlot5();
+                    break;
+                case GemSlot.Six:
+                    mInput.GemSlot6();
+                    break;
+            }
+        }
+
+        private void UpdateNextGemSlot()
+        {
+            if (Settings.Player.magic.cycleAllGemSlots)
+            {
+                switch (currentGemSlot)
+                {
+                    case GemSlot.One:
+                        currentGemSlot = GemSlot.Two;
+                        break;
+                    case GemSlot.Two:
+                        currentGemSlot = GemSlot.Three;
+                        break;
+                    case GemSlot.Three:
+                        currentGemSlot = GemSlot.Four;
+                        break;
+                    case GemSlot.Four:
+                        currentGemSlot = GemSlot.Five;
+                        break;
+                    case GemSlot.Five:
+                        if (!Settings.Player.magic.cycleAllGemSlots) currentGemSlot = GemSlot.Five;
+                        else if (!Settings.Player.magic.usesStaff) currentGemSlot = GemSlot.Six;
+                        else if (Settings.Player.magic.isPremium) currentGemSlot = GemSlot.One;
+                        else if (Settings.Player.magic.isStandard) currentGemSlot = GemSlot.Two;
+                        else currentGemSlot = GemSlot.Three;
+                        break;
+                    case GemSlot.Six:
+                        if (Settings.Player.magic.isPremium) currentGemSlot = GemSlot.One;
+                        else if (Settings.Player.magic.isStandard) currentGemSlot = GemSlot.Two;
+                        else currentGemSlot = GemSlot.Three;
+                        break;
+                }
+            }
+        }
     }
 }

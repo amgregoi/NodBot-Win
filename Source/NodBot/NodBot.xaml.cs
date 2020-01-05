@@ -12,7 +12,7 @@ namespace NodBot
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class NodBotAI : Window
     {
         bool isRunning = false;
 
@@ -22,34 +22,14 @@ namespace NodBot
         private Logger mLogger;
         private int kill_count = 0, chest_count = 0;
         private CancellationTokenSource cts;
+        private bool isSequenceInit = false;
 
         private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)" , "Town Walk(T5)"};
 
-
-        public MainWindow()
+        public NodBotAI()
         {
             InitializeComponent();
-            readSettingFile();
-
-            var progressKillCount = new Progress<int>(value =>
-            {
-                updateKillCount();
-            });
-
-            var progressChestCount = new Progress<int>(value =>
-            {
-                updateChestCount();
-            });
-
-            var progressLog = new Progress<string>(value =>
-            {
-                updateLog(value);
-            });
-
-            mLogger = new Logger(progressLog);
-            mGrindSequence = new SeqGrind(mLogger, progressKillCount, progressChestCount);
-            mTownWalkSequence = new SeqTownWalk(mLogger);
-            mArenaSequence = new SeqArena(mLogger);
+            this.Title = "Player - " + Settings.WINDOW_NAME;
 
             // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
@@ -60,37 +40,19 @@ namespace NodBot
             options_combo.SelectedIndex = 0;
         }
 
-
-        private void readSettingFile()
+        private void initSequences()
         {
-            try
-            {
-                string[] lines = System.IO.File.ReadAllLines(@"Settings/settings.txt");
+            if (isSequenceInit) return;
+            isSequenceInit = true;
 
-                // Display the file contents by using a foreach loop.
-                System.Console.WriteLine("Contents of WriteLines2.txt = ");
-                foreach (string line in lines)
-                {
-                    if (line.Contains("WINDOW_NAME"))
-                    {
-                        String lLine = line.Replace("WINDOW_NAME", "").Replace(":", "").Trim();
-                        if (lLine == null || lLine.Length == 0)
-                        {
-                            mLogger.sendMessage("You must define window name in the settings file", LogType.ERROR);
-                        }
-                        else
-                        {
-                            Console.WriteLine("\t" + lLine);
-                            Settings.WINDOW_NAME = lLine;
-                        }
-                    }
-                    // Use a tab to indent each line of the file.
-                    Console.WriteLine("\t" + line);
-                }
-            }catch(Exception ex)
-            {
-                mLogger.sendMessage(ex.Message, LogType.ERROR);
-            }
+            var progressKillCount = new Progress<int>(value => updateKillCount());
+            var progressChestCount = new Progress<int>(value => updateChestCount());
+            var progressLog = new Progress<string>(value => updateLog(value));
+
+            mLogger = new Logger(progressLog);
+            mGrindSequence = new SeqGrind(mLogger, progressKillCount, progressChestCount);
+            mTownWalkSequence = new SeqTownWalk(mLogger);
+            mArenaSequence = new SeqArena(mLogger);
         }
 
         /// <summary>
@@ -101,20 +63,22 @@ namespace NodBot
         /// <param name="e"></param>
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
+            /*
             SeqArena test = new SeqArena(mLogger);
             Task.Delay(25).ContinueWith(async _ =>
             {
                 await test.EnterQueue();
             });
-
-            /*
+            */
+            
             ImageAnalyze test = new ImageAnalyze(mLogger);
             ImageAnalyze.CaptureScreen();
-            System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.Arena, NodImages.Test, true);
+            // System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.CurrentSS_Right, NodImages.Empty_Black, true);
+            test.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS);
 
-            Console.Out.WriteLine(result);
-            mLogger.sendLog(result.ToString(), LogType.INFO);
-            */
+           // Console.Out.WriteLine(result);
+           // mLogger.sendLog(result.ToString(), LogType.INFO);
+            
         }
 
         /// <summary>
@@ -135,6 +99,8 @@ namespace NodBot
         /// </summary>
         private void startGrind()
         {
+            initSequences();
+
             mLogger.sendMessage("Starting bot", LogType.INFO);
             start_button.Content = "Stop";
             int optionsIndex = options_combo.SelectedIndex;

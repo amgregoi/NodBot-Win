@@ -23,7 +23,9 @@ namespace NodBot.Code
         public ImageAnalyze(Logger aLogger)
         {
             mLogger = aLogger;
-
+        }
+        public ImageAnalyze()
+        {
         }
 
         public Point? FindChestCoord(bool debug = false)
@@ -50,11 +52,12 @@ namespace NodBot.Code
             return result;
         }
 
-        public bool ContainsMatch(String modelImagePath, String observedImagePath)
+        public bool ContainsMatch(String modelImagePath, String observedImagePath, Boolean isTemplateMatch = false)
         {
             Mat lImage;
             CaptureScreen(); //Take Screenshot
-            return Draw(modelImagePath, observedImagePath, out lImage) != null;
+            if(isTemplateMatch) return FindMatchTemplate(observedImagePath, modelImagePath) != null;
+            else return Draw(modelImagePath, observedImagePath, out lImage) != null;
         }
 
         public Point? getMatchCoord(String modelImagePath, String observedImagePath)
@@ -88,31 +91,77 @@ namespace NodBot.Code
         /// </summary>
         public static void CaptureScreen()
         {
-            IntPtr hWnd = Input.getNodiatisWindowHandle();
-
-            Rectangle rctForm = new Rectangle();
-            GetWindowRect(hWnd, ref rctForm);
-
-            using (Graphics grfx = Graphics.FromHdc(GetWindowDC(hWnd)))
-            {
-                rctForm = Rectangle.Round(grfx.VisibleClipBounds);
-            }
-            Bitmap pImage = new Bitmap((int)(rctForm.Width /*/ 1.5*/), rctForm.Height);  // Clip off the right side of the screen capture to remove inventory
-                                                                                     // This is useful for not getting false positives when looking for 
-                                                                                     // similar symbols for combat state.
-            Graphics graphics = Graphics.FromImage(pImage);
-            IntPtr hDC = graphics.GetHdc();
-            //paint control onto graphics using provided options        
-            try
-            {
-                PrintWindow(hWnd, hDC, (uint)0);
-            }
-            finally
-            {
-                graphics.ReleaseHdc(hDC);
-            }
-
+            Bitmap pImage = GetScreenCapture();
             pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
+        }
+
+        /// <summary>
+        /// TODO :: Copy w hat is done for #CaptureNeutralPoint() to retrieve a specific portion of the screen capture.
+        /// </summary>
+        public static void CaptureScreenRight()
+        {
+            Bitmap pImage = GetScreenCapture();
+
+            pImage.Save(NodImages.CurrentSS_Right, ImageFormat.Png);
+        }
+
+        public static void CaputreNeutralPoint()
+        {
+            Bitmap pImage = GetScreenCapture();
+
+            if (pImage.Width > 700 && pImage.Height > 500)
+            {
+                // Retrieve specific portion of screen capture
+                Rectangle cloneRect = new Rectangle(100, 100, 600, 400);
+                System.Drawing.Imaging.PixelFormat format = pImage.PixelFormat;
+                Bitmap cloneBitmap = pImage.Clone(cloneRect, format);
+
+                cloneBitmap.Save(NodImages.NeutralSS, ImageFormat.Png);
+
+                cloneBitmap.Dispose();
+            }
+            else pImage.Save(NodImages.NeutralSS, ImageFormat.Png);
+
+            pImage.Dispose();
+        }
+
+        public Point? FindMatchTemplate(String baseImage, String templateImage)
+        {
+            CaptureScreen();
+
+            Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
+            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
+            Image<Bgr, byte> imageToShow = source.Copy();
+
+            using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
+            {
+                double[] minValues, maxValues;
+                Point[] minLocations, maxLocations;
+                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+
+                // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
+                if (maxValues[0] > 0.9)
+                {
+                    // This is a match. Do something with it, for example draw a rectangle around it.
+                    Rectangle match = new Rectangle(maxLocations[0], template.Size);
+                    imageToShow.Draw(match, new Bgr(Color.Red), 3);
+
+                    //IntPtr hWnd = FindWindow(null, "Calculator");
+                    //if (hWnd != null)
+                    //{
+                    //    Graphics g = Graphics.FromHwnd(hWnd);
+                    //    g.DrawImage((Image)imageToShow.Bitmap, 0, 0, g.VisibleClipBounds.Width, g.VisibleClipBounds.Height);
+                    //    g.Dispose();
+                    //}
+
+                    imageToShow.Bitmap.Save(NodImages.CompareResult, ImageFormat.Png);
+
+                    return maxLocations[0];
+                }
+
+                new Bitmap(20, 20).Save(NodImages.CompareResult);
+                return null;
+            }
         }
 
         /// <summary>
@@ -263,10 +312,10 @@ namespace NodBot.Code
                     Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
                     PointF[] pts = new PointF[]
                     {
-                  new PointF(rect.Left, rect.Bottom),
-                  new PointF(rect.Right, rect.Bottom),
-                  new PointF(rect.Right, rect.Top),
-                  new PointF(rect.Left, rect.Top)
+                          new PointF(rect.Left, rect.Bottom),
+                          new PointF(rect.Right, rect.Bottom),
+                          new PointF(rect.Right, rect.Top),
+                          new PointF(rect.Left, rect.Top)
                     };
                     pts = CvInvoke.PerspectiveTransform(pts, homography);
 
@@ -286,6 +335,35 @@ namespace NodBot.Code
 
                 return resultPoint;
             }
+        }
+
+        private static Bitmap GetScreenCapture()
+        {
+            IntPtr hWnd = Input.getNodiatisWindowHandle();
+
+            Rectangle rctForm = new Rectangle();
+            GetWindowRect(hWnd, ref rctForm);
+
+            using (Graphics grfx = Graphics.FromHdc(GetWindowDC(hWnd)))
+            {
+                rctForm = Rectangle.Round(grfx.VisibleClipBounds);
+            }
+
+            Bitmap pImage = new Bitmap((int)(rctForm.Width), rctForm.Height);
+
+            Graphics graphics = Graphics.FromImage(pImage);
+            IntPtr hDC = graphics.GetHdc();
+            //paint control onto graphics using provided options        
+            try
+            {
+                PrintWindow(hWnd, hDC, (uint)0);
+            }
+            finally
+            {
+                graphics.ReleaseHdc(hDC);
+            }
+
+            return pImage;
         }
 
         /***

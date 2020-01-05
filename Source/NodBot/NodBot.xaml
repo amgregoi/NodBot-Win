@@ -1,4 +1,4 @@
-﻿<Window x:Class="NodBot.MainWindow"
+﻿<Window x:Class="NodBot.NodBotAI"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -37,7 +37,7 @@
         <Label Content="Kill Counter: " Margin="299,39,0,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Left" Width="82" Grid.ColumnSpan="2"/>
         <Label x:Name="kill_counter_label" Content="0" HorizontalAlignment="Left" Margin="4,39,-41,0" VerticalAlignment="Top" Height="26" Width="37" Grid.Column="2"/>
         <CheckBox x:Name="pilgrimage_checkbox" Content="Pilgrimage" HorizontalAlignment="Left" Margin="155,41,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="77" />
-        <Button x:Name="test_button" Content="Test(s)" HorizontalAlignment="Left" Margin="114,166,0,0" VerticalAlignment="Top" Width="75" Click="TestButton_Click" Height="21"/>
+        <Button x:Name="test_button" Content="Test(s)" HorizontalAlignment="Left" Margin="105,166,0,0" VerticalAlignment="Top" Width="75" Click="TestButton_Click" Height="21"/>
         <CheckBox x:Name="debug_checkbox" Content="Debug" HorizontalAlignment="Left" Margin="155,108,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="55" />
         <TextBox x:Name="log_textbox" Height="127" Margin="10,199,-50,0" TextWrapping="Wrap" VerticalAlignment="Top" MaxLines="1000" IsReadOnly="True" Grid.ColumnSpan="3" FontSize="11" FontFamily="Trebuchet MS"/>
         <ComboBox x:Name="options_combo" HorizontalAlignment="Left" Margin="11,126,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.005,0.577" Height="22"/>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodBot.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,9 @@ namespace NodBot.Code
         public static bool MELEE { get; set; } = true;
         public static bool CA_PRIMARTY { get; set; } = true;
 
+        public static PlayerSettings Player {get;set;} = new PlayerSettings();
+
         public static String WINDOW_NAME { get; set; } = "Nodiatis";
+        public static String SETTINGS_FILE { get; set; } = "Settings/settings.txt";
     }
 }

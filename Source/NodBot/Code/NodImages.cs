@@ -38,8 +38,17 @@ namespace NodBot.Code
         public static String Trophy4 { get { return new NodImages("t4.png").PATH; } }
         public static String Empty { get { return new NodImages("empty.png").PATH; } }
 
+        public static String Empty_Black { get { return new NodImages("empty_inventory.png").PATH; } }
+
 
         public static String CurrentSS { get { return new NodImages("current_ss.png").PATH; } }
+        public static String CurrentSS_Right { get { return new NodImages("current_ss_right.png").PATH; } }
         public static String Test { get { return new NodImages("test_ss.png").PATH; } }
+        public static String Test2 { get { return new NodImages("test2_ss.png").PATH; } }
+
+
+        public static String CompareResult { get { return new NodImages("compare_result.png").PATH; } }
+        public static String NeutralSS { get { return new NodImages("player_neutral.png").PATH; } }
+
     }
 }

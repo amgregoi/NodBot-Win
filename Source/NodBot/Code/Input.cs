@@ -110,6 +110,12 @@ namespace NodBot.Code
         /// </summary>
         public enum Keyboard_Actions
         {
+            GEM_SLOT_1 = 0X31,
+            GEM_SLOT_2 = 0X32,
+            GEM_SLOT_3 = 0X33,
+            GEM_SLOT_4 = 0X34,
+            GEM_SLOT_5 = 0X35,
+            GEM_SLOT_6 = 0X36,
             AUTO_ATTACK = 0x41,
             AUTO_SHOOT = 0x53,
             LOOT = 0x4C,

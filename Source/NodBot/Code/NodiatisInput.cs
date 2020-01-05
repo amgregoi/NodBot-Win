@@ -38,6 +38,34 @@ namespace NodBot.Code
             mInputController.sendKeyboardClick(Input.Keyboard_Actions.MOVE_RIGHT);
         }
 
+        public void GemSlot1()
+        {
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.GEM_SLOT_1);
+        }
+
+        public void GemSlot2()
+        {
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.GEM_SLOT_2);
+        }
+
+        public void GemSlot3()
+        {
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.GEM_SLOT_3);
+        }
+
+        public void GemSlot4()
+        {
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.GEM_SLOT_4);
+        }
+        public void GemSlot5()
+        {
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.GEM_SLOT_5);
+        }
+
+        public void GemSlot6()
+        {
+            mInputController.sendKeyboardClick(Input.Keyboard_Actions.GEM_SLOT_6);
+        }
         public void AutoAttack()
         {
             mInputController.sendKeyboardClick(Input.Keyboard_Actions.AUTO_ATTACK);
