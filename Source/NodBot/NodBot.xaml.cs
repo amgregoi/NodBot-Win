@@ -24,12 +24,23 @@ namespace NodBot
         private CancellationTokenSource cts;
         private bool isSequenceInit = false;
 
+        private Progress<int> progressKillCount;
+        private Progress<int> progressChestCount;
+        private Progress<string> progressLog;
+
         private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)" , "Town Walk(T5)"};
 
         public NodBotAI()
         {
             InitializeComponent();
             this.Title = "Player - " + Settings.WINDOW_NAME;
+
+            // init logger
+            progressKillCount = new Progress<int>(value => updateKillCount());
+            progressChestCount = new Progress<int>(value => updateChestCount());
+            progressLog = new Progress<string>(value => updateLog(value));
+
+            mLogger = new Logger(progressLog);
 
             // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
@@ -45,11 +56,6 @@ namespace NodBot
             if (isSequenceInit) return;
             isSequenceInit = true;
 
-            var progressKillCount = new Progress<int>(value => updateKillCount());
-            var progressChestCount = new Progress<int>(value => updateChestCount());
-            var progressLog = new Progress<string>(value => updateLog(value));
-
-            mLogger = new Logger(progressLog);
             mGrindSequence = new SeqGrind(mLogger, progressKillCount, progressChestCount);
             mTownWalkSequence = new SeqTownWalk(mLogger);
             mArenaSequence = new SeqArena(mLogger);
@@ -260,6 +266,14 @@ namespace NodBot
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             log_textbox.Clear();
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            new NodBotInit().Show();
+
+            stopGrind();
+            this.Close();
         }
 
         /// <summary>

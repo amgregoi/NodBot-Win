@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NodBot"
         mc:Ignorable="d"
-        Title="MainWindow" Height="368.552" Width="456.469" ResizeMode="CanMinimize">
+        Title="MainWindow" Height="368.552" Width="456.469" ResizeMode="CanMinimize" Closed="Window_Closed">
     <Grid RenderTransformOrigin="0.374,0.658" Margin="0,0,58.714,3.714">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="356*"/>

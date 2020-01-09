@@ -41,14 +41,17 @@ namespace NodBot.Code
         public static String Empty_Black { get { return new NodImages("empty_inventory.png").PATH; } }
 
 
-        public static String CurrentSS { get { return new NodImages("current_ss.png").PATH; } }
-        public static String CurrentSS_Right { get { return new NodImages("current_ss_right.png").PATH; } }
+        public static String CurrentSS { get { return new NodImages("current_ss_"+Settings.Player.playerName+".png").PATH; } }
+        public static String CurrentSS_Right { get { return new NodImages("current_ss_right_" + Settings.Player.playerName + ".png").PATH; } }
         public static String Test { get { return new NodImages("test_ss.png").PATH; } }
         public static String Test2 { get { return new NodImages("test2_ss.png").PATH; } }
 
 
         public static String CompareResult { get { return new NodImages("compare_result.png").PATH; } }
-        public static String NeutralSS { get { return new NodImages("player_neutral.png").PATH; } }
+        public static String NeutralSS { get { return new NodImages("player_neutral_" + Settings.Player.playerName + ".png").PATH; } }
+
+        public static String StatDistribution { get { return new NodImages("stats.png").PATH; } }
+        public static String X { get { return new NodImages("x.png").PATH; } }
 
     }
 }

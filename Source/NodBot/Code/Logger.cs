@@ -27,7 +27,7 @@ namespace NodBot.Code
 
         public Logger(IProgress<String> aProgress)
         {            
-            sw = new StreamWriter(new FileStream("log.txt", FileMode.Create, FileAccess.Write, FileShare.Read));
+            sw = new StreamWriter(new FileStream("log_"+Settings.Player.playerName+".txt", FileMode.Create, FileAccess.Write, FileShare.Read));
             sw.AutoFlush = true;
 
             mProgress = aProgress; 

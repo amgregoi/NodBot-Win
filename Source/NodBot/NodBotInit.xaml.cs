@@ -27,8 +27,6 @@ namespace NodBot
     /// </summary>
     public partial class NodBotInit : Window
     {
-
-        private NodBotAI player = new NodBotAI();
         private bool playerLoaded = false;
         private bool playerNeutralSet = false;
 
@@ -77,7 +75,7 @@ namespace NodBot
         {
             if (playerLoaded && playerNeutralSet)
             {
-                player.Show();
+                new NodBotAI().Show();
                 this.Close();
             }
             else

@@ -134,6 +134,13 @@ namespace NodBot.Code
                         WAITING_FOR_ARENA = true;
                     }
 
+                    var dialog = mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.X);
+                    if (dialog != null)
+                    {
+                        mInput.ClickOnPoint(dialog.Value.X, dialog.Value.Y, true);
+                        continue;
+                    }
+
                     if (mCombatState >= SequenceState.WAIT && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
                     {
                         await combatEndAsync();
@@ -252,40 +259,34 @@ namespace NodBot.Code
             mLogger.sendMessage("Ending combat", LogType.INFO);
 
             if (!Settings.PILGRIMAGE)
-            {
-                if (mCombatState < SequenceState.END)
+        {
+                //increment kill count
+                mKillCount++;
+                mProgressKillCount.Report(1);
+
+                // loot trophies
+                if (!Settings.BOSSING) // SKIP loot if bossing
                 {
-                    //increment kill count
-                    mKillCount++;
-                    mProgressKillCount.Report(1);
-
-                    // loot trophies
-                    if (!Settings.BOSSING) // SKIP loot if bossing
-                    {
-                        mLogger.sendMessage("Lotting trophies", LogType.INFO);
-                        mInput.LootTrophies();
-                    }
-
-                    await delay(2000 + generateOffset(2000));
-
-                    // loot chest
-                    if (Settings.CHESTS)
-                    {
-                        mLogger.sendMessage("Starting search for chests.", LogType.INFO);
-                        Point? coord = mImageAnalyze.FindChestCoord();
-                        if (coord != null)
-                        {
-                            mInput.ClickOnPoint(coord.Value.X, coord.Value.Y, true);
-                            mProgressChestCount.Report(1); // update ui chest counter
-                        }
-                        await delay(2000 + generateOffset(1000));
-                    }
+                    mLogger.sendMessage("Lotting trophies", LogType.INFO);
+                    mInput.LootTrophies();
                 }
-                else
+                else mLogger.sendMessage("Skipped looting trophies?", LogType.INFO);
+
+                await delay(2000 + generateOffset(2000));
+
+                // loot chest
+                if (Settings.CHESTS)
                 {
-                    mLogger.sendMessage("Already looted, trying to exit combat again..", LogType.DEBUG);
-                    await delay(250 + generateOffset(250));
+                    mLogger.sendMessage("Starting search for chests.", LogType.INFO);
+                    Point? coord = mImageAnalyze.FindChestCoord();
+                    if (coord != null)
+                    {
+                        mInput.ClickOnPoint(coord.Value.X, coord.Value.Y, true);
+                        mProgressChestCount.Report(1); // update ui chest counter
+                    }
+                    await delay(2000 + generateOffset(1000));
                 }
+                else mLogger.sendMessage("Skipped chests?", LogType.INFO);
             }
             else
             {
