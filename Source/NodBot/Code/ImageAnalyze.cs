@@ -125,6 +125,59 @@ namespace NodBot.Code
             pImage.Dispose();
         }
 
+        public void findMatchTest(String baseImage, String templateImage, Color invMatchColor, Color storageMatchColor)
+        {
+            Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
+            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
+
+            var inventory = new List<Rectangle>();
+            var storage = new List<Rectangle>();
+
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                while (true)
+                {
+                    //updated and changed TemplateMatchingType- CcoeffNormed.
+                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
+                    {
+                        var threshold = CvInvoke.Threshold(result, result, 0.75, 1, ThresholdType.ToZero);
+                        double[] minValues, maxValues;
+                        Point[] minLocations, maxLocations;
+                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                        if (maxValues[0] > threshold)
+                        {
+                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
+
+                            if (match.X > 950)
+                            {
+                                imgSrc.Draw(match, new Bgr(invMatchColor), -1);
+                                inventory.Add(match);
+                            }
+                            else
+                            {
+                                if (match.Y > 800)
+                                {
+                                    imgSrc.Draw(match, new Bgr(storageMatchColor), -1);
+                                    storage.Add(match);
+                                }
+                                else
+                                {
+                                    imgSrc.Draw(match, new Bgr(Color.HotPink), -1);
+                                };
+                            }
+
+                            imgSrc.Bitmap.Save(NodImages.CompareResult, ImageFormat.Png);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            Console.Out.WriteLine("Complete: " + templateImage);
+        }
+
         public Point? FindMatchTemplate(String baseImage, String templateImage)
         {
             CaptureScreen();

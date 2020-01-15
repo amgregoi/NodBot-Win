@@ -5,6 +5,11 @@ using System.Windows;
 using System.Windows.Controls;
 using NodBot.Code;
 using System.Threading;
+using Microsoft.Win32;
+using System.IO;
+using NodBot.Model;
+using Newtonsoft.Json;
+using System.Drawing;
 
 namespace NodBot
 {
@@ -33,7 +38,7 @@ namespace NodBot
         public NodBotAI()
         {
             InitializeComponent();
-            this.Title = "Player - " + Settings.WINDOW_NAME;
+            this.Title = "Player - " + Settings.Player.playerName;
 
             // init logger
             progressKillCount = new Progress<int>(value => updateKillCount());
@@ -80,11 +85,12 @@ namespace NodBot
             ImageAnalyze test = new ImageAnalyze(mLogger);
             ImageAnalyze.CaptureScreen();
             // System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.CurrentSS_Right, NodImages.Empty_Black, true);
-            test.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS);
+            //test.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS);
+            test.findMatchTest(NodImages.CurrentSS, NodImages.SDread_Trophy1, Color.Red, Color.Red);
 
-           // Console.Out.WriteLine(result);
-           // mLogger.sendLog(result.ToString(), LogType.INFO);
-            
+            // Console.Out.WriteLine(result);
+            // mLogger.sendLog(result.ToString(), LogType.INFO);
+
         }
 
         /// <summary>
@@ -132,7 +138,7 @@ namespace NodBot
             Task.Delay(50).ContinueWith(_ =>
             {
                 isRunning = false;
-                cts.Cancel();
+                if(cts != null)cts.Cancel();
             });
         }
 
@@ -290,8 +296,72 @@ namespace NodBot
 
             log_textbox.Text += aMessage + "\n";
             log_textbox.ScrollToEnd();
+        }
 
-            
+        private void ProfileMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var fileContent = string.Empty;
+            var filePath = string.Empty;
+
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            try
+            {
+                openFileDialog.InitialDirectory = Directory.GetCurrentDirectory() + "\\Settings";
+                openFileDialog.Filter = "nodbot files (*.nb)|*.nb|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    //Get the path of specified file
+                    filePath = openFileDialog.FileName;
+                    Settings.SETTINGS_FILE = openFileDialog.FileName;
+                    readSettingFile();
+                    this.Title = "Player - " + Settings.WINDOW_NAME;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Out.WriteLine(ex.Message);
+                Console.Out.WriteLine(ex.StackTrace);
+            }
+        }
+
+        private void NeutralMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ImageAnalyze test = new ImageAnalyze();
+            ImageAnalyze.CaputreNeutralPoint();
+        }
+
+        private void readSettingFile()
+        {
+            string[] lines = System.IO.File.ReadAllLines(Settings.SETTINGS_FILE);
+
+            string json = File.ReadAllText(Settings.SETTINGS_FILE);
+            PlayerSettings settings = DeserializePlayerSettings(json);
+
+            string test = SerializePlayerSettings(settings);
+
+            if (settings.playerName == null || settings.playerName.Length == 0)
+            {
+                // Player Name required
+                return;
+            }
+
+            Settings.Player = settings;
+            Settings.WINDOW_NAME = settings.playerName;
+        }
+
+
+        public PlayerSettings DeserializePlayerSettings(string json)
+        {
+            return JsonConvert.DeserializeObject<PlayerSettings>(json);
+        }
+
+        public String SerializePlayerSettings(PlayerSettings settings)
+        {
+            return JsonConvert.SerializeObject(settings);
         }
     }
 }

@@ -66,9 +66,14 @@ namespace NodBot
 
         private void NeutralButton_Click(object sender, RoutedEventArgs e)
         {
-            ImageAnalyze test = new ImageAnalyze();
-            ImageAnalyze.CaputreNeutralPoint();
-            playerNeutralSet = true;
+            if(playerLoaded)
+            {
+                ImageAnalyze test = new ImageAnalyze();
+                ImageAnalyze.CaputreNeutralPoint();
+
+                new NodBotAI().Show();
+                this.Close();
+            }
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)

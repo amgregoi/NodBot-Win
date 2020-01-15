@@ -190,6 +190,9 @@ namespace NodBot.Code
             mInput.InitiateFight();
             await delay(1500);
 
+            //increment kill count
+            mKillCount++;
+            mProgressKillCount.Report(1);
         }
 
         /// <summary>
@@ -260,10 +263,6 @@ namespace NodBot.Code
 
             if (!Settings.PILGRIMAGE)
         {
-                //increment kill count
-                mKillCount++;
-                mProgressKillCount.Report(1);
-
                 // loot trophies
                 if (!Settings.BOSSING) // SKIP loot if bossing
                 {

@@ -53,5 +53,10 @@ namespace NodBot.Code
         public static String StatDistribution { get { return new NodImages("stats.png").PATH; } }
         public static String X { get { return new NodImages("x.png").PATH; } }
 
+        public static String SDread_Trophy1 { get { return new NodImages("trophy\\sdread_1.png").PATH; } }
+        public static String SDread_Trophy2 { get { return new NodImages("trophy\\sdread_2.png").PATH; } }
+        public static String SDread_Trophy3 { get { return new NodImages("trophy\\sdread_3.png").PATH; } }
+        public static String SDread_Trophy4 { get { return new NodImages("trophy\\sdread_4.png").PATH; } }
+
     }
 }
