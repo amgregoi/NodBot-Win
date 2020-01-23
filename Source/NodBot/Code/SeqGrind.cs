@@ -8,84 +8,15 @@ using System.Threading;
 using System.Windows.Threading;
 using System.Drawing;
 using System.Diagnostics;
-/*
-using OpenCvSharp;
-using OpenCvSharp.Util;
-static void RunTemplateMatch(string reference, string template)
-{
-    using (Mat refMat = new Mat(reference))
-    using (Mat tplMat = new Mat(template))
-    using (Mat res = new Mat(refMat.Rows - tplMat.Rows + 1, refMat.Cols - tplMat.Cols + 1, MatType.CV_32FC1))
-    {
-        //Convert input images to gray
-        Mat gref = refMat.CvtColor(ColorConversionCodes.BGR2GRAY);
-        Mat gtpl = tplMat.CvtColor(ColorConversionCodes.BGR2GRAY);
+using NodBot.Code.Services;
 
-        Cv2.MatchTemplate(gref, gtpl, res, TemplateMatchModes.CCoeffNormed);
-        Cv2.Threshold(res, res, 0.8, 1.0, ThresholdTypes.Tozero);
-
-        while (true)
-        {
-            double minval, maxval, threshold = 0.8;
-            Point minloc, maxloc;
-            Cv2.MinMaxLoc(res, out minval, out maxval, out minloc, out maxloc);
-
-            if (maxval >= threshold)
-            {
-                //Setup the rectangle to draw
-                Rect r = new Rect(new Point(maxloc.X, maxloc.Y), new Size(tplMat.Width, tplMat.Height));
-
-                //Draw a rectangle of the matching area
-                Cv2.Rectangle(refMat, r, Scalar.LimeGreen, 2);
-
-                //Fill in the res Mat so you don't find the same area again in the MinMaxLoc
-                Rect outRect;
-                Cv2.FloodFill(res, maxloc, new Scalar(0), out outRect, new Scalar(0.1), new Scalar(1.0));
-            }
-            else
-                break;
-        }
-
-        Cv2.ImShow("Matches", refMat);
-        Cv2.WaitKey();
-    }
-}*/
-
-
-// OR
-/* NOTE: This one seems more promising
- using (Image<Bgr, byte> imgSrc = BaseImage.Copy())
-    {
-        while (true)
-        {
-           //updated and changed TemplateMatchingType- CcoeffNormed.
-            using (Image<Gray, float> result = imgSrc.MatchTemplate(SubImage, TemplateMatchingType.CcoeffNormed)) 
-            {
-                CvInvoke.Threshold(result, result, 0.7, 1, ThresholdType.ToZero);
-                double[] minValues, maxValues;
-                Point[] minLocations, maxLocations;
-                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                if (maxValues[0] > Threashold)
-                {
-                    Rectangle match = new Rectangle(maxLocations[0], SubImage.Size);
-                    imgSrc.Draw(match, new Bgr(Color.Blue), -1);
-                    rectangles.Add(match);
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-    }
- */
 namespace NodBot.Code
 {
 
     public class SeqGrind : SeqBase
     {
+        private InventoryService inventoryService;
         private IProgress<int> mProgressKillCount, mProgressChestCount;
-
         private int mKillCount = 0;
         private Stopwatch sw;
         GemSlot currentGemSlot = GemSlot.Five;
@@ -111,6 +42,14 @@ namespace NodBot.Code
 
             mProgressKillCount = aProgressKill;
             mProgressChestCount = aProgressChest;
+
+            if (Settings.isManagingInventory())
+            {
+                Task.Run(() =>
+                {
+                    inventoryService = new InventoryService(mInput.mInputController);
+                });
+            }
         }
 
         /// <summary>
@@ -128,12 +67,6 @@ namespace NodBot.Code
                 {
                     aCt.ThrowIfCancellationRequested();
 
-                    if (Settings.ARENA && !WAITING_FOR_ARENA)
-                    {
-                        await mArena.EnterQueue();
-                        WAITING_FOR_ARENA = true;
-                    }
-
                     var dialog = mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.X);
                     if (dialog != null)
                     {
@@ -143,20 +76,37 @@ namespace NodBot.Code
 
                     if (mCombatState >= SequenceState.WAIT && mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
                     {
-                        await combatEndAsync();
+                        await combatEndAsync(aCt);
                     }
                     else if (mCombatState >= SequenceState.ATTACK && mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) != null)
                     {
+                        if (mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.PlayerResourceMinimum) == null)
+                        {
+                            mLogger.sendLog("Waiting for resources to regen", LogType.INFO);
+                            continue;
+                        }
+
+                        if (Settings.ARENA && !WAITING_FOR_ARENA)
+                        {
+                            mArena.EnterQueue().Wait();
+                            WAITING_FOR_ARENA = true;
+                        }
+
                         await combatInitAsync();
+                    }
+                    else if (WAITING_FOR_ARENA && mImageAnalyze.FindTemplateMatchWithYConstraint(NodImages.Arena, 450, true).Count > 0)
+                    {
+                        for(int i=13; i>1;i--)
+                        {
+                            mLogger.sendMessage("Starting arena in ~" + i + "secs", LogType.INFO);
+                            Task.Delay(950).Wait();
+                        }
+                        WAITING_FOR_ARENA = false;
+                        mCombatState = SequenceState.INIT;
                     }
                     else if (mCombatState >= SequenceState.INIT && mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
                     {
                         await combatStartAsync();
-                    }
-                    else if (mImageAnalyze.ContainsMatch(NodImages.Arena, NodImages.CurrentSS))
-                    {
-                        await mArena.StartArenaCombat();
-                        WAITING_FOR_ARENA = false;
                     }
                     else
                     {
@@ -193,6 +143,11 @@ namespace NodBot.Code
             //increment kill count
             mKillCount++;
             mProgressKillCount.Report(1);
+
+            if(Settings.isManagingInventory())
+            {
+                inventoryService.sortInventory();
+            }
         }
 
         /// <summary>
@@ -253,7 +208,7 @@ namespace NodBot.Code
         /// 
         /// </summary>
         /// <returns></returns>
-        private async Task combatEndAsync()
+        private async Task combatEndAsync(CancellationToken aCt)
         {
             // In case bot is started at end of combat, it will still attempt to loot
             if (mCombatState == SequenceState.BOT_START)
@@ -262,7 +217,7 @@ namespace NodBot.Code
             mLogger.sendMessage("Ending combat", LogType.INFO);
 
             if (!Settings.PILGRIMAGE)
-        {
+            {
                 // loot trophies
                 if (!Settings.BOSSING) // SKIP loot if bossing
                 {
@@ -298,6 +253,11 @@ namespace NodBot.Code
 
             //update combat state
             mCombatState = SequenceState.END;
+
+            if(Settings.isManagingInventory() &&inventoryService.isStorageEmpty())
+            {
+                aCt.ThrowIfCancellationRequested();
+            }
 
             // Check if we should take break after some random range of kills
             await delay(takeBreak() + generateOffset(1000));

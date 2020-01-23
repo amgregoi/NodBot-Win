@@ -95,6 +95,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Code\Services\InventoryService.cs" />
     <Compile Include="Models\MagicSettings.cs" />
     <Compile Include="Models\PlayerSettings.cs" />
     <Compile Include="NodBotInit.xaml.cs">
@@ -165,6 +166,7 @@
     <Content Include="libs\opencv_ffmpeg330.dll" />
     <Content Include="libs\vcruntime140.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>XCOPY "$(SolutionDir)NodBot\Images" "$(TargetDir)Images\" /S /Y

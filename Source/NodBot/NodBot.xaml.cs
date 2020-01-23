@@ -10,6 +10,7 @@ using System.IO;
 using NodBot.Model;
 using Newtonsoft.Json;
 using System.Drawing;
+using NodBot.Code.Services;
 
 namespace NodBot
 {
@@ -32,12 +33,17 @@ namespace NodBot
         private Progress<int> progressKillCount;
         private Progress<int> progressChestCount;
         private Progress<string> progressLog;
-
+        private InventoryService inventoryService;
         private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)" , "Town Walk(T5)"};
 
         public NodBotAI()
         {
             InitializeComponent();
+            init();
+        }
+
+        private void init()
+        {
             this.Title = "Player - " + Settings.Player.playerName;
 
             // init logger
@@ -66,6 +72,8 @@ namespace NodBot
             mArenaSequence = new SeqArena(mLogger);
         }
 
+        CancellationTokenSource inventoryCancel = new CancellationTokenSource();
+
         /// <summary>
         /// This function handles click events for the UI Test button.
         /// 
@@ -81,12 +89,39 @@ namespace NodBot
                 await test.EnterQueue();
             });
             */
-            
+
+
             ImageAnalyze test = new ImageAnalyze(mLogger);
             ImageAnalyze.CaptureScreen();
-            // System.Drawing.Point? result = test.FindImageMatchDebug(NodImages.CurrentSS_Right, NodImages.Empty_Black, true);
-            //test.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS);
-            test.findMatchTest(NodImages.CurrentSS, NodImages.SDread_Trophy1, Color.Red, Color.Red);
+            if (inventoryService != null)
+            {
+                Task.Run(() =>
+                {
+                    inventoryCancel.Cancel();
+                    try
+                    {
+                        inventoryService.stackItems(NodImages.SDread_Trophy1).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.SDread_Trophy2).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.SDread_Trophy3).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.SDread_Trophy4).Wait(inventoryCancel.Token);
+                    }
+                    catch (AggregateException ex)
+                    {
+                        Console.Out.WriteLine(ex.StackTrace);
+                        Console.Out.WriteLine(ex.InnerException.StackTrace);
+                    }
+                });
+            }
+            else
+            {
+                Task.Run(() =>
+                {
+                    inventoryService = new InventoryService(new Input(Settings.WINDOW_NAME, mLogger));
+                });
+            }
+            //var point = new ImageAnalyze(mLogger).FindMatchTemplate(NodImages.Temp_Inventory_1, NodImages.Gate);            
+            
+            //test.findMatchTest(NodImages.CurrentSS, NodImages.SDread_Trophy1, Color.Red, Color.Red);
 
             // Console.Out.WriteLine(result);
             // mLogger.sendLog(result.ToString(), LogType.INFO);
@@ -116,9 +151,16 @@ namespace NodBot
             mLogger.sendMessage("Starting bot", LogType.INFO);
             start_button.Content = "Stop";
             int optionsIndex = options_combo.SelectedIndex;
+
+            cts = new CancellationTokenSource();
+
+            cts.Token.Register(() =>
+            {
+                stopGrind();
+            });
+
             Task.Run(async () =>
             {
-                cts = new CancellationTokenSource();
                 isRunning = true;
                 if(optionsIndex == 0) await mGrindSequence.Start(cts.Token);
                 else if (optionsIndex == 1) await mArenaSequence.Start(cts.Token); // start arena
@@ -134,12 +176,17 @@ namespace NodBot
         private void stopGrind()
         {
             mLogger.sendMessage("Stopping bot", LogType.INFO);
-            start_button.Content = "Start";
-            Task.Delay(50).ContinueWith(_ =>
+            this.Dispatcher.Invoke(() =>
             {
+                start_button.Content = "Start";
                 isRunning = false;
-                if(cts != null)cts.Cancel();
+                if (cts != null)
+                {
+                    cts.Cancel();
+                    cts = null;
+                }
             });
+
         }
 
         /// <summary>
@@ -319,6 +366,7 @@ namespace NodBot
                     Settings.SETTINGS_FILE = openFileDialog.FileName;
                     readSettingFile();
                     this.Title = "Player - " + Settings.WINDOW_NAME;
+                    System.IO.Directory.CreateDirectory("Images\\" + Settings.Player.playerName);
                 }
             }
             catch (Exception ex)
@@ -326,6 +374,8 @@ namespace NodBot
                 Console.Out.WriteLine(ex.Message);
                 Console.Out.WriteLine(ex.StackTrace);
             }
+
+            init();
         }
 
         private void NeutralMenuItem_Click(object sender, RoutedEventArgs e)

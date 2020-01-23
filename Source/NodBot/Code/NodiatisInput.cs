@@ -8,15 +8,14 @@ namespace NodBot.Code
 {
     public class NodiatisInput
     {
-        private Input mInputController;
+        public Input mInputController { get;  private set; }
+        public Logger LOG { get; set; }
 
         public NodiatisInput(Logger aLogger)
         {
             LOG = aLogger;
             mInputController = new Input(Settings.WINDOW_NAME, LOG);
         }
-
-        public Logger LOG { get; set; }
 
         public void moveUp()
         {
@@ -110,7 +109,7 @@ namespace NodBot.Code
 
         public void ClickOnPoint(int aX, int aY, bool aLeftClick)
         {
-            mInputController.sendLeftMouseClick(aX, aY, aLeftClick);
+            mInputController.sendLeftMouseClickWithWindowHandler(aX, aY, aLeftClick);
         }
 
         public void MoveCursorTo(int aX, int aY)

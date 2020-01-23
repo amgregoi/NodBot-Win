@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace NodBot.Code
 {
-    class Input
+     public class Input
     {
         // Mouse click values
         private const int WM_RBUTTON_DOWN = 0x204;
@@ -46,7 +46,7 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void sendLeftMouseClick(int x, int y, bool aLeftClick)
+        public void sendLeftMouseClickWithWindowHandler(int x, int y, bool aLeftClick)
         {
             String coord = "(" + x + ", " + y + ")";
             mLogger.sendMessage("Sending left mouse click: " + coord, LogType.DEBUG);
@@ -89,6 +89,106 @@ namespace NodBot.Code
 
                 // Restore Cursor Position
                 SetCursorPos(lCurrentCursor.X, lCurrentCursor.Y);
+            });
+        }
+
+        public void sendShiftLeftDown(int x, int y, bool withShiftKey = true)
+        {
+            // Retrieve the rectangle of game handle window
+            Rectangle rect = new Rectangle();
+            GetWindowRect(game_hwnd, ref rect);
+
+            // Retrieves current window and cursor state, so it can be restored
+            IntPtr lCurrentWindow = GetForegroundWindow();
+            POINT lCurrentCursor;
+            GetCursorPos(out lCurrentCursor);
+
+            // Bring the game handle window to the foreground for mouse click
+            SetForegroundWindow(game_hwnd);
+
+            // Set curosr to x,y coords + offset of the game handle window
+            SetCursorPos(rect.X + x, rect.Y + y);
+
+            Task.Delay(100).ContinueWith(_ =>
+            {
+                if (withShiftKey)
+                {
+                    keybd_event(0x10, 0, 0, 0); // Shift Down
+                    Task.Delay(100).Wait();
+                }
+
+                SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+                Task.Delay(100).Wait();
+                SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+
+                if (withShiftKey)
+                {
+                    Task.Delay(100).Wait();
+                    keybd_event(0x10, 0, 0x02, 0); // Shift Up
+                }
+            });
+        }
+
+        public async Task dragTo(int x, int y, int x2, int y2, bool withShiftKey = true)
+        {
+            // Retrieve the rectangle of game handle window
+            Rectangle rect = new Rectangle();
+            GetWindowRect(game_hwnd, ref rect);
+
+            // Retrieves current window and cursor state, so it can be restored
+            IntPtr lCurrentWindow = GetForegroundWindow();
+            POINT lCurrentCursor;
+            GetCursorPos(out lCurrentCursor);
+
+            // Bring the game handle window to the foreground for mouse click
+            SetForegroundWindow(game_hwnd);
+
+            // Set curosr to x,y coords + offset of the game handle window
+
+
+            if (withShiftKey)
+            {
+                keybd_event(0x10, 0, 0, 0); // Shift Down
+                Task.Delay(100).Wait();
+            }
+
+            SetCursorPos(rect.X + x, rect.Y + y);
+            Task.Delay(100).Wait();
+            SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(750).Wait();
+
+            SetCursorPos(rect.X + x2, rect.Y + y2);
+            Task.Delay(100).Wait();
+            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+
+            if (withShiftKey)
+            {
+                Task.Delay(100).Wait();
+                keybd_event(0x10, 0, 0x02, 0); // Shift Up
+            }
+
+        }
+
+        public void sendShiftLeftUp(int x, int y)
+        {
+            // Retrieve the rectangle of game handle window
+            Rectangle rect = new Rectangle();
+            GetWindowRect(game_hwnd, ref rect);
+
+            // Retrieves current window and cursor state, so it can be restored
+            IntPtr lCurrentWindow = GetForegroundWindow();
+            POINT lCurrentCursor;
+            GetCursorPos(out lCurrentCursor);
+
+            // Bring the game handle window to the foreground for mouse click
+            SetForegroundWindow(game_hwnd);
+
+            // Set curosr to x,y coords + offset of the game handle window
+            SetCursorPos(rect.X + x, rect.Y + y);
+
+            Task.Delay(100).ContinueWith(_ =>
+            {
+                SendMessage(game_hwnd, WM_LBUTTON_UP, new IntPtr((uint)0x0004), new IntPtr(0));
             });
         }
 
@@ -202,6 +302,10 @@ namespace NodBot.Code
         /// <returns></returns>
         [DllImport("user32.dll")]
         static extern bool GetCursorPos(out POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        static extern bool keybd_event(int bVk, int bScan, int dwFlags, int dwExtraInfo);
+
 
         /// <summary>
         /// This struct is used to hold the cursor x,y position returned by the above function 'GetCursorPos'

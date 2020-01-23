@@ -55,6 +55,7 @@ namespace NodBot
                     filePath = openFileDialog.FileName;
                     Settings.SETTINGS_FILE = openFileDialog.FileName;
                     readSettingFile();
+                    System.IO.Directory.CreateDirectory("Images\\" + Settings.Player.playerName);
                 }
             }
             catch (Exception ex)

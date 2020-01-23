@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodBot.Code.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,6 @@ namespace NodBot.Code
         protected Logger mLogger;
         protected ImageAnalyze mImageAnalyze;
         protected NodiatisInput mInput;
-
         protected SequenceState mCombatState;
 
         protected SeqBase(Logger aLogger)

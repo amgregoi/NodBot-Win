@@ -23,5 +23,10 @@ namespace NodBot.Code
 
         public static String WINDOW_NAME { get; set; } = "Nodiatis";
         public static String SETTINGS_FILE { get; set; } = "Settings/settings.txt";
+
+        public static bool isManagingInventory()
+        {
+            return !Settings.PILGRIMAGE && !Settings.BOSSING;
+        }
     }
 }
