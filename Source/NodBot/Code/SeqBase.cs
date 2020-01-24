@@ -38,10 +38,7 @@ namespace NodBot.Code
         /// <returns></returns>
         protected async Task delay(int aTime)
         {
-            await Task.Run(async () =>
-            {
-                await Task.Delay(aTime);
-            });
+            Task.Delay(aTime).Wait();
         }
 
         /// <summary>

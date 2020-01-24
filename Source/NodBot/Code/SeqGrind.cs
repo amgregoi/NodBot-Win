@@ -96,13 +96,13 @@ namespace NodBot.Code
                     }
                     else if (WAITING_FOR_ARENA && mImageAnalyze.FindTemplateMatchWithYConstraint(NodImages.Arena, 450, true).Count > 0)
                     {
-                        for(int i=13; i>1;i--)
+                        for(int i=13; i>=0; i--)
                         {
                             mLogger.sendMessage("Starting arena in ~" + i + "secs", LogType.INFO);
                             Task.Delay(950).Wait();
                         }
                         WAITING_FOR_ARENA = false;
-                        mCombatState = SequenceState.INIT;
+                        await arenaCombatStartAsync();
                     }
                     else if (mCombatState >= SequenceState.INIT && mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
                     {
@@ -206,18 +206,13 @@ namespace NodBot.Code
         private async Task arenaCombatStartAsync()
         {
             mLogger.sendMessage("Starting Attack", LogType.INFO);
-            await delay(generateOffset(100));
+
+            Task.Delay(500).Wait();
+            if (mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.Arena) == null) return;
 
             // start auto attack [A/S]
             if (Settings.Player.isMelee)
             {
-                // TODO :: Verify  this autoshoot function works
-                if (Settings.Player.startCombatRangeSwapMelee)
-                {
-                    mInput.AutoShoot();
-                    await delay(2000 + generateOffset(500));
-                }
-                if (mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) == null) return;
                 mInput.AutoAttack();
             }
             else
@@ -227,7 +222,7 @@ namespace NodBot.Code
 
             await delay(1500 + generateOffset(2000));
 
-            if (mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) == null) return;
+            if (mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.Arena) == null) return;
 
             // start class ability [D/F]
             if (Settings.Player.usePrimaryClassAbility)
