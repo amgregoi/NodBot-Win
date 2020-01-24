@@ -220,23 +220,6 @@ namespace NodBot.Code
                 mInput.AutoShoot();
             }
 
-            await delay(1500 + generateOffset(2000));
-
-            if (mImageAnalyze.FindMatchTemplate(NodImages.CurrentSS, NodImages.Arena) == null) return;
-
-            // start class ability [D/F]
-            if (Settings.Player.usePrimaryClassAbility)
-            {
-                mInput.PrimaryClassAbility();
-            }
-            else if (Settings.Player.useSecondaryClassAbility)
-            {
-                mInput.SecondaryClassAbility();
-            }
-
-            // long wait at start of combat
-            //await delay (20000 + generateOffset(15000));
-
             mCombatState = SequenceState.ATTACK;
         }
         /// <summary>
