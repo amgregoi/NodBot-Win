@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using NodBot.Code.Services;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,6 +8,7 @@ namespace NodBot.Code
     public class SeqTownWalk : SeqBase
     {
         private bool mTravelNorth = false;
+        private TimeService timeService;
 
         /// <summary>
         /// These points represent the min and max values to determine where the
@@ -21,9 +23,10 @@ namespace NodBot.Code
         /// This is the constructor fo the Town Walking Sequence.
         /// 
         /// </summary>
-        /// <param name="aLogger"></param>
-        public SeqTownWalk(Logger aLogger) : base(aLogger)
+        /// <param name="logger"></param>
+        public SeqTownWalk(CancellationTokenSource ct, Logger logger) : base(ct, logger)
         {
+            timeService = new TimeService(logger);
             // Relevant constructor operations done in base class.
         }
 
@@ -35,10 +38,10 @@ namespace NodBot.Code
         /// <param name="aCt"></param>
         /// <param name="aDirection"></param>
         /// <returns></returns>
-        public async Task Start(CancellationToken aCt, bool aDirection)
+        public async Task Start(bool aDirection)
         {
             mTravelNorth = aDirection;
-            await Start(aCt);
+            await Start();
         }
 
         /// <summary>
@@ -49,18 +52,18 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="aCt"></param>
         /// <returns></returns>
-        public override async Task Start(CancellationToken aCt)
+        public override async Task Start()
         {
             Point? aTown = null, aPrev = null;
             bool seenT4 = false, seenT5 = false;
 
             while (true)
             {
-                aCt.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
                 if (mTravelNorth)
                 {
-                    aTown = mImageAnalyze.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
+                    aTown = imageService.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
                     if (!seenT5) seenT5 = aTown != null;
 
                     if (seenT5 && aTown == null && aPrev.Value.X > mTown5Max.X)
@@ -77,7 +80,7 @@ namespace NodBot.Code
                 else
                 {
                 
-                    aTown = mImageAnalyze.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
+                    aTown = imageService.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
                     if (!seenT4) seenT4 = aTown != null;
 
                     if (seenT4 && aTown == null && mTownSeenLast)
@@ -106,22 +109,23 @@ namespace NodBot.Code
         /// <returns></returns>
         private async Task checkForCombat()
         {
-            await delay(1750);
+            timeService.delay(1750);
 
-            if (mImageAnalyze.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
+            if (imageService.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
             {
-                mInput.SettingsAttack();
-                await delay(1000);
+                nodInputService.SettingsAttack();
 
-                while (!mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS)) ;
+                timeService.delay(1000);
 
-                while(mImageAnalyze.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
+                while (!imageService.ContainsMatch(NodImages.Exit, NodImages.CurrentSS)) ;
+
+                while(imageService.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
                 {
-                    mInput.Exit();
-                    await delay(1000);
+                    nodInputService.Exit();
+                    timeService.delay(1000);
                 }
 
-                await delay(3500);
+                timeService.delay(3500);
             }
 
         }
@@ -141,12 +145,12 @@ namespace NodBot.Code
             {
                 if (aTownSeen)
                 {
-                    if (p.Y < mTown5Min.Y) mInput.moveUp();
-                    else if (p.Y >= mTown5Max.Y) mInput.moveDown();
+                    if (p.Y < mTown5Min.Y) nodInputService.moveUp();
+                    else if (p.Y >= mTown5Max.Y) nodInputService.moveDown();
                     else
                     {
-                        if (p.X >= mTown5Max.X) mInput.moveRight();
-                        else if (p.X <= mTown5Min.X) mInput.moveLeft();
+                        if (p.X >= mTown5Max.X) nodInputService.moveRight();
+                        else if (p.X <= mTown5Min.X) nodInputService.moveLeft();
                         else mTravelNorth = !mTravelNorth;
                     }
                 }
@@ -156,19 +160,19 @@ namespace NodBot.Code
                 }
                 else
                 {
-                    mInput.moveUp();
+                    nodInputService.moveUp();
                 }
             }
             else
             {
                 if (aTownSeen)
                 {
-                    if (p.Y < mTown4Min.Y) mInput.moveUp();
-                    else if (p.Y > mTown4Min.Y) mInput.moveDown();
+                    if (p.Y < mTown4Min.Y) nodInputService.moveUp();
+                    else if (p.Y > mTown4Min.Y) nodInputService.moveDown();
                     else
                     {
-                        if (p.X <= mTown4Min.X) mInput.moveLeft();
-                        else if (p.X >= mTown4Max.X) mInput.moveRight();
+                        if (p.X <= mTown4Min.X) nodInputService.moveLeft();
+                        else if (p.X >= mTown4Max.X) nodInputService.moveRight();
                         else mTravelNorth = !mTravelNorth;
                     }
                 }
@@ -178,7 +182,7 @@ namespace NodBot.Code
                 }
                 else
                 {
-                    mInput.moveDown();
+                    nodInputService.moveDown();
                 }
             }
             mTownSeenLast = aTownSeen;

@@ -95,7 +95,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Code\Enums\SequenceState.cs" />
+    <Compile Include="Code\Services\ArenaService.cs" />
+    <Compile Include="Code\Services\GrindService.cs" />
     <Compile Include="Code\Services\InventoryService.cs" />
+    <Compile Include="Code\Services\MagicService.cs" />
+    <Compile Include="Code\Services\TimeService.cs" />
     <Compile Include="Models\MagicSettings.cs" />
     <Compile Include="Models\PlayerSettings.cs" />
     <Compile Include="NodBotInit.xaml.cs">
@@ -109,15 +114,15 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Code\NodiatisInput.cs" />
-    <Compile Include="Code\SeqArena.cs" />
-    <Compile Include="Code\SeqBase.cs" />
-    <Compile Include="Code\SeqGrind.cs" />
-    <Compile Include="Code\ImageAnalyze.cs" />
+    <Compile Include="Code\Services\NodiatisInputService.cs" />
+    <Compile Include="Code\Sequences\SeqArena.cs" />
+    <Compile Include="Code\Sequences\SeqBase.cs" />
+    <Compile Include="Code\Sequences\SeqGrind.cs" />
+    <Compile Include="Code\Services\ImageService.cs" />
     <Compile Include="Code\Logger.cs" />
     <Compile Include="Code\NodImages.cs" />
-    <Compile Include="Code\Input.cs" />
-    <Compile Include="Code\SeqTownWalk.cs" />
+    <Compile Include="Code\Services\InputService.cs" />
+    <Compile Include="Code\Sequences\SeqTownWalk.cs" />
     <Compile Include="Code\Settings.cs" />
     <Compile Include="NodBot.xaml.cs">
       <DependentUpon>NodBot.xaml</DependentUpon>

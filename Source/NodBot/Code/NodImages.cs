@@ -26,6 +26,7 @@ namespace NodBot.Code
 
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }
         public static String Arena { get { return new NodImages("arena.png").PATH; } }
+        public static String ArenaVerify { get { return new NodImages("arena_queue_check.png").PATH; } }
         public static String PlayerResourceMinimum { get { return new NodImages("player_resource_minimum.png").PATH; } }
 
         public static String Temp_Inventory_1 { get { return new NodImages("temp_inv_1.png").PATH; } }

@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace NodBot.Code
 {
-     public class Input
+     public class InputService
     {
         // Mouse click values
         private const int WM_RBUTTON_DOWN = 0x204;
@@ -22,7 +22,7 @@ namespace NodBot.Code
         //
         public IntPtr GAME { get { return game_hwnd; } }
 
-        public Input(String handleTitle, Logger aLogger)
+        public InputService(String handleTitle, Logger aLogger)
         {
             game_hwnd = FindWindow(null, handleTitle);
             mLogger = aLogger;
@@ -92,43 +92,6 @@ namespace NodBot.Code
             });
         }
 
-        public void sendShiftLeftDown(int x, int y, bool withShiftKey = true)
-        {
-            // Retrieve the rectangle of game handle window
-            Rectangle rect = new Rectangle();
-            GetWindowRect(game_hwnd, ref rect);
-
-            // Retrieves current window and cursor state, so it can be restored
-            IntPtr lCurrentWindow = GetForegroundWindow();
-            POINT lCurrentCursor;
-            GetCursorPos(out lCurrentCursor);
-
-            // Bring the game handle window to the foreground for mouse click
-            SetForegroundWindow(game_hwnd);
-
-            // Set curosr to x,y coords + offset of the game handle window
-            SetCursorPos(rect.X + x, rect.Y + y);
-
-            Task.Delay(100).ContinueWith(_ =>
-            {
-                if (withShiftKey)
-                {
-                    keybd_event(0x10, 0, 0, 0); // Shift Down
-                    Task.Delay(100).Wait();
-                }
-
-                SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-                Task.Delay(100).Wait();
-                SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-
-                if (withShiftKey)
-                {
-                    Task.Delay(100).Wait();
-                    keybd_event(0x10, 0, 0x02, 0); // Shift Up
-                }
-            });
-        }
-
         public async Task dragTo(int x, int y, int x2, int y2, bool withShiftKey = true)
         {
             // Retrieve the rectangle of game handle window
@@ -144,52 +107,21 @@ namespace NodBot.Code
             SetForegroundWindow(game_hwnd);
 
             // Set curosr to x,y coords + offset of the game handle window
-
-
-            if (withShiftKey)
-            {
-                keybd_event(0x10, 0, 0, 0); // Shift Down
-                Task.Delay(100).Wait();
-            }
+            keybd_event(0x10, 0, 0, 0); // Shift Down
 
             SetCursorPos(rect.X + x, rect.Y + y);
-            Task.Delay(100).Wait();
+            Task.Delay(250).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-            Task.Delay(750).Wait();
+            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(500).Wait();
 
             SetCursorPos(rect.X + x2, rect.Y + y2);
-            Task.Delay(100).Wait();
+            Task.Delay(250).Wait();
+            SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
             SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-
-            if (withShiftKey)
-            {
-                Task.Delay(100).Wait();
-                keybd_event(0x10, 0, 0x02, 0); // Shift Up
-            }
-
-        }
-
-        public void sendShiftLeftUp(int x, int y)
-        {
-            // Retrieve the rectangle of game handle window
-            Rectangle rect = new Rectangle();
-            GetWindowRect(game_hwnd, ref rect);
-
-            // Retrieves current window and cursor state, so it can be restored
-            IntPtr lCurrentWindow = GetForegroundWindow();
-            POINT lCurrentCursor;
-            GetCursorPos(out lCurrentCursor);
-
-            // Bring the game handle window to the foreground for mouse click
-            SetForegroundWindow(game_hwnd);
-
-            // Set curosr to x,y coords + offset of the game handle window
-            SetCursorPos(rect.X + x, rect.Y + y);
-
-            Task.Delay(100).ContinueWith(_ =>
-            {
-                SendMessage(game_hwnd, WM_LBUTTON_UP, new IntPtr((uint)0x0004), new IntPtr(0));
-            });
+            Task.Delay(250).Wait();
+            
+            keybd_event(0x10, 0, 0x02, 0); // Shift Up
         }
 
         /// <summary>
@@ -210,24 +142,24 @@ namespace NodBot.Code
         /// </summary>
         public enum Keyboard_Actions
         {
-            GEM_SLOT_1 = 0X31,
-            GEM_SLOT_2 = 0X32,
-            GEM_SLOT_3 = 0X33,
-            GEM_SLOT_4 = 0X34,
-            GEM_SLOT_5 = 0X35,
-            GEM_SLOT_6 = 0X36,
-            AUTO_ATTACK = 0x41,
-            AUTO_SHOOT = 0x53,
-            LOOT = 0x4C,
-            CA_PRIMARY = 0x44,
-            CA_SECONDARY = 0x46,
-            START_FIGHT = 0x46,
-            EXIT = 0x45,
-            ESC = 0x1B,
-            MOVE_UP = 0X57,
-            MOVE_DOWN = 0X53,
-            MOVE_LEFT = 0X41,
-            MOVE_RIGHT = 0X44,
+            GEM_SLOT_1 = 0X31,   // 1
+            GEM_SLOT_2 = 0X32,   // 2
+            GEM_SLOT_3 = 0X33,   // 3
+            GEM_SLOT_4 = 0X34,   // 4
+            GEM_SLOT_5 = 0X35,   // 5
+            GEM_SLOT_6 = 0X36,   // 6
+            AUTO_ATTACK = 0x41,  // A
+            AUTO_SHOOT = 0x53,   // S
+            LOOT = 0x4C,         // L
+            CA_PRIMARY = 0x44,   // D
+            CA_SECONDARY = 0x46, // F
+            START_FIGHT = 0x46,  // F
+            EXIT = 0x45,         // E
+            ESC = 0x1B,          // Esc
+            MOVE_UP = 0X57,      // Arrow Up
+            MOVE_DOWN = 0X53,    // Arrow Down
+            MOVE_LEFT = 0X41,    // Arrow Left
+            MOVE_RIGHT = 0X44,   // Arrow Right
         }
 
         private enum Keyboard_Actions_Keys

@@ -69,8 +69,8 @@ namespace NodBot
         {
             if(playerLoaded)
             {
-                ImageAnalyze test = new ImageAnalyze();
-                ImageAnalyze.CaputreNeutralPoint();
+                ImageService test = new ImageService();
+                test.CaputreNeutralPoint();
 
                 new NodBotAI().Show();
                 this.Close();

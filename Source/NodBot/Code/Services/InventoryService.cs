@@ -17,9 +17,9 @@ namespace NodBot.Code.Services
 
         private List<Rectangle> inventory;
         private List<Rectangle> storage;
-        private ImageAnalyze imageAnalysis = new ImageAnalyze();
-        private Input mouseInput;
-        public InventoryService(Input input)
+        private ImageService imageAnalysis = new ImageService();
+        private InputService mouseInput;
+        public InventoryService(InputService input)
         {
             mouseInput = input;
             //inventory = imageAnalysis.FindTemplateMatchWithXConstraint(NodImages.CurrentSS, NodImages.Empty_Black, xPosition, false);
@@ -72,7 +72,7 @@ namespace NodBot.Code.Services
             if (storage.Count == 0)
             {
                 Console.Out.WriteLine("Storage full");
-                storage = imageAnalysis.FindTemplateMatchWithYConstraint(NodImages.Empty_Black, yPosition, false);
+                storage = imageAnalysis.FindTemplateMatchWithYConstraint(NodImages.Empty_Black, yPosition, true);
                 if (storage.Count == 0) return;
             }
 
@@ -96,9 +96,9 @@ namespace NodBot.Code.Services
                 mouseInput.dragTo(x0, y0, x1, y1, true).Wait();
 
                 // Move cursor out of the way
-                Task.Delay(200).Wait();
-                mouseInput.moveMouse(200, 500);
-                Task.Delay(200).Wait();
+                Task.Delay(250).Wait();
+                mouseInput.moveMouse(20, 50);
+                Task.Delay(400).Wait();
 
                 bool isSlotEmpty = imageAnalysis.isRectEmpty(rect0, NodImages.CurrentSS_Verify_Item);
                 if(isSlotEmpty)
@@ -126,16 +126,17 @@ namespace NodBot.Code.Services
                     int xStorage = storageSlot.X + (storageSlot.Width/2);
                     int yStorage = storageSlot.Y + (storageSlot.Height/2);
 
-                    mouseInput.sendShiftLeftDown(x1, y1);
-                    Task.Delay(750).Wait();     
-                    mouseInput.sendShiftLeftDown(xStorage, yStorage, false);
+                    mouseInput.dragTo(x1, y1, xStorage, yStorage, true).Wait();
+
                     storage.RemoveAt(0);
                     items.RemoveAt(0);
+
+                    Task.Delay(250).Wait();
                 }
 
-                    // move item[1] into item[2]
-                    // scan location of item[1]
-                    // if(location == empty) items.remove(1)
+                // move item[1] into item[2]
+                // scan location of item[1]
+                // if(location == empty) items.remove(1)
             }
 
 

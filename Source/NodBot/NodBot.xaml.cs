@@ -67,9 +67,6 @@ namespace NodBot
             if (isSequenceInit) return;
             isSequenceInit = true;
 
-            mGrindSequence = new SeqGrind(mLogger, progressKillCount, progressChestCount);
-            mTownWalkSequence = new SeqTownWalk(mLogger);
-            mArenaSequence = new SeqArena(mLogger);
         }
 
         CancellationTokenSource inventoryCancel = new CancellationTokenSource();
@@ -91,8 +88,9 @@ namespace NodBot
             */
 
 
-            ImageAnalyze test = new ImageAnalyze(mLogger);
-            ImageAnalyze.CaptureScreen();
+            ImageService test = new ImageService(cts, mLogger);
+            test.CaptureScreen();
+
             if (inventoryService != null)
             {
                 Task.Run(() =>
@@ -116,7 +114,7 @@ namespace NodBot
             {
                 Task.Run(() =>
                 {
-                    inventoryService = new InventoryService(new Input(Settings.WINDOW_NAME, mLogger));
+                    inventoryService = new InventoryService(new InputService(Settings.WINDOW_NAME, mLogger));
                 });
             }
             //var point = new ImageAnalyze(mLogger).FindMatchTemplate(NodImages.Temp_Inventory_1, NodImages.Gate);            
@@ -140,6 +138,9 @@ namespace NodBot
             else startGrind();
         }
 
+        private SeqBase mCurrentSequence;
+
+
         /// <summary>
         /// This function handles starting the selected bot sequence to execute.
         /// 
@@ -154,18 +155,24 @@ namespace NodBot
 
             cts = new CancellationTokenSource();
 
-            cts.Token.Register(() =>
-            {
-                stopGrind();
-            });
-
             Task.Run(async () =>
             {
                 isRunning = true;
-                if(optionsIndex == 0) await mGrindSequence.Start(cts.Token);
-                else if (optionsIndex == 1) await mArenaSequence.Start(cts.Token); // start arena
-                else if (optionsIndex == 2) await mTownWalkSequence.Start(cts.Token, false); // start north towards T4
-                else if (optionsIndex == 3) await mTownWalkSequence.Start(cts.Token, true); // start south towards T5
+                if (optionsIndex == 0)
+                {
+                    mCurrentSequence = new SeqGrind(cts, mLogger, progressKillCount, progressChestCount);
+                    await mCurrentSequence.Start();
+                }
+                else if (optionsIndex == 1)
+                {
+                    mCurrentSequence = new SeqArena(cts, mLogger);
+                    await mCurrentSequence.Start();
+                }
+                else if (optionsIndex == 2 || optionsIndex == 3)
+                {
+                    mCurrentSequence = new SeqTownWalk(cts, mLogger);
+                    await ((SeqTownWalk)mCurrentSequence).Start(optionsIndex == 3);
+                }
             });
         }
 
@@ -380,8 +387,8 @@ namespace NodBot
 
         private void NeutralMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ImageAnalyze test = new ImageAnalyze();
-            ImageAnalyze.CaputreNeutralPoint();
+            ImageService test = new ImageService();
+            test.CaputreNeutralPoint();
         }
 
         private void readSettingFile()

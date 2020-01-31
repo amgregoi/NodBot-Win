@@ -14,24 +14,35 @@ using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using Emgu.CV.XFeatures2D;
+using System.Threading;
 
 namespace NodBot.Code
 {
-    public class ImageAnalyze
+    public class ImageService
     {
-        private Logger mLogger;
-        public ImageAnalyze(Logger aLogger)
+        private CancellationTokenSource token;
+        private Logger logger;
+        //private Image<Bgr, byte> currentScreen;
+
+        public ImageService(CancellationTokenSource ct,Logger aLogger)
         {
-            mLogger = aLogger;
+            token = ct;
+            logger = aLogger;
         }
-        public ImageAnalyze()
+
+        public ImageService()
         {
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="debug"></param>
+        /// <returns></returns>
         public Point? FindChestCoord(bool debug = false)
         {
             Mat lImage;
-            CaptureScreen(); //Take Screenshot
+            CaptureScreen(); // Always update current screen before locating chest
             String obsImage = NodImages.CurrentSS;
             String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3 };
             Point? result = null;
@@ -39,32 +50,30 @@ namespace NodBot.Code
             {
                 try
                 {
-                    mLogger.sendMessage("Scanning: " + chest, LogType.DEBUG);
+                    logger.sendMessage("Scanning: " + chest, LogType.DEBUG);
                     result = Draw(chest, NodImages.CurrentSS, out lImage);
                     if (debug) CvInvoke.Imshow(chest, lImage);
                     if (result != null) break;
                 }catch(Exception ex)
                 {
-                    mLogger.sendMessage(ex.ToString(), LogType.WARNING);
+                    logger.sendMessage(ex.ToString(), LogType.WARNING);
                 }
             }
 
             return result;
         }
 
-        public bool ContainsMatch(String modelImagePath, String observedImagePath, Boolean isTemplateMatch = false)
+
+        public bool ContainsMatch(String templateImage, String baseImage)
         {
-            Mat lImage;
-            CaptureScreen(); //Take Screenshot
-            if(isTemplateMatch) return FindMatchTemplate(observedImagePath, modelImagePath) != null;
-            else return Draw(modelImagePath, observedImagePath, out lImage) != null;
+            return getMatchCoord(templateImage, baseImage) != null;
         }
 
-        public Point? getMatchCoord(String modelImagePath, String observedImagePath)
+        public Point? getMatchCoord(String templateImage, String baseImage)
         {
             Mat lImage;
             CaptureScreen(); //Take Screenshot
-            return Draw(modelImagePath, observedImagePath, out lImage, false);
+            return Draw(templateImage, baseImage, out lImage, false);
         }
 
         public Point? FindImageMatchDebug(String model, String obs, bool debug = false, bool random = false)
@@ -73,13 +82,13 @@ namespace NodBot.Code
             Point? result = null;
             try
             {
-                mLogger.sendMessage("Scanning: " + model, LogType.DEBUG);
+                logger.sendMessage("Scanning: " + model, LogType.DEBUG);
                 result = Draw(model, obs, out lImage, random);
                 if (debug) CvInvoke.Imshow(model, lImage);
             }
             catch (Exception ex)
             {
-                mLogger.sendMessage(ex.ToString(), LogType.WARNING);
+                logger.sendMessage(ex.ToString(), LogType.WARNING);
             }
           
             return result;
@@ -89,13 +98,19 @@ namespace NodBot.Code
         /// <summary>
         /// 
         /// </summary>
-        public static void CaptureScreen()
+        public void CaptureScreen()
         {
-            Bitmap pImage = GetScreenCapture();
-            pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
+            try {
+                Bitmap pImage = GetScreenCapture();
+                pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
+            }catch(Exception ex)
+            {
+                Console.Out.WriteLine(ex.Message);
+                Console.Out.WriteLine(ex.StackTrace);
+            }
         }
 
-        public static void CaptureScreen(String filePath)
+        public void CaptureScreen(String filePath)
         {
             Console.Out.WriteLine("Screen Caputre: " + filePath);
             Bitmap pImage = GetScreenCapture();
@@ -105,14 +120,14 @@ namespace NodBot.Code
         /// <summary>
         /// TODO :: Copy w hat is done for #CaptureNeutralPoint() to retrieve a specific portion of the screen capture.
         /// </summary>
-        public static void CaptureScreenRight()
+        public void CaptureScreenRight()
         {
             Bitmap pImage = GetScreenCapture();
 
             pImage.Save(NodImages.CurrentSS_Right, ImageFormat.Png);
         }
 
-        public static void CaputreNeutralPoint()
+        public void CaputreNeutralPoint()
         {
             Bitmap pImage = GetScreenCapture();
 
@@ -120,8 +135,7 @@ namespace NodBot.Code
             {
                 // Retrieve specific portion of screen capture
                 Rectangle cloneRect = new Rectangle(100, 100, 600, 400);
-                System.Drawing.Imaging.PixelFormat format = pImage.PixelFormat;
-                Bitmap cloneBitmap = pImage.Clone(cloneRect, format);
+                Bitmap cloneBitmap = pImage.Clone(cloneRect, pImage.PixelFormat);
 
                 cloneBitmap.Save(NodImages.NeutralSS, ImageFormat.Png);
 
@@ -132,9 +146,10 @@ namespace NodBot.Code
             pImage.Dispose();
         }
 
-        public List<Rectangle> FindTemplateMatchWithXConstraint(String templateImage, int xConstraint, bool lessThanX)
+        public List<Rectangle> FindTemplateMatchWithXConstraint(String templateImage, int xConstraint, bool lessThanX, bool updateCurrentScreen = false)
         {
             CaptureScreen(NodImages.CompareResultX);
+            //CaptureScreen(NodImages.CompareResultX);
             Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultX); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
 
@@ -187,9 +202,11 @@ namespace NodBot.Code
             return matches;
         }
 
-        public List<Rectangle> FindTemplateMatchWithYConstraint(String templateImage, int yConstraint, bool lessThanY)
+        public List<Rectangle> FindTemplateMatchWithYConstraint(String templateImage, int yConstraint, bool lessThanY, bool updateCurrentScreen = false)
         {
             CaptureScreen(NodImages.CompareResultY);
+
+            //CaptureScreen(NodImages.CompareResultY);
             Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultY); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
 
@@ -309,6 +326,7 @@ namespace NodBot.Code
         {
             try
             {
+                //CaptureScreen();
                 CaptureScreen(baseImage);
 
                 Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
@@ -316,7 +334,7 @@ namespace NodBot.Code
                 Image<Bgr, byte> filteredSource = new Image<Bgr, byte>(NodImages.Temp_Inventory_1);
 
                 var avgColors = filteredSource.GetAverage();
-                if (avgColors.Red < 5 && avgColors.Blue < 5 && avgColors.Green < 5)
+                if (avgColors.Red < 38 && avgColors.Blue < 38 && avgColors.Green < 38)
                 {
                     return true;
                 }
@@ -338,7 +356,7 @@ namespace NodBot.Code
 
                 Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
 
-                    var temp2 = source.GetAverage();
+                var temp2 = source.GetAverage();
                     var temp = source.CountNonzero();
                     if (temp2.Red < 5 && temp2.Blue < 5 && temp2.Green < 5)
                     {
@@ -397,9 +415,9 @@ namespace NodBot.Code
             return false;
         }
 
-        public Point? FindMatchTemplate(String baseImage, String templateImage)
+        public Point? FindMatchTemplate(String baseImage, String templateImage, bool updateCurrentScreen = false)
         {
-            CaptureScreen();
+            //CaptureScreen(NodImages.CompareResult);
 
             Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
@@ -609,16 +627,25 @@ namespace NodBot.Code
             }
         }
 
-        private static Bitmap GetScreenCapture()
+        private Bitmap GetScreenCapture()
         {
-            IntPtr hWnd = Input.getNodiatisWindowHandle();
+            IntPtr hWnd = InputService.getNodiatisWindowHandle();
 
             Rectangle rctForm = new Rectangle();
             GetWindowRect(hWnd, ref rctForm);
+            IntPtr val = GetWindowDC(hWnd);
 
-            using (Graphics grfx = Graphics.FromHdc(GetWindowDC(hWnd)))
+            try
             {
-                rctForm = Rectangle.Round(grfx.VisibleClipBounds);
+                using (Graphics grfx = Graphics.FromHdc(val))
+                {
+                    rctForm = Rectangle.Round(grfx.VisibleClipBounds);
+                }
+            }catch(Exception ex)
+            {
+                // There was a problem, stopping bot
+                logger.sendLog(ex.StackTrace, LogType.ERROR);
+                token.Cancel();
             }
 
             Bitmap pImage = new Bitmap((int)(rctForm.Width), rctForm.Height);
