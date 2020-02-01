@@ -34,7 +34,7 @@ namespace NodBot
         private Progress<int> progressChestCount;
         private Progress<string> progressLog;
         private InventoryService inventoryService;
-        private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)" , "Town Walk(T5)"};
+        private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)", "Town Walk(T5)" };
 
         public NodBotAI()
         {
@@ -45,6 +45,8 @@ namespace NodBot
         private void init()
         {
             this.Title = "Player - " + Settings.Player.playerName;
+
+            GetSupportedTrophyZones();
 
             // init logger
             progressKillCount = new Progress<int>(value => updateKillCount());
@@ -98,10 +100,10 @@ namespace NodBot
                     inventoryCancel.Cancel();
                     try
                     {
-                        inventoryService.stackItems(NodImages.SDread_Trophy1).Wait(inventoryCancel.Token);
-                        inventoryService.stackItems(NodImages.SDread_Trophy2).Wait(inventoryCancel.Token);
-                        inventoryService.stackItems(NodImages.SDread_Trophy3).Wait(inventoryCancel.Token);
-                        inventoryService.stackItems(NodImages.SDread_Trophy4).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.Trophy1).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.Trophy2).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.Trophy3).Wait(inventoryCancel.Token);
+                        inventoryService.stackItems(NodImages.Trophy4).Wait(inventoryCancel.Token);
                     }
                     catch (AggregateException ex)
                     {
@@ -118,7 +120,7 @@ namespace NodBot
                 });
             }
             //var point = new ImageAnalyze(mLogger).FindMatchTemplate(NodImages.Temp_Inventory_1, NodImages.Gate);            
-            
+
             //test.findMatchTest(NodImages.CurrentSS, NodImages.SDread_Trophy1, Color.Red, Color.Red);
 
             // Console.Out.WriteLine(result);
@@ -343,7 +345,8 @@ namespace NodBot
         /// <param name="aMessage"></param>
         public void updateLog(string aMessage)
         {
-            if (log_textbox.LineCount >= log_textbox.MaxLines) {
+            if (log_textbox.LineCount >= log_textbox.MaxLines)
+            {
                 string[] lines = log_textbox.Text.Split(Environment.NewLine.ToCharArray()).Skip(1).ToArray();
                 log_textbox.Text = string.Join("\n", lines);
             }
@@ -410,7 +413,6 @@ namespace NodBot
             Settings.WINDOW_NAME = settings.playerName;
         }
 
-
         public PlayerSettings DeserializePlayerSettings(string json)
         {
             return JsonConvert.DeserializeObject<PlayerSettings>(json);
@@ -419,6 +421,25 @@ namespace NodBot
         public String SerializePlayerSettings(PlayerSettings settings)
         {
             return JsonConvert.SerializeObject(settings);
+        }
+
+        private void options_combo_zones_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+            Settings.ZONE = (String) options_combo_zones.Items.GetItemAt(options_combo_zones.SelectedIndex);
+        }
+
+        private void GetSupportedTrophyZones()
+        {
+            // Process the list of files found in the directory.
+            string[] folderEntries = Directory.GetDirectories("Images\\trophy");
+            foreach (String zone in folderEntries)
+            {
+                var title = zone.Split(new char[] { '\\' }).Last();
+                options_combo_zones.Items.Add(title);
+            }
+
+            options_combo_zones.SelectedIndex = 0;
         }
     }
 }

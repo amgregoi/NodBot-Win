@@ -415,7 +415,7 @@ namespace NodBot.Code
             return false;
         }
 
-        public Point? FindMatchTemplate(String baseImage, String templateImage, bool updateCurrentScreen = false)
+        public Point? FindMatchTemplate(String baseImage, String templateImage,bool updateCurrentScreen = false)
         {
             //CaptureScreen(NodImages.CompareResult);
 

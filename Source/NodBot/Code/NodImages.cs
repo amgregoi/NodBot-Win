@@ -60,10 +60,10 @@ namespace NodBot.Code
         public static String X { get { return new NodImages("x.png").PATH; } }
         public static String Gate { get { return new NodImages("gate.png").PATH; } }
 
-        public static String SDread_Trophy1 { get { return new NodImages("trophy\\t1.png").PATH; } }
-        public static String SDread_Trophy2 { get { return new NodImages("trophy\\t2.png").PATH; } }
-        public static String SDread_Trophy3 { get { return new NodImages("trophy\\t3.png").PATH; } }
-        public static String SDread_Trophy4 { get { return new NodImages("trophy\\t4.png").PATH; } }
+        public static String Trophy1 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t1.png").PATH; } }
+        public static String Trophy2 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t2.png").PATH; } }
+        public static String Trophy3 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t3.png").PATH; } }
+        public static String Trophy4 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t4.png").PATH; } }
 
     }
 }

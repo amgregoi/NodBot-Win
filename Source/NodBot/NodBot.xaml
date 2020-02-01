@@ -42,5 +42,6 @@
                 <MenuItem Header="Take Neutral SS" Click="NeutralMenuItem_Click" HorizontalAlignment="Left" Width="158" UseLayoutRounding="False" Height="18" Padding="0,0,-19.8,0"/>
             </MenuItem>
         </Menu>
+        <ComboBox x:Name="options_combo_zones" HorizontalAlignment="Left" Margin="152,135,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.005,0.577" Height="22" SelectionChanged="options_combo_zones_SelectionChanged"/>
     </Grid>
 </Window>

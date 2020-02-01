@@ -51,10 +51,10 @@ namespace NodBot.Code.Services
                     try
                     {
                         // TODO :: Build system to manage zone and relavent trophies
-                        stackItems(NodImages.SDread_Trophy1).Wait();
-                        stackItems(NodImages.SDread_Trophy2).Wait();
-                        stackItems(NodImages.SDread_Trophy3).Wait();
-                        stackItems(NodImages.SDread_Trophy4).Wait();
+                        stackItems(NodImages.Trophy1).Wait();
+                        stackItems(NodImages.Trophy2).Wait();
+                        stackItems(NodImages.Trophy3).Wait();
+                        stackItems(NodImages.Trophy4).Wait();
                     }
                     catch (AggregateException ex)
                     {
