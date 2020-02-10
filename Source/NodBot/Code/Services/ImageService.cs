@@ -417,7 +417,7 @@ namespace NodBot.Code
 
         public Point? FindMatchTemplate(String baseImage, String templateImage,bool updateCurrentScreen = false)
         {
-            //CaptureScreen(NodImages.CompareResult);
+            if(updateCurrentScreen) CaptureScreen(NodImages.CurrentSS);
 
             Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
@@ -435,15 +435,6 @@ namespace NodBot.Code
                     // This is a match. Do something with it, for example draw a rectangle around it.
                     Rectangle match = new Rectangle(maxLocations[0], template.Size);
                     imageToShow.Draw(match, new Bgr(Color.Red), 3);
-
-                    //IntPtr hWnd = FindWindow(null, "Calculator");
-                    //if (hWnd != null)
-                    //{
-                    //    Graphics g = Graphics.FromHwnd(hWnd);
-                    //    g.DrawImage((Image)imageToShow.Bitmap, 0, 0, g.VisibleClipBounds.Width, g.VisibleClipBounds.Height);
-                    //    g.Dispose();
-                    //}
-
                     imageToShow.Bitmap.Save(NodImages.CompareResult, ImageFormat.Png);
 
                     return maxLocations[0];
