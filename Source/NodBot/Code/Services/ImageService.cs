@@ -22,16 +22,19 @@ namespace NodBot.Code
     {
         private CancellationTokenSource token;
         private Logger logger;
+        private IntPtr gameWindow;
         //private Image<Bgr, byte> currentScreen;
 
-        public ImageService(CancellationTokenSource ct,Logger aLogger)
+        public ImageService(CancellationTokenSource ct,Logger aLogger, IntPtr gameWindowHandle)
         {
             token = ct;
             logger = aLogger;
+            gameWindow = gameWindowHandle;
         }
 
-        public ImageService()
+        public ImageService(IntPtr gameWindowHandle)
         {
+            gameWindow = gameWindowHandle;
         }
 
         /// <summary>
@@ -104,9 +107,10 @@ namespace NodBot.Code
                 Bitmap pImage = GetScreenCapture();
                 pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
             }catch(Exception ex)
-            {
+            { 
                 Console.Out.WriteLine(ex.Message);
                 Console.Out.WriteLine(ex.StackTrace);
+                token.Cancel();
             }
         }
 
@@ -130,6 +134,7 @@ namespace NodBot.Code
         public void CaputreNeutralPoint()
         {
             Bitmap pImage = GetScreenCapture();
+            pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
 
             if (pImage.Width > 700 && pImage.Height > 500)
             {
@@ -618,42 +623,63 @@ namespace NodBot.Code
             }
         }
 
-        private Bitmap GetScreenCapture()
+        private Bitmap GetScreenCapture(bool updateScreen = true)
         {
-            IntPtr hWnd = InputService.getNodiatisWindowHandle();
-
-            Rectangle rctForm = new Rectangle();
-            GetWindowRect(hWnd, ref rctForm);
-            IntPtr val = GetWindowDC(hWnd);
-
+            IntPtr hWnd = gameWindow;
             try
             {
+
+                bool res = UpdateWindow(hWnd);
+              
+
+
+                Rectangle rctForm = new Rectangle();
+                GetWindowRect(hWnd, ref rctForm);
+                IntPtr val = GetWindowDC(hWnd);
+
+
                 using (Graphics grfx = Graphics.FromHdc(val))
                 {
                     rctForm = Rectangle.Round(grfx.VisibleClipBounds);
                 }
-            }catch(Exception ex)
+
+                Bitmap pImage = new Bitmap((int)(rctForm.Width), rctForm.Height);
+
+                Graphics graphics = Graphics.FromImage(pImage);
+                IntPtr hDC = graphics.GetHdc();
+                //paint control onto graphics using provided options        
+                try
+                {
+                    PrintWindow(hWnd, hDC, (uint)0);
+                }
+                finally
+                {
+                    graphics.ReleaseHdc(hDC);
+                }
+
+                pImage.Save(NodImages.PlayerDebug, ImageFormat.Png);
+                return pImage;
+            }
+            catch (Exception ex)
             {
                 // There was a problem, stopping bot
-                logger.sendLog(ex.StackTrace, LogType.ERROR);
+                //logger.sendLog(ex.StackTrace, LogType.ERROR);
+                Console.Out.WriteLine(ex.StackTrace);
                 token.Cancel();
             }
+            //finally
+            //{
+            //    bool result = UpdateWindow(hWnd);
+            //    if (result) Console.Out.WriteLine("Updated handle successffully?");
+            //    else
+            //    {
+            //        Console.Out.WriteLine("Well that was a dud..");
+            //        IntPtr lastErr = GetLastError();
+            //        Console.Out.WriteLine(lastErr);
+            //    }
+            //}
 
-            Bitmap pImage = new Bitmap((int)(rctForm.Width), rctForm.Height);
-
-            Graphics graphics = Graphics.FromImage(pImage);
-            IntPtr hDC = graphics.GetHdc();
-            //paint control onto graphics using provided options        
-            try
-            {
-                PrintWindow(hWnd, hDC, (uint)0);
-            }
-            finally
-            {
-                graphics.ReleaseHdc(hDC);
-            }
-
-            return pImage;
+            return new Bitmap(0, 0);
         }
 
         /***
@@ -672,6 +698,16 @@ namespace NodBot.Code
 
         [DllImport("user32.dll")]
         private static extern long GetWindowRect(IntPtr hWnd, ref Rectangle lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern bool DestroyWindow(IntPtr hWnd);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetLastError();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool UpdateWindow(IntPtr hWnd);
+
 
     }
 }

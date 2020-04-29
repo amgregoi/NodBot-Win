@@ -23,12 +23,15 @@ namespace NodBot.Code
 
         private IProgress<String> mProgress;
 
-        private StreamWriter sw;
+        //private StreamWriter sw;
+        private String filePath() {
+           return "log_" + Settings.Player.playerName + ".txt";
+        }
 
         public Logger(IProgress<String> aProgress)
-        {            
-            sw = new StreamWriter(new FileStream("log_"+Settings.Player.playerName+".txt", FileMode.Create, FileAccess.Write, FileShare.Read));
-            sw.AutoFlush = true;
+        {
+            //    sw = new StreamWriter(new FileStream, FileMode.Create, FileAccess.Write, FileShare.Read));
+            //    sw.AutoFlush = true;
 
             mProgress = aProgress; 
             
@@ -57,8 +60,11 @@ namespace NodBot.Code
 
 
             String lMessage = sb.ToString();
-            sw.WriteLine(lMessage);
 
+            using (StreamWriter sw = new StreamWriter(filePath(), true))
+            {
+                sw.WriteLine(lMessage);
+            }
         }
             public void sendMessage(
             String aMessage, 
@@ -68,48 +74,52 @@ namespace NodBot.Code
             [CallerLineNumber] int callerLineNumber = -1
             )
         {
-
-            // Build output string
-            StringBuilder sb = new StringBuilder();
-            sb.Append(aLogType);
-            sb.Append(" :: ");
-            sb.Append(Path.GetFileNameWithoutExtension(callerFilePath));
-            sb.Append(".");
-            sb.Append(callerName);
-            sb.Append("(");
-            sb.Append(callerLineNumber);
-            sb.Append(") :: ");
-            sb.Append(aMessage);           
-
-
-            String lMessage = sb.ToString();
-            sw.WriteLine(lMessage); //write debug formatted output to log file
-
-            if(aLogType != LogType.DEBUG)
-            {
-                sb.Clear();
+                // Build output string
+                StringBuilder sb = new StringBuilder();
+                sb.Append(DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"));
+                sb.Append(" :: ");
                 sb.Append(aLogType);
                 sb.Append(" :: ");
+                sb.Append(Path.GetFileNameWithoutExtension(callerFilePath));
+                sb.Append(".");
+                sb.Append(callerName);
+                sb.Append("(");
+                sb.Append(callerLineNumber);
+                sb.Append(") :: ");
                 sb.Append(aMessage);
-                lMessage = sb.ToString();
-            }
 
 
-            switch (aLogType)
-            {
-                case LogType.DEBUG:
-                    sendDebug(lMessage);
-                    break;
-                case LogType.WARNING:
-                    sendInfo(lMessage);
-                    break;
-                case LogType.ERROR:
-                    sendError(lMessage);
-                    break;
-                default:
-                    sendInfo(lMessage);
-                    break;
-            }
+                String lMessage = sb.ToString();
+                using (StreamWriter sw = new StreamWriter(filePath(), true))
+                {
+                    sw.WriteLine(lMessage);
+                }
+
+                if (aLogType != LogType.DEBUG)
+                {
+                    sb.Clear();
+                    sb.Append(aLogType);
+                    sb.Append(" :: ");
+                    sb.Append(aMessage);
+                    lMessage = sb.ToString();
+                }
+
+
+                switch (aLogType)
+                {
+                    case LogType.DEBUG:
+                        sendDebug(lMessage);
+                        break;
+                    case LogType.WARNING:
+                        sendInfo(lMessage);
+                        break;
+                    case LogType.ERROR:
+                        sendError(lMessage);
+                        break;
+                    default:
+                        sendInfo(lMessage);
+                        break;
+                }
         }
 
         private void sendDebug(String aMessage)

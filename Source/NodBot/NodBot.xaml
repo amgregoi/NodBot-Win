@@ -43,5 +43,6 @@
             </MenuItem>
         </Menu>
         <ComboBox x:Name="options_combo_zones" HorizontalAlignment="Left" Margin="152,135,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.005,0.577" Height="22" SelectionChanged="options_combo_zones_SelectionChanged"/>
+        <CheckBox x:Name="resource_wait" Content="Wait for Resources" HorizontalAlignment="Left" Margin="112,79,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="123" />
     </Grid>
 </Window>

@@ -74,10 +74,12 @@ namespace NodBot.Code
                     {
                         grindService.EndCombat().Wait();
                         if (Settings.isManagingInventory() && inventoryService.isStorageEmpty()) token.ThrowIfCancellationRequested();
+                        Task.Delay(1000).Wait();
                     }
                     else if (combatState >= SequenceState.ATTACK && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) != null)
                     {
-                        if (imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.PlayerResourceMinimum) == null)
+                        // TODO :: Make resource waiting a property, off by default atm
+                        if (Settings.WAIT_FOR_RESOURCES && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.PlayerResourceMinimum) == null)
                         {
                             logger.sendLog("Waiting for resources to regen", LogType.INFO);
                             timeService.delay(3000);
@@ -101,6 +103,7 @@ namespace NodBot.Code
                         }
 
                         grindService.enterCombat().Wait();
+                        Task.Delay(1500).Wait();
                     }
                     else if (Settings.ARENA && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.Arena) != null)
                     {

@@ -17,7 +17,8 @@ namespace NodBot.Code.Services
 
         private List<Rectangle> inventory;
         private List<Rectangle> storage;
-        private ImageService imageAnalysis = new ImageService();
+        // TODO :: need to cleanup / separate items in ImageService
+        private ImageService imageAnalysis = new ImageService(InputService.getNodiatisWindowHandle());
         private InputService mouseInput;
         public InventoryService(InputService input)
         {

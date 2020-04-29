@@ -28,6 +28,16 @@ namespace NodBot.Code
             mLogger = aLogger;
         }
 
+        public IntPtr getGameWindow()
+        {
+            return game_hwnd;
+            //return FindWindow(null, Settings.WINDOW_NAME);
+        }
+
+        /// <summary>
+        ///  Use Sparingly
+        /// </summary>
+        /// <returns></returns>
         public static IntPtr getNodiatisWindowHandle()
         {
             return FindWindow(null, Settings.WINDOW_NAME);

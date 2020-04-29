@@ -69,8 +69,10 @@ namespace NodBot
         {
             if(playerLoaded)
             {
-                ImageService test = new ImageService();
+                ImageService test = new ImageService(InputService.getNodiatisWindowHandle());
                 test.CaputreNeutralPoint();
+
+
 
                 new NodBotAI().Show();
                 this.Close();

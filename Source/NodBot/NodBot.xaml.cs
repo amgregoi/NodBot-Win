@@ -89,36 +89,40 @@ namespace NodBot
             });
             */
 
-
-            ImageService test = new ImageService(cts, mLogger);
-            test.CaptureScreen();
-
-            if (inventoryService != null)
+            Task.Delay(25).ContinueWith(async _ =>
             {
-                Task.Run(() =>
-                {
-                    inventoryCancel.Cancel();
-                    try
-                    {
-                        inventoryService.stackItems(NodImages.Trophy1).Wait(inventoryCancel.Token);
-                        inventoryService.stackItems(NodImages.Trophy2).Wait(inventoryCancel.Token);
-                        inventoryService.stackItems(NodImages.Trophy3).Wait(inventoryCancel.Token);
-                        inventoryService.stackItems(NodImages.Trophy4).Wait(inventoryCancel.Token);
-                    }
-                    catch (AggregateException ex)
-                    {
-                        Console.Out.WriteLine(ex.StackTrace);
-                        Console.Out.WriteLine(ex.InnerException.StackTrace);
-                    }
-                });
-            }
-            else
-            {
-                Task.Run(() =>
-                {
-                    inventoryService = new InventoryService(new InputService(Settings.WINDOW_NAME, mLogger));
-                });
-            }
+                cts.Cancel();
+            });
+
+            //ImageService test = new ImageService(cts, mLogger);
+            //test.CaptureScreen();
+
+            //if (inventoryService != null)
+            //{
+            //    Task.Run(() =>
+            //    {
+            //        inventoryCancel.Cancel();
+            //        try
+            //        {
+            //            inventoryService.stackItems(NodImages.Trophy1).Wait(inventoryCancel.Token);
+            //            inventoryService.stackItems(NodImages.Trophy2).Wait(inventoryCancel.Token);
+            //            inventoryService.stackItems(NodImages.Trophy3).Wait(inventoryCancel.Token);
+            //            inventoryService.stackItems(NodImages.Trophy4).Wait(inventoryCancel.Token);
+            //        }
+            //        catch (AggregateException ex)
+            //        {
+            //            Console.Out.WriteLine(ex.StackTrace);
+            //            Console.Out.WriteLine(ex.InnerException.StackTrace);
+            //        }
+            //    });
+            //}
+            //else
+            //{
+            //    Task.Run(() =>
+            //    {
+            //        inventoryService = new InventoryService(new InputService(Settings.WINDOW_NAME, mLogger));
+            //    });
+            //}
             //var point = new ImageAnalyze(mLogger).FindMatchTemplate(NodImages.Temp_Inventory_1, NodImages.Gate);            
 
             //test.findMatchTest(NodImages.CurrentSS, NodImages.SDread_Trophy1, Color.Red, Color.Red);
@@ -141,8 +145,7 @@ namespace NodBot
         }
 
         private SeqBase mCurrentSequence;
-
-
+        private int grindOption = 0;
         /// <summary>
         /// This function handles starting the selected bot sequence to execute.
         /// 
@@ -151,39 +154,58 @@ namespace NodBot
         {
             initSequences();
 
-            mLogger.sendMessage("Starting bot", LogType.INFO);
-            start_button.Content = "Stop";
-            int optionsIndex = options_combo.SelectedIndex;
+            try
+            {
+                mLogger.sendMessage("Starting bot", LogType.INFO);
+                start_button.Content = "Stop";
+                grindOption = options_combo.SelectedIndex;
+            }
+            catch (Exception ex)
+            {
+                Console.Out.WriteLine(ex.StackTrace);
+            }
+
 
             cts = new CancellationTokenSource();
+
+
+            cts.Token.Register(() =>
+            {
+                if (!isManualStop) startGrind();
+                else Console.Out.WriteLine("Stop button was pressed");
+
+                isManualStop = false;
+            });
 
             Task.Run(async () =>
             {
                 isRunning = true;
-                if (optionsIndex == 0)
+                if (grindOption == 0)
                 {
                     mCurrentSequence = new SeqGrind(cts, mLogger, progressKillCount, progressChestCount);
                     await mCurrentSequence.Start();
                 }
-                else if (optionsIndex == 1)
+                else if (grindOption == 1)
                 {
                     mCurrentSequence = new SeqArena(cts, mLogger);
                     await mCurrentSequence.Start();
                 }
-                else if (optionsIndex == 2 || optionsIndex == 3)
+                else if (grindOption == 2 || grindOption == 3)
                 {
                     mCurrentSequence = new SeqTownWalk(cts, mLogger);
-                    await ((SeqTownWalk)mCurrentSequence).Start(optionsIndex == 3);
+                    await ((SeqTownWalk)mCurrentSequence).Start(grindOption == 3);
                 }
             });
         }
 
+        bool isManualStop = false;
         /// <summary>
         /// This function handles stopping the currently running bot sequence.
         /// 
         /// </summary>
         private void stopGrind()
         {
+            isManualStop = true;
             mLogger.sendMessage("Stopping bot", LogType.INFO);
             this.Dispatcher.Invoke(() =>
             {
@@ -227,6 +249,9 @@ namespace NodBot
                 case "bossing_checkbox":
                     Settings.BOSSING = true;
                     break;
+                case "resource_wait":
+                    Settings.WAIT_FOR_RESOURCES = true;
+                    break;
             }
         }
 
@@ -258,6 +283,9 @@ namespace NodBot
                     break;
                 case "bossing_checkbox":
                     Settings.BOSSING = false;
+                    break;
+                case "resource_wait":
+                    Settings.WAIT_FOR_RESOURCES = false;
                     break;
             }
         }
@@ -390,7 +418,7 @@ namespace NodBot
 
         private void NeutralMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ImageService test = new ImageService();
+            ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
             test.CaputreNeutralPoint();
         }
 

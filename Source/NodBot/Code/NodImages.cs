@@ -42,6 +42,8 @@ namespace NodBot.Code
         public static String Empty_Black_Filtered { get { return new NodImages("empty_inventory_filtered.png").PATH; } }
 
         // Player Specific
+        public static String PlayerDebug { get { return new NodImages(Settings.Player.playerName + "\\__god_damn_updates.png").PATH; } }
+
         public static String CurrentSS { get { return new NodImages(Settings.Player.playerName+"\\current_ss_.png").PATH; } }
         public static String CurrentSS_Right { get { return new NodImages(Settings.Player.playerName + "\\current_ss_right_.png").PATH; } }
         public static String CurrentSS_Verify_Item { get { return new NodImages(Settings.Player.playerName + "\\current_ss_verify_item_.png").PATH; } }

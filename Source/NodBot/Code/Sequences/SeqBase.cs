@@ -28,8 +28,9 @@ namespace NodBot.Code
             token = ct.Token;
 
             logger = aLogger;
-            imageService = new ImageService(tokenSource, logger);
             nodInputService = new NodiatisInputService(logger);
+            imageService = new ImageService(tokenSource, logger, nodInputService.inputService.getGameWindow());
+
         }
 
         public virtual async Task Start()
