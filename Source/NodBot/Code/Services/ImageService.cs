@@ -231,7 +231,7 @@ namespace NodBot.Code
                         if (maxValues[0] > threshold)
                         {
                             Rectangle match = new Rectangle(maxLocations[0], template.Size);
-
+                           
                             if (lessThanY && match.Y < yConstraint)
                             {
                                 imgSrc.Draw(match, new Bgr(Color.Red), -1);
@@ -256,6 +256,47 @@ namespace NodBot.Code
                         }
 
                         imgSrc.Bitmap.Save(NodImages.CompareResultY, ImageFormat.Png);
+                    }
+                }
+            }
+
+            return matches;
+        }
+
+        public List<Point> FindTemplateMatches(String templateImage)
+        {
+            CaptureScreen(NodImages.CompareResultX);
+            //CaptureScreen(NodImages.CompareResultX);
+            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultX); // Image B
+            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
+
+            var matches = new List<Point>();
+            Rectangle prevMatch = new Rectangle();
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                while (true)
+                {
+                    //updated and changed TemplateMatchingType- CcoeffNormed.
+                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
+                    {
+                        var threshold = CvInvoke.Threshold(result, result, 0.75, 1, ThresholdType.ToZero);
+                        double[] minValues, maxValues;
+                        Point[] minLocations, maxLocations;
+                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                        if (maxValues[0] > threshold)
+                        {
+                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
+                            matches.Add(match.Location);
+
+                            if (prevMatch == match) return matches;
+                            prevMatch = match;
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                        imgSrc.Bitmap.Save(NodImages.CompareResultX, ImageFormat.Png);
                     }
                 }
             }

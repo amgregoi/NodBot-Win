@@ -2,6 +2,8 @@
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 
 namespace NodBot.Code
 {
@@ -63,7 +65,11 @@ namespace NodBot.Code
 
                 if (mTravelNorth)
                 {
-                    aTown = imageService.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
+                    //aTown = imageService.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
+                    List<Point> matches = imageService.FindTemplateMatches(NodImages.Town5);
+                    if (matches == null || matches.Count <= 0) aTown = null;
+                    else aTown = matches[0];
+
                     if (!seenT5) seenT5 = aTown != null;
 
                     if (seenT5 && aTown == null && aPrev.Value.X > mTown5Max.X)
@@ -79,8 +85,12 @@ namespace NodBot.Code
                 }
                 else
                 {
-                
-                    aTown = imageService.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
+
+                    //aTown = imageService.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
+                    List<Point> matches = imageService.FindTemplateMatches(NodImages.Town4);
+                    if (matches == null || matches.Count <= 0) aTown = null;
+                    else aTown = matches[0];
+
                     if (!seenT4) seenT4 = aTown != null;
 
                     if (seenT4 && aTown == null && mTownSeenLast)
