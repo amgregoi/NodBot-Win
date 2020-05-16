@@ -33,7 +33,8 @@ namespace NodBot.Code.Services
             timeService = new TimeService(this.logger);
             grindCallback = callback;
 
-            setupInventoryService();
+            //setupInventoryService();
+            inventoryService = InventoryService.Instance;
         }
 
 

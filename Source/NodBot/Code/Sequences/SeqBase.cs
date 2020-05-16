@@ -16,6 +16,7 @@ namespace NodBot.Code
 
         protected ImageService imageService;
         protected NodiatisInputService nodInputService;
+        protected InventoryService inventoryService;
         protected Logger logger;
 
         protected SequenceState combatState;
@@ -30,7 +31,8 @@ namespace NodBot.Code
             logger = aLogger;
             nodInputService = new NodiatisInputService(logger);
             imageService = new ImageService(tokenSource, logger, nodInputService.inputService.getGameWindow());
-
+            inventoryService = InventoryService.Instance;
+            //inventoryService = new InventoryService(nodInputService.inputService);
         }
 
         public virtual async Task Start()

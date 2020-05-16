@@ -11,6 +11,8 @@ using NodBot.Model;
 using Newtonsoft.Json;
 using System.Drawing;
 using NodBot.Code.Services;
+using Emgu.CV;
+using System.Collections;
 
 namespace NodBot
 {
@@ -25,7 +27,11 @@ namespace NodBot
         private SeqGrind mGrindSequence;
         private SeqTownWalk mTownWalkSequence;
         private SeqArena mArenaSequence;
+
         private Logger mLogger;
+        private NodiatisInputService mInput;
+        private InventoryService mInventory;
+
         private int kill_count = 0, chest_count = 0;
         private CancellationTokenSource cts;
         private bool isSequenceInit = false;
@@ -33,7 +39,6 @@ namespace NodBot
         private Progress<int> progressKillCount;
         private Progress<int> progressChestCount;
         private Progress<string> progressLog;
-        private InventoryService inventoryService;
         private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)", "Town Walk(T5)" };
 
         public NodBotAI()
@@ -54,6 +59,8 @@ namespace NodBot
             progressLog = new Progress<string>(value => updateLog(value));
 
             mLogger = new Logger(progressLog);
+            mInput = new NodiatisInputService(mLogger);
+            mInventory = new InventoryService(mInput.inputService);
 
             // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
@@ -81,55 +88,11 @@ namespace NodBot
         /// <param name="e"></param>
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            SeqArena test = new SeqArena(mLogger);
-            Task.Delay(25).ContinueWith(async _ =>
-            {
-                await test.EnterQueue();
-            });
-            */
+            ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
 
-            Task.Delay(25).ContinueWith(async _ =>
-            {
-                cts.Cancel();
-            });
+          
 
-            //ImageService test = new ImageService(cts, mLogger);
-            //test.CaptureScreen();
-
-            //if (inventoryService != null)
-            //{
-            //    Task.Run(() =>
-            //    {
-            //        inventoryCancel.Cancel();
-            //        try
-            //        {
-            //            inventoryService.stackItems(NodImages.Trophy1).Wait(inventoryCancel.Token);
-            //            inventoryService.stackItems(NodImages.Trophy2).Wait(inventoryCancel.Token);
-            //            inventoryService.stackItems(NodImages.Trophy3).Wait(inventoryCancel.Token);
-            //            inventoryService.stackItems(NodImages.Trophy4).Wait(inventoryCancel.Token);
-            //        }
-            //        catch (AggregateException ex)
-            //        {
-            //            Console.Out.WriteLine(ex.StackTrace);
-            //            Console.Out.WriteLine(ex.InnerException.StackTrace);
-            //        }
-            //    });
-            //}
-            //else
-            //{
-            //    Task.Run(() =>
-            //    {
-            //        inventoryService = new InventoryService(new InputService(Settings.WINDOW_NAME, mLogger));
-            //    });
-            //}
-            //var point = new ImageAnalyze(mLogger).FindMatchTemplate(NodImages.Temp_Inventory_1, NodImages.Gate);            
-
-            //test.findMatchTest(NodImages.CurrentSS, NodImages.SDread_Trophy1, Color.Red, Color.Red);
-
-            // Console.Out.WriteLine(result);
-            // mLogger.sendLog(result.ToString(), LogType.INFO);
-
+            if (mInventory != null) mInventory.sortInventory();
         }
 
         /// <summary>
@@ -165,10 +128,8 @@ namespace NodBot
                 Console.Out.WriteLine(ex.StackTrace);
             }
 
-
             cts = new CancellationTokenSource();
-
-
+            
             cts.Token.Register(() =>
             {
                 if (!isManualStop) startGrind();
@@ -217,7 +178,6 @@ namespace NodBot
                     cts = null;
                 }
             });
-
         }
 
         /// <summary>
@@ -251,6 +211,9 @@ namespace NodBot
                     break;
                 case "resource_wait":
                     Settings.WAIT_FOR_RESOURCES = true;
+                    break;
+                case "option_mining":
+                    Settings.RESOURCE_MINING = true;
                     break;
             }
         }
@@ -287,42 +250,8 @@ namespace NodBot
                 case "resource_wait":
                     Settings.WAIT_FOR_RESOURCES = false;
                     break;
-            }
-        }
-
-        /// <summary>
-        /// This event handler toggles the Auto Attack and Class Ability options.
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            switch (((Slider)sender).Name)
-            {
-                case "attack_slider":
-                    if (e.NewValue > 0)
-                    {
-                        Settings.MELEE = false;
-                        mLogger.sendMessage("ATTACK SET [S]", LogType.INFO);
-                    }
-                    else
-                    {
-                        Settings.MELEE = true;
-                        mLogger.sendMessage("ATTACK SET [A]", LogType.INFO);
-                    }
-                    break;
-                case "ability_slider":
-                    if (e.NewValue > 0)
-                    {
-                        Settings.CA_PRIMARTY = false;
-                        mLogger.sendMessage("CLASS ABILITY SET [F]", LogType.INFO);
-                    }
-                    else
-                    {
-                        Settings.CA_PRIMARTY = true;
-                        mLogger.sendMessage("ATTACK SET [D]", LogType.INFO);
-                    }
+                case "option_mining":
+                    Settings.RESOURCE_MINING = false;
                     break;
             }
         }

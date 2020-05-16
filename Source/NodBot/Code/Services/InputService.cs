@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
 namespace NodBot.Code
 {
-     public class InputService
+    public class InputService
     {
         // Mouse click values
         private const int WM_RBUTTON_DOWN = 0x204;
@@ -51,6 +52,18 @@ namespace NodBot.Code
             SetCursorPos(rect.X + x, rect.Y + y);
         }
 
+        public void leftClick()
+        {
+            SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        public void rightClick()
+        {
+            SendMessage(game_hwnd, WM_RBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            SendMessage(game_hwnd, WM_RBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+        }
+
         /// <summary>
         /// This function sends a mouse click to the provided x,y coordinate
         /// </summary>
@@ -81,17 +94,8 @@ namespace NodBot.Code
 
             Task.Delay(50).ContinueWith(_ =>
             {
-                if (aLeftClick)
-                {
-                    SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-                    SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-                }
-                else
-                {
-                    SendMessage(game_hwnd, WM_RBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-                    SendMessage(game_hwnd, WM_RBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-                }
-
+                if (aLeftClick) leftClick();
+                else rightClick();
 
                 // Brings back the previous forground window, if not game handle window
                 if (lCurrentWindow != game_hwnd)
@@ -102,7 +106,7 @@ namespace NodBot.Code
             });
         }
 
-        public async Task dragTo(int x, int y, int x2, int y2, bool withShiftKey = true)
+        public Task<bool> dragTo(int x, int y, int x2, int y2, bool withShiftKey = true)
         {
             // Retrieve the rectangle of game handle window
             Rectangle rect = new Rectangle();
@@ -120,18 +124,23 @@ namespace NodBot.Code
             keybd_event(0x10, 0, 0, 0); // Shift Down
 
             SetCursorPos(rect.X + x, rect.Y + y);
-            Task.Delay(250).Wait();
+            Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(50);
             SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-            Task.Delay(500).Wait();
+
+            Task.Delay(100).Wait();
 
             SetCursorPos(rect.X + x2, rect.Y + y2);
-            Task.Delay(250).Wait();
+            Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(50);
             SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-            Task.Delay(250).Wait();
-            
+            Task.Delay(100).Wait();
+
             keybd_event(0x10, 0, 0x02, 0); // Shift Up
+
+            return Task.FromResult<bool>(true);
         }
 
         /// <summary>

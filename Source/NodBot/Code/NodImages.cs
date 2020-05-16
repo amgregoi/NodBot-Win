@@ -23,6 +23,13 @@ namespace NodBot.Code
         public static String Dust { get { return new NodImages("dust.png").PATH; } }
         public static String TownWalk { get { return new NodImages("tw_message.png").PATH; } }
 
+        //Mining
+        public static String Rock1 { get { return new NodImages("mining/rock_1.png").PATH; } }
+        public static String Rock2{ get { return new NodImages("mining/rock_2.png").PATH; } }
+        public static String Rock3 { get { return new NodImages("mining/rock_3.png").PATH; } }
+        public static String MiningIcon { get { return new NodImages("mining/icon.png").PATH; } }
+        public static String RockTest { get { return new NodImages("poft/rock_test.png").PATH; } }
+
 
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }
         public static String Arena { get { return new NodImages("arena.png").PATH; } }
@@ -57,15 +64,42 @@ namespace NodBot.Code
         public static String CompareResult { get { return new NodImages(Settings.Player.playerName + "\\compare_result.png").PATH; } }
         public static String CompareResultX { get { return new NodImages(Settings.Player.playerName + "\\compare_result_x.png").PATH; } }
         public static String CompareResultY { get { return new NodImages(Settings.Player.playerName + "\\compare_result_y.png").PATH; } }
+        public static String InventoryScan { get { return new NodImages(Settings.Player.playerName + "\\inventory_scan.png").PATH; } }
 
         public static String StatDistribution { get { return new NodImages("stats.png").PATH; } }
         public static String X { get { return new NodImages("x.png").PATH; } }
         public static String Gate { get { return new NodImages("gate.png").PATH; } }
 
+
+        // Inventory management
         public static String Trophy1 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t1.png").PATH; } }
         public static String Trophy2 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t2.png").PATH; } }
         public static String Trophy3 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t3.png").PATH; } }
         public static String Trophy4 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t4.png").PATH; } }
+
+        // Ore
+        public static String Ore_T1 { get { return new NodImages("ore\\t1.png").PATH; } }
+        public static String Ore_T17 { get { return new NodImages("ore\\t17.png").PATH; } }
+        public static String Ore_T18 { get { return new NodImages("ore\\t18.png").PATH; } }
+        public static String Ore_T19 { get { return new NodImages("ore\\t19.png").PATH; } }
+        public static String Ore_T20 { get { return new NodImages("ore\\t20.png").PATH; } }
+        public static String Ore_T21 { get { return new NodImages("ore\\t21.png").PATH; } }
+        public static String Ore_T22 { get { return new NodImages("ore\\t22.png").PATH; } }
+        public static String Ore_T23 { get { return new NodImages("ore\\t23.png").PATH; } }
+        public static String Ore_T24 { get { return new NodImages("ore\\t24.png").PATH; } }
+        public static String Ore_T25 { get { return new NodImages("ore\\t25.png").PATH; } }
+        public static String Ore_T26 { get { return new NodImages("ore\\t26.png").PATH; } }
+        public static String Ore_T27 { get { return new NodImages("ore\\t27.png").PATH; } }
+        public static String Ore_T28 { get { return new NodImages("ore\\t28.png").PATH; } }
+        public static String Ore_T29 { get { return new NodImages("ore\\t29.png").PATH; } }
+        public static String Ore_T30 { get { return new NodImages("ore\\t30.png").PATH; } }
+
+
+        // Ore
+        public static String Silk_T1 { get { return new NodImages("silk\\t1.png").PATH; } }
+        public static String Silk_T4 { get { return new NodImages("silk\\t4.png").PATH; } }
+        public static String Silk_T6 { get { return new NodImages("silk\\t6.png").PATH; } }
+        public static String Silk_T8{ get { return new NodImages("silk\\t8.png").PATH; } }
 
     }
 }

@@ -97,11 +97,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Code\Enums\SequenceState.cs" />
+    <Compile Include="Code\ItemList.cs" />
+    <Compile Include="Code\Sequences\SeqMining.cs" />
     <Compile Include="Code\Services\ArenaService.cs" />
     <Compile Include="Code\Services\GrindService.cs" />
     <Compile Include="Code\Services\InventoryService.cs" />
     <Compile Include="Code\Services\MagicService.cs" />
     <Compile Include="Code\Services\TimeService.cs" />
+    <Compile Include="Code\WhiteList.cs" />
     <Compile Include="Models\MagicSettings.cs" />
     <Compile Include="Models\PlayerSettings.cs" />
     <Compile Include="NodBotInit.xaml.cs">
@@ -164,6 +167,9 @@
   <ItemGroup>
     <Content Include="libs\concrt140.dll" />
     <Content Include="libs\cvextern.dll" />
+    <None Include="Settings\items.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Settings\settings.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

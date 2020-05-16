@@ -15,6 +15,7 @@ using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using Emgu.CV.XFeatures2D;
 using System.Threading;
+using NodBot.Code.Services;
 
 namespace NodBot.Code
 {
@@ -25,7 +26,7 @@ namespace NodBot.Code
         private IntPtr gameWindow;
         //private Image<Bgr, byte> currentScreen;
 
-        public ImageService(CancellationTokenSource ct,Logger aLogger, IntPtr gameWindowHandle)
+        public ImageService(CancellationTokenSource ct, Logger aLogger, IntPtr gameWindowHandle)
         {
             token = ct;
             logger = aLogger;
@@ -49,7 +50,7 @@ namespace NodBot.Code
             String obsImage = NodImages.CurrentSS;
             String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3 };
             Point? result = null;
-            foreach(String chest in chestImages)
+            foreach (String chest in chestImages)
             {
                 try
                 {
@@ -57,7 +58,8 @@ namespace NodBot.Code
                     result = Draw(chest, NodImages.CurrentSS, out lImage);
                     if (debug) CvInvoke.Imshow(chest, lImage);
                     if (result != null) break;
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     logger.sendMessage(ex.ToString(), LogType.WARNING);
                 }
@@ -93,7 +95,7 @@ namespace NodBot.Code
             {
                 logger.sendMessage(ex.ToString(), LogType.WARNING);
             }
-          
+
             return result;
         }
 
@@ -103,11 +105,13 @@ namespace NodBot.Code
         /// </summary>
         public void CaptureScreen()
         {
-            try {
+            try
+            {
                 Bitmap pImage = GetScreenCapture();
                 pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
-            }catch(Exception ex)
-            { 
+            }
+            catch (Exception ex)
+            {
                 Console.Out.WriteLine(ex.Message);
                 Console.Out.WriteLine(ex.StackTrace);
                 token.Cancel();
@@ -116,7 +120,7 @@ namespace NodBot.Code
 
         public void CaptureScreen(String filePath)
         {
-            Console.Out.WriteLine("Screen Caputre: " + filePath);
+            //Console.Out.WriteLine("Screen Caputre: " + filePath);
             Bitmap pImage = GetScreenCapture();
             pImage.Save(filePath, ImageFormat.Png);
         }
@@ -151,7 +155,7 @@ namespace NodBot.Code
             pImage.Dispose();
         }
 
-        public List<Rectangle> FindTemplateMatchWithXConstraint(String templateImage, int xConstraint, bool lessThanX, bool updateCurrentScreen = false)
+        public List<Rectangle> FindTemplateMatchWithXConstraint(String templateImage, int xConstraint, bool lessThanX, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
             CaptureScreen(NodImages.CompareResultX);
             //CaptureScreen(NodImages.CompareResultX);
@@ -165,9 +169,8 @@ namespace NodBot.Code
                 while (true)
                 {
                     //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
+                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
                     {
-                        var threshold = CvInvoke.Threshold(result, result, 0.75, 1, ThresholdType.ToZero);
                         double[] minValues, maxValues;
                         Point[] minLocations, maxLocations;
                         result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
@@ -181,7 +184,7 @@ namespace NodBot.Code
 
                                 matches.Add(match);
                             }
-                            else if(!lessThanX && match.X > xConstraint)
+                            else if (!lessThanX && match.X > xConstraint)
                             {
                                 imgSrc.Draw(match, new Bgr(Color.Red), -1);
                                 matches.Add(match);
@@ -207,7 +210,54 @@ namespace NodBot.Code
             return matches;
         }
 
-        public List<Rectangle> FindTemplateMatchWithYConstraint(String templateImage, int yConstraint, bool lessThanY, bool updateCurrentScreen = false)
+        public Rectangle? FindTemplateMatchWithXConstraintSingle(String templateImage, int xConstraint, bool lessThanX, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        {
+            CaptureScreen(NodImages.CompareResultY);
+
+            //CaptureScreen(NodImages.CompareResultY);
+            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultY); // Image B
+            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
+
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                while (true)
+                {
+                    //updated and changed TemplateMatchingType- CcoeffNormed.
+                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
+                    {
+                        double[] minValues, maxValues;
+                        Point[] minLocations, maxLocations;
+                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                        if (maxValues[0] > threshold)
+                        {
+                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
+
+                            if (lessThanX && match.X < xConstraint)
+                            {
+                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                                return match;
+                            }
+                            else if (!lessThanX && match.X > xConstraint)
+                            {
+                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                                return match;
+                            }
+                            else
+                            {
+                                imgSrc.Draw(match, new Bgr(Color.Pink), -1);
+                            }
+                        }
+                        else break;
+
+                        imgSrc.Bitmap.Save(NodImages.CompareResultY, ImageFormat.Png);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public List<Rectangle> FindTemplateMatchWithYConstraint(String templateImage, int yConstraint, bool lessThanY, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
             CaptureScreen(NodImages.CompareResultY);
 
@@ -221,17 +271,15 @@ namespace NodBot.Code
             {
                 while (true)
                 {
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
+                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
                     {
-                        var threshold = CvInvoke.Threshold(result, result, 0.75, 1, ThresholdType.ToZero);
                         double[] minValues, maxValues;
                         Point[] minLocations, maxLocations;
                         result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
                         if (maxValues[0] > threshold)
                         {
                             Rectangle match = new Rectangle(maxLocations[0], template.Size);
-                           
+
                             if (lessThanY && match.Y < yConstraint)
                             {
                                 imgSrc.Draw(match, new Bgr(Color.Red), -1);
@@ -261,6 +309,53 @@ namespace NodBot.Code
             }
 
             return matches;
+        }
+
+        public Rectangle? FindTemplateMatchWithYConstraintSingle(String templateImage, int yConstraint, bool lessThanY, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        {
+            CaptureScreen(NodImages.CompareResultY);
+
+            //CaptureScreen(NodImages.CompareResultY);
+            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultY); // Image B
+            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
+
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                while (true)
+                {
+                    //updated and changed TemplateMatchingType- CcoeffNormed.
+                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
+                    {
+                        double[] minValues, maxValues;
+                        Point[] minLocations, maxLocations;
+                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                        if (maxValues[0] > threshold)
+                        {
+                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
+
+                            if (lessThanY && match.Y < yConstraint)
+                            {
+                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                                return match;
+                            }
+                            else if (!lessThanY && match.Y > yConstraint)
+                            {
+                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                                return match;
+                            }
+                            else
+                            {
+                                imgSrc.Draw(match, new Bgr(Color.Pink), -1);
+                            }
+                        }
+                        else break;
+
+                        imgSrc.Bitmap.Save(NodImages.CompareResultY, ImageFormat.Png);
+                    }
+                }
+            }
+
+            return null;
         }
 
         public List<Point> FindTemplateMatches(String templateImage)
@@ -302,6 +397,80 @@ namespace NodBot.Code
             }
 
             return matches;
+        }
+
+        private bool containsTemplate(Image<Bgr, byte> imgSrc, Image<Bgr, byte> template, out Point[] maxLocations, out Point[] minLocations, double threshold = 0.9, TemplateMatchingType matchingType = TemplateMatchingType.CcoeffNormed)
+        {
+            using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
+            {
+                var _threshold = CvInvoke.Threshold(result, result, threshold, 1, ThresholdType.ToZero);
+                double[] minValues, maxValues;
+                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                if (maxValues[0] > _threshold)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public void ScanForItems(List<Item> whitelist, List<Item> blacklist, out List<Item> resultWhite, out List<Item> resultBlack)
+        {
+            resultWhite = new List<Item>();
+            resultBlack = new List<Item>();
+
+            CaptureScreen(NodImages.InventoryScan);
+            //CaptureScreen(NodImages.CompareResultX);
+            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.InventoryScan); // Image B
+
+            Rectangle rect = new Rectangle(GameDimension.WIDTH, 0, source.Width - GameDimension.WIDTH, GameDimension.HEIGHT);
+
+            source = copySubImage(rect, source);
+            source.Save(NodImages.InventoryScan);
+
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                for (int i = 0; i < whitelist.Count; i++)
+                {
+                    Item currentItem = whitelist.ElementAt(i);
+                    Image<Bgr, byte> template = new Image<Bgr, byte>(currentItem.imageFile); // Image A
+
+                    //updated and changed TemplateMatchingType- CcoeffNormed.
+
+                    Point[] minLocations, maxLocations;
+                    bool result = containsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold: .75);
+
+                    if (result)
+                    {
+                        Rectangle match = new Rectangle(maxLocations[0], template.Size);
+
+                        imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                        resultWhite.Add(currentItem);
+                    }
+
+                    imgSrc.Bitmap.Save(NodImages.InventoryScan, ImageFormat.Png);
+                }
+
+                for (int i = 0; i < blacklist.Count; i++)
+                {
+                    Item currentItem = blacklist.ElementAt(i);
+                    Image<Bgr, byte> template = new Image<Bgr, byte>(currentItem.imageFile); // Image A
+
+                    //updated and changed TemplateMatchingType- CcoeffNormed.
+
+                    Point[] minLocations, maxLocations;
+                    bool result = containsTemplate(imgSrc, template, out maxLocations, out minLocations);
+
+                    if (result)
+                    {
+                        Rectangle match = new Rectangle(maxLocations[0], template.Size);
+                        imgSrc.Draw(match, new Bgr(Color.Pink), -1);
+                        resultBlack.Add(currentItem);
+                    }
+
+                    imgSrc.Bitmap.Save(NodImages.InventoryScan, ImageFormat.Png);
+                }
+            }
         }
 
         public void findMatchTest(String baseImage, String templateImage, Color invMatchColor, Color storageMatchColor)
@@ -362,7 +531,7 @@ namespace NodBot.Code
         {
             Rectangle roi = image.ROI;
             image.ROI = rect;
-            Image <Bgr, byte> newImage = image.Copy();
+            Image<Bgr, byte> newImage = image.Copy();
             image.ROI = roi;
 
             return newImage;
@@ -403,13 +572,13 @@ namespace NodBot.Code
                 Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
 
                 var temp2 = source.GetAverage();
-                    var temp = source.CountNonzero();
-                    if (temp2.Red < 5 && temp2.Blue < 5 && temp2.Green < 5)
-                    {
-                        return true;
-                    }
+                var temp = source.CountNonzero();
+                if (temp2.Red < 5 && temp2.Blue < 5 && temp2.Green < 5)
+                {
+                    return true;
+                }
 
-                    return false;
+                return false;
 
             }
             catch (Exception ex)
@@ -430,7 +599,7 @@ namespace NodBot.Code
 
                 template.Bitmap.Save(NodImages.Temp_Inventory_2);
 
-                rect = new Rectangle(rect.X+1, rect.Y+1, template.Width, template.Height);
+                rect = new Rectangle(rect.X + 1, rect.Y + 1, template.Width, template.Height);
 
                 copySubImage(rect, source).Save(NodImages.Temp_Inventory_1);
                 Image<Bgr, byte> filteredSource = new Image<Bgr, byte>(NodImages.Temp_Inventory_1);
@@ -452,7 +621,8 @@ namespace NodBot.Code
 
                     return false;
                 }
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.Out.WriteLine(ex.StackTrace);
                 // Sometimes throws exception if template match is not found
@@ -461,30 +631,36 @@ namespace NodBot.Code
             return false;
         }
 
-        public Point? FindMatchTemplate(String baseImage, String templateImage,bool updateCurrentScreen = false)
+        public Point? FindMatchTemplate(String baseImage, String templateImage, bool updateCurrentScreen = false, String postfix = "", double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            if(updateCurrentScreen) CaptureScreen(NodImages.CurrentSS);
+            if (updateCurrentScreen) CaptureScreen(NodImages.CurrentSS);
 
             Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
             Image<Bgr, byte> imageToShow = source.Copy();
 
-            using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
+            using (Image<Gray, float> result = source.MatchTemplate(template, matchType))
             {
                 double[] minValues, maxValues;
                 Point[] minLocations, maxLocations;
                 result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
 
                 // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
-                if (maxValues[0] > 0.9)
+                if (maxValues[0] > threshold)
                 {
                     // This is a match. Do something with it, for example draw a rectangle around it.
                     Rectangle match = new Rectangle(maxLocations[0], template.Size);
                     imageToShow.Draw(match, new Bgr(Color.Red), 3);
-                    imageToShow.Bitmap.Save(NodImages.CompareResult, ImageFormat.Png);
 
+
+                    imageToShow.Bitmap.Save(NodImages.CompareResult.Replace(".png", postfix + ".png"), ImageFormat.Png);
+                    imageToShow.Bitmap.Save(baseImage, ImageFormat.Png);
+
+                    Console.Out.WriteLine("Found [" + templateImage + "] in [" + baseImage + "] >> " + maxValues[0]);
                     return maxLocations[0];
                 }
+
+                Console.Out.WriteLine("Failed to find [" + templateImage + "] in [" + baseImage + "] >> " + maxValues[0]);
 
                 new Bitmap(20, 20).Save(NodImages.CompareResult);
                 return null;
@@ -649,12 +825,12 @@ namespace NodBot.Code
                     Point[] points = Array.ConvertAll<PointF, Point>(pts, Point.Round);
                     using (VectorOfPoint vp = new VectorOfPoint(points))
                     {
-                       CvInvoke.Polylines(result, vp, true, new MCvScalar(255, 0, 0, 255), 5);
+                        CvInvoke.Polylines(result, vp, true, new MCvScalar(255, 0, 0, 255), 5);
 
                         // return random point to click
-                        int rand = points.Length-1; // retrieve last point
-                        if(random) rand = new Random().Next(0, points.Length - 1); // random point
-                        resultPoint =  points[rand];
+                        int rand = points.Length - 1; // retrieve last point
+                        if (random) rand = new Random().Next(0, points.Length - 1); // random point
+                        resultPoint = points[rand];
                     }
 
                 }
@@ -671,7 +847,7 @@ namespace NodBot.Code
             {
 
                 bool res = UpdateWindow(hWnd);
-              
+
 
 
                 Rectangle rctForm = new Rectangle();
@@ -698,7 +874,7 @@ namespace NodBot.Code
                     graphics.ReleaseHdc(hDC);
                 }
 
-                pImage.Save(NodImages.PlayerDebug, ImageFormat.Png);
+                //pImage.Save(NodImages.PlayerDebug, ImageFormat.Png);
                 return pImage;
             }
             catch (Exception ex)

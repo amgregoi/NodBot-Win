@@ -1,0 +1,89 @@
+﻿{
+  "items": [
+    {
+      "id": 101,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore//t1.png"
+    },
+    {
+      "id": 102,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore//t1.png"
+    },
+    {
+      "id": 103,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 104,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 105,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 106,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 107,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 108,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 109,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 110,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 111,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 112,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 113,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+    {
+      "id": 114,
+      "name": "Ore1",
+      "itemType": "Ore",
+      "imageFile": "Images//ore/t1.png"
+    },
+
+  ]
+}

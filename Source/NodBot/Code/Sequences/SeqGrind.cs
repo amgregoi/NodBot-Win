@@ -16,8 +16,6 @@ namespace NodBot.Code
 
     public class SeqGrind : SeqBase, GrindCallback
     {
-        private InventoryService inventoryService;
-
         private IProgress<int> mProgressKillCount;
         private IProgress<int> mProgressChestCount;
 
@@ -78,8 +76,15 @@ namespace NodBot.Code
                     }
                     else if (combatState >= SequenceState.ATTACK && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) != null)
                     {
-                        // TODO :: Make resource waiting a property, off by default atm
-                        if (Settings.WAIT_FOR_RESOURCES && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.PlayerResourceMinimum) == null)
+
+                        if (Settings.RESOURCE_MINING && imageService.FindTemplateMatchWithXConstraint(NodImages.MiningIcon, 950, true, true).Count > 0)
+                        {
+                            new SeqMining(tokenSource, logger).Start().Wait();
+                            timeService.delay(1000);
+                        }
+
+                            // TODO :: Make resource waiting a property, off by default atm
+                            if (Settings.WAIT_FOR_RESOURCES && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.PlayerResourceMinimum) == null)
                         {
                             logger.sendLog("Waiting for resources to regen", LogType.INFO);
                             timeService.delay(3000);

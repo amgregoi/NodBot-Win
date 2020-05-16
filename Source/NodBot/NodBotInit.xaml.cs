@@ -56,6 +56,9 @@ namespace NodBot
                     Settings.SETTINGS_FILE = openFileDialog.FileName;
                     readSettingFile();
                     System.IO.Directory.CreateDirectory("Images\\" + Settings.Player.playerName);
+
+                    new NodBotAI().Show();
+                    this.Close();
                 }
             }
             catch (Exception ex)
