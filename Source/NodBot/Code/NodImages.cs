@@ -15,6 +15,10 @@ namespace NodBot.Code
         public String PATH { get { return mPath; } }
 
         public static String Exit { get { return new NodImages("exit.png").PATH; } }
+        public static String ButtonYes { get { return new NodImages("button_yes.png").PATH; } }
+        public static String ButtonNo { get { return new NodImages("button_no.png").PATH; } }
+        public static String DestroyItem { get { return new NodImages("destroy_item.png").PATH; } }
+
         public static String Chest1 { get { return new NodImages("chest1.png").PATH; } }
         public static String Chest2 { get { return new NodImages("chest2.png").PATH; } }
         public static String Chest3 { get { return new NodImages("chest3.png").PATH; } }
@@ -27,58 +31,46 @@ namespace NodBot.Code
         public static String Rock1 { get { return new NodImages("mining/rock_1.png").PATH; } }
         public static String Rock2{ get { return new NodImages("mining/rock_2.png").PATH; } }
         public static String Rock3 { get { return new NodImages("mining/rock_3.png").PATH; } }
+        public static String Rock4 { get { return new NodImages("mining/rock_4.png").PATH; } }
         public static String MiningIcon { get { return new NodImages("mining/icon.png").PATH; } }
-        public static String RockTest { get { return new NodImages("poft/rock_test.png").PATH; } }
 
-
+        // Combat + Arena
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }
         public static String Arena { get { return new NodImages("arena.png").PATH; } }
         public static String ArenaVerify { get { return new NodImages("arena_queue_check.png").PATH; } }
         public static String PlayerResourceMinimum { get { return new NodImages("player_resource_minimum.png").PATH; } }
 
-        public static String Temp_Inventory_1 { get { return new NodImages("temp_inv_1.png").PATH; } }
-        public static String Temp_Inventory_2 { get { return new NodImages("temp_inv_2.png").PATH; } }
-
-
+        // Town Walking
         public static String Town4 { get { return new NodImages("town4.png").PATH; } }
         public static String Town5 { get { return new NodImages("town5.png").PATH; } }
 
-        public static String Empty { get { return new NodImages("empty.png").PATH; } }
 
+        // Inventory
         public static String Empty_Black { get { return new NodImages("empty_inventory.png").PATH; } }
         public static String Empty_Black_Filtered { get { return new NodImages("empty_inventory_filtered.png").PATH; } }
+        public static String Empty { get { return new NodImages("empty.png").PATH; } }
 
         // Player Specific
+        public static String NeutralSS { get { return new NodImages(Settings.Player.playerName + "\\player_neutral_.png").PATH; } }
+        public static String GameWindow { get { return new NodImages(Settings.Player.playerName + "\\screen.png").PATH; } }
+        public static String GameWindow_Game { get { return new NodImages(Settings.Player.playerName + "\\screen_Game.png").PATH; } }
+        public static String GameWindow_Inventory { get { return new NodImages(Settings.Player.playerName + "\\screen_Inventory.png").PATH; } }
+        public static String GameWindow_Storage { get { return new NodImages(Settings.Player.playerName + "\\screen_Storage.png").PATH; } }
+
+        // Debug
+        public static String Temp_Inventory_1 { get { return new NodImages("temp_inv_1.png").PATH; } }
+        public static String Temp_Inventory_2 { get { return new NodImages("temp_inv_2.png").PATH; } }
         public static String PlayerDebug { get { return new NodImages(Settings.Player.playerName + "\\__god_damn_updates.png").PATH; } }
 
-        public static String CurrentSS { get { return new NodImages(Settings.Player.playerName+"\\current_ss_.png").PATH; } }
-        public static String CurrentSS_Right { get { return new NodImages(Settings.Player.playerName + "\\current_ss_right_.png").PATH; } }
-        public static String CurrentSS_Verify_Item { get { return new NodImages(Settings.Player.playerName + "\\current_ss_verify_item_.png").PATH; } }
-        public static String NeutralSS { get { return new NodImages(Settings.Player.playerName + "\\player_neutral_.png").PATH; } }
-
-        // MISC
-        public static String Test { get { return new NodImages("test_ss.png").PATH; } }
-        public static String Test2 { get { return new NodImages("test2_ss.png").PATH; } }
-
-
-        public static String CompareResult { get { return new NodImages(Settings.Player.playerName + "\\compare_result.png").PATH; } }
-        public static String CompareResultX { get { return new NodImages(Settings.Player.playerName + "\\compare_result_x.png").PATH; } }
-        public static String CompareResultY { get { return new NodImages(Settings.Player.playerName + "\\compare_result_y.png").PATH; } }
-        public static String InventoryScan { get { return new NodImages(Settings.Player.playerName + "\\inventory_scan.png").PATH; } }
-
+        // Misc.
         public static String StatDistribution { get { return new NodImages("stats.png").PATH; } }
         public static String X { get { return new NodImages("x.png").PATH; } }
+        public static String X2 { get { return new NodImages("x2.png").PATH; } }
         public static String Gate { get { return new NodImages("gate.png").PATH; } }
-
-
-        // Inventory management
-        public static String Trophy1 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t1.png").PATH; } }
-        public static String Trophy2 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t2.png").PATH; } }
-        public static String Trophy3 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t3.png").PATH; } }
-        public static String Trophy4 { get { return new NodImages("trophy\\" + Settings.ZONE + "\\t4.png").PATH; } }
 
         // Ore
         public static String Ore_T1 { get { return new NodImages("ore\\t1.png").PATH; } }
+        public static String Ore_T2 { get { return new NodImages("ore\\t2.png").PATH; } }
         public static String Ore_T17 { get { return new NodImages("ore\\t17.png").PATH; } }
         public static String Ore_T18 { get { return new NodImages("ore\\t18.png").PATH; } }
         public static String Ore_T19 { get { return new NodImages("ore\\t19.png").PATH; } }

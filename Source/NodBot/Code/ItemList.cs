@@ -12,12 +12,13 @@ namespace NodBot.Code
         public ItemType itemType;
         public int id;
         public String imageFile;
-
-        public Item(int id, ItemType itemType, String file)
+        public double threshold;
+        public Item(int id, ItemType itemType, String file, double threshold = 0.95)
         {
             this.id = id;
             this.itemType = itemType;
             this.imageFile = file;
+            this.threshold = threshold;
         }
     }
 
@@ -56,6 +57,15 @@ namespace NodBot.Code
 
         public ItemList()
         {
+
+            setupWhiteList();
+            setupBlackList();
+
+            // TODO :: read items.json file and populate initial item list  
+        }
+
+        private void setupWhiteList()
+        {
             itemWhiteList.Add(new Item(10001, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t1.png"));
             itemWhiteList.Add(new Item(10002, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t2.png"));
             itemWhiteList.Add(new Item(10003, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t3.png"));
@@ -76,25 +86,86 @@ namespace NodBot.Code
             itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t3.png"));
             itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t4.png"));
 
+            itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\DMV\\t1.png"));
+            itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\DMV\\t2.png"));
+            itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\DMV\\t3.png"));
+            itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\DMV\\t4.png"));
 
-            itemWhiteList.Add(new Item(100, ItemType.Ore, NodImages.Ore_T1));
+            itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t1.png"));
+            itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t2.png"));
+            itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t3.png"));
+            //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t4.png"));
 
 
-            itemBlackList.Add(new Item(1001, ItemType.Silk, NodImages.Silk_T1));
-            itemBlackList.Add(new Item(1004, ItemType.Silk, NodImages.Silk_T4));
-            itemBlackList.Add(new Item(1006, ItemType.Silk, NodImages.Silk_T6));
-            itemBlackList.Add(new Item(1008, ItemType.Silk, NodImages.Silk_T8));
+            itemWhiteList.Add(new Item(1, ItemType.Potion, "Images\\gate.png"));
+            itemWhiteList.Add(new Item(2, ItemType.Potion, "Images\\recall.png"));
+            itemWhiteList.Add(new Item(3, ItemType.Item, "Images\\heroic_ess.png"));
 
-            // TODO :: read items.json file and populate initial item list  
+
+            //itemWhiteList.Add(new Item(101, ItemType.Ore, "Images\\ore\\t1.png"));
+            //itemWhiteList.Add(new Item(102, ItemType.Ore, "Images\\ore\\t2.png"));
+            //itemWhiteList.Add(new Item(103, ItemType.Ore, "Images\\ore\\t3.png"));
+            //itemWhiteList.Add(new Item(104, ItemType.Ore, "Images\\ore\\t4.png"));
+            //itemWhiteList.Add(new Item(105, ItemType.Ore, "Images\\ore\\t5.png"));
+            //itemWhiteList.Add(new Item(106, ItemType.Ore, "Images\\ore\\t6.png"));
+            //itemWhiteList.Add(new Item(108, ItemType.Ore, "Images\\ore\\t8.png"));
+            //itemWhiteList.Add(new Item(110, ItemType.Ore, "Images\\ore\\t10.png"));
+            //itemWhiteList.Add(new Item(112, ItemType.Ore, "Images\\ore\\t12.png"));
+            //itemWhiteList.Add(new Item(113, ItemType.Ore, "Images\\ore\\t13.png"));
+            //itemWhiteList.Add(new Item(115, ItemType.Ore, "Images\\ore\\t15.png"));
+            //itemWhiteList.Add(new Item(116, ItemType.Ore, "Images\\ore\\t15.png"));
+            itemWhiteList.Add(new Item(117, ItemType.Ore, "Images\\ore\\t17.png"));
+            itemWhiteList.Add(new Item(118, ItemType.Ore, "Images\\ore\\t18.png"));
+            itemWhiteList.Add(new Item(119, ItemType.Ore, "Images\\ore\\t19.png"));
+            itemWhiteList.Add(new Item(120, ItemType.Ore, "Images\\ore\\t20.png"));
+            itemWhiteList.Add(new Item(121, ItemType.Ore, "Images\\ore\\t21.png"));
+            itemWhiteList.Add(new Item(122, ItemType.Ore, "Images\\ore\\t22.png"));
+
+            itemWhiteList.Add(new Item(1021, ItemType.Silk, "Images\\silk\\t21.png"));
+            itemWhiteList.Add(new Item(1022, ItemType.Silk, "Images\\silk\\t22.png"));
+            itemWhiteList.Add(new Item(1025, ItemType.Silk, "Images\\silk\\t25.png"));
         }
 
-        private void setupWhiteList()
-        {
-
-        }
-
+        /// <summary>
+        /// 
+        /// </summary>
         private void setupBlackList()
         {
+            itemWhiteList.Add(new Item(100, ItemType.Ore, "Images\\ore\\t0.png"));
+
+            itemBlackList.Add(new Item(1001, ItemType.Silk, "Images\\silk\\t1.png"));
+            itemBlackList.Add(new Item(1002, ItemType.Silk, "Images\\silk\\t2.png"));
+            itemBlackList.Add(new Item(1003, ItemType.Silk, "Images\\silk\\t3.png"));
+            itemBlackList.Add(new Item(1004, ItemType.Silk, "Images\\silk\\t4.png"));
+            itemBlackList.Add(new Item(1005, ItemType.Silk, "Images\\silk\\t5.png"));
+            itemBlackList.Add(new Item(1006, ItemType.Silk, "Images\\silk\\t6.png"));
+            itemBlackList.Add(new Item(1007, ItemType.Silk, "Images\\silk\\t7.png"));
+            itemBlackList.Add(new Item(1008, ItemType.Silk, "Images\\silk\\t8.png"));
+            itemBlackList.Add(new Item(1009, ItemType.Silk, "Images\\silk\\t9.png"));
+            itemBlackList.Add(new Item(1010, ItemType.Silk, "Images\\silk\\t10.png"));
+            itemBlackList.Add(new Item(1011, ItemType.Silk, "Images\\silk\\t11.png"));
+            itemBlackList.Add(new Item(1012, ItemType.Silk, "Images\\silk\\t12.png"));
+            itemBlackList.Add(new Item(1014, ItemType.Silk, "Images\\silk\\t14.png"));
+            itemBlackList.Add(new Item(1015, ItemType.Silk, "Images\\silk\\t15.png"));
+            itemBlackList.Add(new Item(1019, ItemType.Silk, "Images\\silk\\t19.png"));
+
+
+            itemBlackList.Add(new Item(101, ItemType.Ore, "Images\\ore\\t1.png"));
+            itemBlackList.Add(new Item(102, ItemType.Ore, "Images\\ore\\t2.png"));
+            itemBlackList.Add(new Item(103, ItemType.Ore, "Images\\ore\\t3.png"));
+            itemBlackList.Add(new Item(104, ItemType.Ore, "Images\\ore\\t4.png"));
+            itemBlackList.Add(new Item(105, ItemType.Ore, "Images\\ore\\t5.png"));
+            itemBlackList.Add(new Item(106, ItemType.Ore, "Images\\ore\\t6.png"));
+            itemBlackList.Add(new Item(107, ItemType.Ore, "Images\\ore\\t7.png"));
+            itemBlackList.Add(new Item(108, ItemType.Ore, "Images\\ore\\t8.png"));
+            itemBlackList.Add(new Item(109, ItemType.Ore, "Images\\ore\\t9.png"));
+            itemBlackList.Add(new Item(110, ItemType.Ore, "Images\\ore\\t10.png"));
+            itemBlackList.Add(new Item(111, ItemType.Ore, "Images\\ore\\t11.png"));
+            itemBlackList.Add(new Item(112, ItemType.Ore, "Images\\ore\\t12.png"));
+            itemBlackList.Add(new Item(113, ItemType.Ore, "Images\\ore\\t13.png", 0.80));
+            itemBlackList.Add(new Item(114, ItemType.Ore, "Images\\ore\\t14.png"));
+            itemBlackList.Add(new Item(115, ItemType.Ore, "Images\\ore\\t15.png"));
+            itemBlackList.Add(new Item(116, ItemType.Ore, "Images\\ore\\t16.png"));
 
         }
 
@@ -103,11 +174,5 @@ namespace NodBot.Code
             var item = itemList.FirstOrDefault(it => it.id == id);
             return item;
         }
-
-        // Trophies
-        public static Item Trophy1 = new Item(id: 1, itemType: Enums.ItemType.Trophy, file: NodImages.Trophy1);
-        public static Item Trophy2 = new Item(id: 2, itemType: Enums.ItemType.Trophy, file: NodImages.Trophy2);
-        public static Item Trophy3 = new Item(id: 3, itemType: Enums.ItemType.Trophy, file: NodImages.Trophy3);
-        public static Item Trophy4 = new Item(id: 4, itemType: Enums.ItemType.Trophy, file: NodImages.Trophy4);
     }
 }

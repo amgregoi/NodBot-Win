@@ -1,9 +1,5 @@
 ﻿using NodBot.Code.Enums;
 using NodBot.Code.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +28,6 @@ namespace NodBot.Code
             nodInputService = new NodiatisInputService(logger);
             imageService = new ImageService(tokenSource, logger, nodInputService.inputService.getGameWindow());
             inventoryService = InventoryService.Instance;
-            //inventoryService = new InventoryService(nodInputService.inputService);
         }
 
         public virtual async Task Start()

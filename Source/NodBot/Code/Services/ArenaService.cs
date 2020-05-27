@@ -25,14 +25,13 @@ namespace NodBot.Code.Services
             timeService = new TimeService(logger);
         }
 
-
         public async Task StartCombat()
         {
             mLogger.sendMessage("Starting Attack", LogType.INFO);
 
 
             timeService.delay(500);
-            if (imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.Arena, true) == null) return;
+            if (!imageService.ContainsTemplateMatch(NodImages.Arena, screenSection: ScreenSection.Game)) return;
 
             // start auto attack [A/S]
             if (Settings.Player.isMelee)

@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Diagnostics;
 using NodBot.Code.Services;
 using NodBot.Code.Enums;
+using System.Windows.Forms;
 
 namespace NodBot.Code
 {
@@ -53,6 +54,8 @@ namespace NodBot.Code
 
             combatState = SequenceState.BOT_START;
 
+            var defaultImages = new List<string>() { NodImages.X, NodImages.X2, NodImages.ButtonNo};
+
             while (true)
             {
                 try
@@ -61,37 +64,48 @@ namespace NodBot.Code
 
                     imageService.CaptureScreen();
 
-                    var dialog = imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.X);
-                    if (dialog != null)
-                    {
-                        nodInputService.ClickOnPoint(dialog.Value.X, dialog.Value.Y, true);
-                        continue;
-                    }
+                    var result = imageService.FindTemplateMatch(defaultImages, screenSection: ScreenSection.Game);
+                    var forceContinue = false;
 
-                    if (combatState >= SequenceState.WAIT && imageService.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
+                    result.ForEach(dialogItem =>
                     {
+                        if (dialogItem != null)
+                        {
+                            nodInputService.ClickOnPoint(dialogItem.X, dialogItem.Y, true);
+                            forceContinue = true;
+                        }
+                    });
+
+                    if (forceContinue) continue;
+                    
+
+                    if (combatState >= SequenceState.WAIT && imageService.ContainsMatch(NodImages.Exit, screenSection:ScreenSection.Game))
+                    {
+                        // Wait for inventory service to finish running
+                        while (inventoryService.isRunning) Task.Delay(500).Wait();
+
                         grindService.EndCombat().Wait();
-                        if (Settings.isManagingInventory() && inventoryService.isStorageEmpty()) token.ThrowIfCancellationRequested();
+                        if (Settings.MANAGE_INVENTORY && inventoryService.IsStorageEmpty) token.ThrowIfCancellationRequested();
                         Task.Delay(1000).Wait();
                     }
-                    else if (combatState >= SequenceState.ATTACK && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.NeutralSS) != null)
+                    else if (combatState >= SequenceState.ATTACK && imageService.ContainsTemplateMatch(NodImages.NeutralSS, screenSection: ScreenSection.Game))
                     {
 
-                        if (Settings.RESOURCE_MINING && imageService.FindTemplateMatchWithXConstraint(NodImages.MiningIcon, 950, true, true).Count > 0)
+                        if (Settings.RESOURCE_MINING && imageService.ContainsTemplateMatch(NodImages.MiningIcon, ScreenSection.Game))
                         {
                             new SeqMining(tokenSource, logger).Start().Wait();
                             timeService.delay(1000);
                         }
 
-                            // TODO :: Make resource waiting a property, off by default atm
-                            if (Settings.WAIT_FOR_RESOURCES && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.PlayerResourceMinimum) == null)
+                        // TODO :: Make resource waiting a property, off by default atm
+                        if (Settings.WAIT_FOR_RESOURCES && !imageService.ContainsTemplateMatch(NodImages.PlayerResourceMinimum, screenSection: ScreenSection.Game))
                         {
                             logger.sendLog("Waiting for resources to regen", LogType.INFO);
                             timeService.delay(3000);
                             continue;
                         }
 
-                        if (Settings.ARENA && imageService.FindTemplateMatchWithYConstraint(NodImages.ArenaVerify, 700, false).Count == 0)
+                        if (Settings.ARENA && !imageService.ContainsTemplateMatch(NodImages.ArenaVerify, ScreenSection.Game))
                         {
                             for (int i = 0; i < 3; i++)
                             {
@@ -99,7 +113,7 @@ namespace NodBot.Code
 
                                 // If we find arena queue icon, exit loop
                                 timeService.delay(250);
-                                if (imageService.FindTemplateMatchWithYConstraint(NodImages.ArenaVerify, 700, false, true).Count > 0)
+                                if (imageService.ContainsTemplateMatch(NodImages.ArenaVerify, ScreenSection.Game))
                                 {
                                     isInArenaQueue = true;
                                     break;
@@ -110,11 +124,11 @@ namespace NodBot.Code
                         grindService.enterCombat().Wait();
                         Task.Delay(1500).Wait();
                     }
-                    else if (Settings.ARENA && imageService.FindMatchTemplate(NodImages.CurrentSS, NodImages.Arena) != null)
+                    else if (Settings.ARENA && imageService.ContainsTemplateMatch(NodImages.Arena, screenSection: ScreenSection.Game))
                     {
                         if (!isInArenaQueue) continue; // Already in arena combat, don't restart count-down
 
-                        for(int i=13; i>=0; i--)
+                        for (int i = 13; i >= 0; i--)
                         {
                             logger.sendMessage("Starting arena in ~" + i + "secs", LogType.INFO);
                             Task.Delay(1000).Wait();
@@ -124,18 +138,20 @@ namespace NodBot.Code
 
                         arenaService.StartCombat().Wait();
                     }
-                    else if (combatState >= SequenceState.INIT && imageService.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
+                    else if (combatState >= SequenceState.INIT && imageService.ContainsMatch(NodImages.InCombat, screenSection: ScreenSection.Game))
                     {
                         grindService.startCombat().Wait();
                     }
                     else
                     {
-                        await combatBetweenStateAsync();
+                        await CombatBetweenStateAsync();
                     }
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     if (ex is OperationCanceledException) break;
 
+                    logger.sendLog(ex.Message, LogType.WARNING);
                     logger.sendLog(ex.StackTrace, LogType.WARNING);
                 }
             }
@@ -146,7 +162,7 @@ namespace NodBot.Code
         /// 
         /// </summary>
         /// <returns></returns>
-        private async Task combatBetweenStateAsync()
+        private async Task CombatBetweenStateAsync()
         {
             if (combatState > SequenceState.WAIT)
             {

@@ -32,7 +32,7 @@
         <Button x:Name="test_button" Content="Test(s)" HorizontalAlignment="Left" Margin="105,175,0,0" VerticalAlignment="Top" Width="75" Click="TestButton_Click" Height="21"/>
         <CheckBox x:Name="debug_checkbox" Content="Debug" HorizontalAlignment="Left" Margin="9,79,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="55" />
         <TextBox x:Name="log_textbox" Height="127" Margin="10,200,-50,0" TextWrapping="Wrap" VerticalAlignment="Top" MaxLines="1000" IsReadOnly="True" Grid.ColumnSpan="3" FontSize="11" FontFamily="Trebuchet MS"/>
-        <ComboBox x:Name="options_combo" HorizontalAlignment="Left" Margin="11,135,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.005,0.577" Height="22"/>
+        <ComboBox x:Name="options_combo" HorizontalAlignment="Left" Margin="11,135,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.005,0.577" Height="22" SelectionChanged="options_combo_SelectionChanged"/>
         <Button x:Name="clear_button" Content="Clear" HorizontalAlignment="Left" Margin="0,175,-50,0" VerticalAlignment="Top" Width="50" Click="ClearButton_Click" Height="21" Grid.Column="2"/>
         <CheckBox x:Name="arena_checkbox" Content="Arena" HorizontalAlignment="Left" Margin="112,34,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="55" />
         <CheckBox x:Name="bossing_checkbox" Content="Bossing" HorizontalAlignment="Left" Margin="112,57,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="68" />
@@ -42,8 +42,8 @@
                 <MenuItem Header="Take Neutral SS" Click="NeutralMenuItem_Click" HorizontalAlignment="Left" Width="158" UseLayoutRounding="False" Height="18" Padding="0,0,-19.8,0"/>
             </MenuItem>
         </Menu>
-        <ComboBox x:Name="options_combo_zones" HorizontalAlignment="Left" Margin="152,135,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.005,0.577" Height="22" SelectionChanged="options_combo_zones_SelectionChanged"/>
         <CheckBox x:Name="resource_wait" Content="Wait for Resources" HorizontalAlignment="Left" Margin="112,79,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="123" />
-        <CheckBox x:Name="option_mining" Content="Mining" HorizontalAlignment="Left" Margin="9,101,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="123" />
+        <CheckBox x:Name="option_mining" Content="Mining" HorizontalAlignment="Left" Margin="9,101,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="66" />
+        <CheckBox x:Name="manage_inventory" Content="Manage Inventory" HorizontalAlignment="Left" Margin="112,101,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="123" />
     </Grid>
 </Window>

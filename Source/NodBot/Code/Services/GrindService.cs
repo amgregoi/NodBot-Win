@@ -37,17 +37,6 @@ namespace NodBot.Code.Services
             inventoryService = InventoryService.Instance;
         }
 
-
-        private void setupInventoryService()
-        {
-            if (Settings.isManagingInventory())
-            {
-                Task.Run(() =>
-                {
-                    inventoryService = new InventoryService(nodInput.inputService);
-                });
-            }
-        }
         /// <summary>
         /// This function initiates combat from the over world map.
         /// 
@@ -65,10 +54,12 @@ namespace NodBot.Code.Services
             killCounter++;
             grindCallback.updateKillCounter();
 
-            if (Settings.isManagingInventory())
+            if (Settings.MANAGE_INVENTORY)
             {
-                if (inventoryService == null) setupInventoryService();
-                else inventoryService.sortInventory();
+                _ = Task.Run(() =>
+                  {
+                      if (inventoryService != null) inventoryService.SortInventory();
+                  });
             }
         }
 

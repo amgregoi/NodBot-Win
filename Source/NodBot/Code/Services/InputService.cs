@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodBot.Code.Model;
+using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -52,15 +53,29 @@ namespace NodBot.Code
             SetCursorPos(rect.X + x, rect.Y + y);
         }
 
-        public void leftClick()
+        public void leftClick(UIPoint point = null)
         {
+            if (point != null)
+            {
+                moveMouse(point.X, point.Y);
+                Task.Delay(100).Wait();
+            }
+
             SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
         }
 
-        public void rightClick()
+        public void rightClick(UIPoint point = null)
         {
+            if (point != null)
+            {
+                moveMouse(point.X, point.Y);
+                Task.Delay(100).Wait();
+            }
+
             SendMessage(game_hwnd, WM_RBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_RBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
         }
 
@@ -131,7 +146,7 @@ namespace NodBot.Code
 
             Task.Delay(100).Wait();
 
-            SetCursorPos(rect.X + x2, rect.Y + y2);
+             SetCursorPos(rect.X + x2, rect.Y + y2);
             Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
             Task.Delay(50);

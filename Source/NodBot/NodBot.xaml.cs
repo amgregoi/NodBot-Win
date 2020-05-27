@@ -13,6 +13,7 @@ using System.Drawing;
 using NodBot.Code.Services;
 using Emgu.CV;
 using System.Collections;
+using NodBot.Code.Enums;
 
 namespace NodBot
 {
@@ -26,7 +27,6 @@ namespace NodBot
 
         private SeqGrind mGrindSequence;
         private SeqTownWalk mTownWalkSequence;
-        private SeqArena mArenaSequence;
 
         private Logger mLogger;
         private NodiatisInputService mInput;
@@ -39,7 +39,7 @@ namespace NodBot
         private Progress<int> progressKillCount;
         private Progress<int> progressChestCount;
         private Progress<string> progressLog;
-        private string[] mNodBotOptions = { "Farm", "Arena", "Town Walk(T4)", "Town Walk(T5)" };
+        private string[] mNodBotOptions = { "Farm", "Town Walk(T4)", "Town Walk(T5)" };
 
         public NodBotAI()
         {
@@ -50,8 +50,6 @@ namespace NodBot
         private void init()
         {
             this.Title = "Player - " + Settings.Player.playerName;
-
-            GetSupportedTrophyZones();
 
             // init logger
             progressKillCount = new Progress<int>(value => updateKillCount());
@@ -67,7 +65,6 @@ namespace NodBot
             options_combo.Items.Add(mNodBotOptions[0]);
             options_combo.Items.Add(mNodBotOptions[1]);
             options_combo.Items.Add(mNodBotOptions[2]);
-            options_combo.Items.Add(mNodBotOptions[3]);
             options_combo.SelectedIndex = 0;
         }
 
@@ -88,11 +85,30 @@ namespace NodBot
         /// <param name="e"></param>
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
-            ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
+            //ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
+            //var iconPoint = test.FindTemplateMatch(NodImages.Silk_T6, screenSection: ScreenSection.Inventory, threshold: 0.75);
 
-          
+            //if(iconPoint != null)
+            //{
+            //    mInventory.DeleteItem(iconPoint);
+            //}
 
-            if (mInventory != null) mInventory.sortInventory();
+
+            /*
+             * var iconPoint = test.FindTemplateMatch(NodImages.Exit, screenSection: ScreenSection.Game, threshold:0.75);
+            var iconPoint = mInventory.GetFirstEmptyInventorySpace();
+            var result = test.ContainsMatch(NodImages.Exit, ScreenSection.Game)
+            if (iconPoint == null)
+                Console.Out.WriteLine("oops");
+            else
+            {
+                mInput.inputService.moveMouse(iconPoint.X, iconPoint.Y);
+                Console.Out.WriteLine("oops");
+            }
+            */
+            //test.FindMatchTemplate("Images//Poft//__source_rock.png", "Images//Poft//__template_rock.png", threshold: 0.952, matchType: Emgu.CV.CvEnum.TemplateMatchingType.CcorrNormed);
+
+            if (mInventory != null) mInventory.SortInventory();
         }
 
         /// <summary>
@@ -129,7 +145,7 @@ namespace NodBot
             }
 
             cts = new CancellationTokenSource();
-            
+
             cts.Token.Register(() =>
             {
                 if (!isManualStop) startGrind();
@@ -144,11 +160,6 @@ namespace NodBot
                 if (grindOption == 0)
                 {
                     mCurrentSequence = new SeqGrind(cts, mLogger, progressKillCount, progressChestCount);
-                    await mCurrentSequence.Start();
-                }
-                else if (grindOption == 1)
-                {
-                    mCurrentSequence = new SeqArena(cts, mLogger);
                     await mCurrentSequence.Start();
                 }
                 else if (grindOption == 2 || grindOption == 3)
@@ -215,6 +226,9 @@ namespace NodBot
                 case "option_mining":
                     Settings.RESOURCE_MINING = true;
                     break;
+                case "manage_inventory":
+                    Settings.MANAGE_INVENTORY = true;
+                    break;
             }
         }
 
@@ -253,6 +267,10 @@ namespace NodBot
                 case "option_mining":
                     Settings.RESOURCE_MINING = false;
                     break;
+                case "manage_inventory":
+                    Settings.MANAGE_INVENTORY = false;
+                    break;
+
             }
         }
 
@@ -375,28 +393,14 @@ namespace NodBot
             return JsonConvert.DeserializeObject<PlayerSettings>(json);
         }
 
+        private void options_combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
         public String SerializePlayerSettings(PlayerSettings settings)
         {
             return JsonConvert.SerializeObject(settings);
-        }
-
-        private void options_combo_zones_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-            Settings.ZONE = (String) options_combo_zones.Items.GetItemAt(options_combo_zones.SelectedIndex);
-        }
-
-        private void GetSupportedTrophyZones()
-        {
-            // Process the list of files found in the directory.
-            string[] folderEntries = Directory.GetDirectories("Images\\trophy");
-            foreach (String zone in folderEntries)
-            {
-                var title = zone.Split(new char[] { '\\' }).Last();
-                options_combo_zones.Items.Add(title);
-            }
-
-            options_combo_zones.SelectedIndex = 0;
         }
     }
 }

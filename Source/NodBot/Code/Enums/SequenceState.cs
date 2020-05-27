@@ -38,9 +38,4 @@ namespace NodBot.Code.Enums
         //Resourcing
         RESOURCING = 40
     }
-
-    public enum ItemType
-    {
-        Trophy, Potion, Ore, Silk
-    }
 }

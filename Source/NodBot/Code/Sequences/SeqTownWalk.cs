@@ -3,7 +3,8 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using NodBot.Code.Enums;
+using NodBot.Code.Model;
 
 namespace NodBot.Code
 {
@@ -56,7 +57,7 @@ namespace NodBot.Code
         /// <returns></returns>
         public override async Task Start()
         {
-            Point? aTown = null, aPrev = null;
+            UIPoint aTown = null, aPrev = null;
             bool seenT4 = false, seenT5 = false;
 
             while (true)
@@ -66,13 +67,13 @@ namespace NodBot.Code
                 if (mTravelNorth)
                 {
                     //aTown = imageService.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
-                    List<Point> matches = imageService.FindTemplateMatches(NodImages.Town5);
+                    List<UIPoint> matches = imageService.FindTemplateMatches(NodImages.Town5);
                     if (matches == null || matches.Count <= 0) aTown = null;
                     else aTown = matches[0];
 
                     if (!seenT5) seenT5 = aTown != null;
 
-                    if (seenT5 && aTown == null && aPrev.Value.X > mTown5Max.X)
+                    if (seenT5 && aTown == null && aPrev.X > mTown5Max.X)
                     {
                         mTravelNorth = !mTravelNorth;
                         seenT5 = false;
@@ -80,14 +81,14 @@ namespace NodBot.Code
                         continue;
                     }
 
-                    if (aTown == null) makeCorrectMove(new Point(), false);
-                    else makeCorrectMove(aTown.Value, true);
+                    if (aTown == null) makeCorrectMove(UIPoint.Default(), false);
+                    else makeCorrectMove(aTown, true);
                 }
                 else
                 {
 
                     //aTown = imageService.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
-                    List<Point> matches = imageService.FindTemplateMatches(NodImages.Town4);
+                    List<UIPoint> matches = imageService.FindTemplateMatches(NodImages.Town4);
                     if (matches == null || matches.Count <= 0) aTown = null;
                     else aTown = matches[0];
 
@@ -101,11 +102,11 @@ namespace NodBot.Code
                         continue;
                     }
 
-                    if (aTown == null) makeCorrectMove(new Point(), false);
-                    else makeCorrectMove(aTown.Value, true);
+                    if (aTown == null) makeCorrectMove(UIPoint.Default(), false);
+                    else makeCorrectMove(aTown, true);
                 }
 
-                await checkForCombat();
+                await CheckForCombat();
                 if (aTown != null)
                     aPrev = aTown;
             }
@@ -117,19 +118,19 @@ namespace NodBot.Code
         /// 
         /// </summary>
         /// <returns></returns>
-        private async Task checkForCombat()
+        private async Task CheckForCombat()
         {
             timeService.delay(1750);
 
-            if (imageService.ContainsMatch(NodImages.InCombat, NodImages.CurrentSS))
+            if (imageService.ContainsMatch(NodImages.InCombat, screenSection: ScreenSection.Game))
             {
                 nodInputService.SettingsAttack();
 
                 timeService.delay(1000);
 
-                while (!imageService.ContainsMatch(NodImages.Exit, NodImages.CurrentSS)) ;
+                while (!imageService.ContainsMatch(NodImages.Exit, screenSection: ScreenSection.Game)) ;
 
-                while(imageService.ContainsMatch(NodImages.Exit, NodImages.CurrentSS))
+                while (imageService.ContainsMatch(NodImages.Exit, screenSection: ScreenSection.Game))
                 {
                     nodInputService.Exit();
                     timeService.delay(1000);
@@ -148,9 +149,9 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="p"></param>
         /// <param name="aTownSeen"></param>
-        private void makeCorrectMove(Point p, bool aTownSeen)
+        private void makeCorrectMove(UIPoint p, bool aTownSeen)
         {
-           
+
             if (mTravelNorth)
             {
                 if (aTownSeen)
@@ -164,7 +165,7 @@ namespace NodBot.Code
                         else mTravelNorth = !mTravelNorth;
                     }
                 }
-                else if(mTownSeenLast && !aTownSeen)
+                else if (mTownSeenLast && !aTownSeen)
                 {
                     mTravelNorth = !mTravelNorth;
                 }

@@ -5,26 +5,25 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Emgu.CV;
-using Emgu.CV.Cuda;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using Emgu.CV.XFeatures2D;
 using System.Threading;
-using NodBot.Code.Services;
+using NodBot.Code.Enums;
+using NodBot.Code.Model;
+using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace NodBot.Code
 {
     public class ImageService
     {
-        private CancellationTokenSource token;
-        private Logger logger;
-        private IntPtr gameWindow;
-        //private Image<Bgr, byte> currentScreen;
+        private readonly CancellationTokenSource token;
+        private readonly Logger logger;
+        private readonly IntPtr gameWindow;
 
         public ImageService(CancellationTokenSource ct, Logger aLogger, IntPtr gameWindowHandle)
         {
@@ -38,67 +37,7 @@ namespace NodBot.Code
             gameWindow = gameWindowHandle;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="debug"></param>
-        /// <returns></returns>
-        public Point? FindChestCoord(bool debug = false)
-        {
-            Mat lImage;
-            CaptureScreen(); // Always update current screen before locating chest
-            String obsImage = NodImages.CurrentSS;
-            String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3 };
-            Point? result = null;
-            foreach (String chest in chestImages)
-            {
-                try
-                {
-                    logger.sendMessage("Scanning: " + chest, LogType.DEBUG);
-                    result = Draw(chest, NodImages.CurrentSS, out lImage);
-                    if (debug) CvInvoke.Imshow(chest, lImage);
-                    if (result != null) break;
-                }
-                catch (Exception ex)
-                {
-                    logger.sendMessage(ex.ToString(), LogType.WARNING);
-                }
-            }
-
-            return result;
-        }
-
-
-        public bool ContainsMatch(String templateImage, String baseImage)
-        {
-            return getMatchCoord(templateImage, baseImage) != null;
-        }
-
-        public Point? getMatchCoord(String templateImage, String baseImage)
-        {
-            Mat lImage;
-            CaptureScreen(); //Take Screenshot
-            return Draw(templateImage, baseImage, out lImage, false);
-        }
-
-        public Point? FindImageMatchDebug(String model, String obs, bool debug = false, bool random = false)
-        {
-            Mat lImage;
-            Point? result = null;
-            try
-            {
-                logger.sendMessage("Scanning: " + model, LogType.DEBUG);
-                result = Draw(model, obs, out lImage, random);
-                if (debug) CvInvoke.Imshow(model, lImage);
-            }
-            catch (Exception ex)
-            {
-                logger.sendMessage(ex.ToString(), LogType.WARNING);
-            }
-
-            return result;
-        }
-
+        #region Public Fucntion API
 
         /// <summary>
         /// 
@@ -107,8 +46,7 @@ namespace NodBot.Code
         {
             try
             {
-                Bitmap pImage = GetScreenCapture();
-                pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
+                CaptureScreen(NodImages.GameWindow);
             }
             catch (Exception ex)
             {
@@ -118,327 +56,177 @@ namespace NodBot.Code
             }
         }
 
-        public void CaptureScreen(String filePath)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="screenSection"></param>
+        public Image<Bgr, byte> CaptureScreen(String filePath, ScreenSection screenSection = ScreenSection.All)
         {
-            //Console.Out.WriteLine("Screen Caputre: " + filePath);
             Bitmap pImage = GetScreenCapture();
-            pImage.Save(filePath, ImageFormat.Png);
+            Image<Bgr, byte> source = new Image<Bgr, byte>(pImage);
+
+            source = copySubImage(screenSection.getSubRect(source), source);
+            filePath = filePath.Replace(".png", "_" + screenSection.ToString() + ".png");
+            SaveImageFile(source, filePath);
+
+            return source;
         }
 
         /// <summary>
-        /// TODO :: Copy w hat is done for #CaptureNeutralPoint() to retrieve a specific portion of the screen capture.
+        /// TODO :: Needs to be updated, still functional
         /// </summary>
-        public void CaptureScreenRight()
-        {
-            Bitmap pImage = GetScreenCapture();
-
-            pImage.Save(NodImages.CurrentSS_Right, ImageFormat.Png);
-        }
-
         public void CaputreNeutralPoint()
         {
             Bitmap pImage = GetScreenCapture();
-            pImage.Save(NodImages.CurrentSS, ImageFormat.Png);
+
+            Image<Bgr, byte> current = new Image<Bgr, byte>(pImage);
 
             if (pImage.Width > 700 && pImage.Height > 500)
             {
                 // Retrieve specific portion of screen capture
                 Rectangle cloneRect = new Rectangle(100, 100, 600, 400);
-                Bitmap cloneBitmap = pImage.Clone(cloneRect, pImage.PixelFormat);
-
-                cloneBitmap.Save(NodImages.NeutralSS, ImageFormat.Png);
-
-                cloneBitmap.Dispose();
+                Image<Bgr, byte> neutral = copySubImage(cloneRect, current);
+                SaveImageFile(neutral, NodImages.NeutralSS);
             }
-            else pImage.Save(NodImages.NeutralSS, ImageFormat.Png);
+            else SaveImageFile(current, NodImages.NeutralSS);
 
             pImage.Dispose();
         }
 
-        public List<Rectangle> FindTemplateMatchWithXConstraint(String templateImage, int xConstraint, bool lessThanX, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="debug"></param>
+        /// <returns></returns>
+        public Point? FindChestCoord(bool debug = false)
         {
-            CaptureScreen(NodImages.CompareResultX);
-            //CaptureScreen(NodImages.CompareResultX);
-            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultX); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
-
-            var matches = new List<Rectangle>();
-            Rectangle prevMatch = new Rectangle();
-            using (Image<Bgr, byte> imgSrc = source.Copy())
+            Mat lImage;
+            CaptureScreen(NodImages.GameWindow, ScreenSection.Game); // Always update current screen before locating chest
+            String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3 };
+            Point? point = null;
+            foreach (String chest in chestImages)
             {
-                while (true)
+                try
                 {
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
-                    {
-                        double[] minValues, maxValues;
-                        Point[] minLocations, maxLocations;
-                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                        if (maxValues[0] > threshold)
-                        {
-                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
-
-                            if (lessThanX && match.X < xConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-
-                                matches.Add(match);
-                            }
-                            else if (!lessThanX && match.X > xConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                matches.Add(match);
-                            }
-                            else
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Pink), -1);
-                            }
-
-                            if (prevMatch == match) return matches;
-                            prevMatch = match;
-                        }
-                        else
-                        {
-                            break;
-                        }
-
-                        imgSrc.Bitmap.Save(NodImages.CompareResultX, ImageFormat.Png);
-                    }
+                    logger.sendMessage("Scanning: " + chest, LogType.DEBUG);
+                    point = Draw(chest, NodImages.GameWindow_Game, out lImage);
+                    if (debug) CvInvoke.Imshow(chest, lImage);
+                    if (point != null) break;
+                }
+                catch (Exception ex)
+                {
+                    logger.sendMessage(ex.ToString(), LogType.WARNING);
                 }
             }
 
-            return matches;
-        }
-
-        public Rectangle? FindTemplateMatchWithXConstraintSingle(String templateImage, int xConstraint, bool lessThanX, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
-        {
-            CaptureScreen(NodImages.CompareResultY);
-
-            //CaptureScreen(NodImages.CompareResultY);
-            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultY); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
-
-            using (Image<Bgr, byte> imgSrc = source.Copy())
+            if (point != null)
             {
-                while (true)
-                {
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
-                    {
-                        double[] minValues, maxValues;
-                        Point[] minLocations, maxLocations;
-                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                        if (maxValues[0] > threshold)
-                        {
-                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
-
-                            if (lessThanX && match.X < xConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                return match;
-                            }
-                            else if (!lessThanX && match.X > xConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                return match;
-                            }
-                            else
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Pink), -1);
-                            }
-                        }
-                        else break;
-
-                        imgSrc.Bitmap.Save(NodImages.CompareResultY, ImageFormat.Png);
-                    }
-                }
+                Point result = point.Value;
+                result.X += ScreenSection.Game.getXOffset();
+                result.Y += ScreenSection.Game.getYOffset();
+                return result;
             }
 
             return null;
         }
 
-        public List<Rectangle> FindTemplateMatchWithYConstraint(String templateImage, int yConstraint, bool lessThanY, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <returns></returns>
+        public List<UIPoint> FindTemplateMatches(String templateImage, ScreenSection screenSection = ScreenSection.All, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            CaptureScreen(NodImages.CompareResultY);
+            List<Rectangle> result = FindTemplateMatchesImpl(templateImage: templateImage, screenSection: screenSection, threshold: threshold, matchType: matchType);
 
-            //CaptureScreen(NodImages.CompareResultY);
-            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultY); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
-
-            var matches = new List<Rectangle>();
-            Rectangle prevMatch = new Rectangle();
-            using (Image<Bgr, byte> imgSrc = source.Copy())
+            if (result == null)
             {
-                while (true)
-                {
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
-                    {
-                        double[] minValues, maxValues;
-                        Point[] minLocations, maxLocations;
-                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                        if (maxValues[0] > threshold)
-                        {
-                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
-
-                            if (lessThanY && match.Y < yConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                matches.Add(match);
-                            }
-                            else if (!lessThanY && match.Y > yConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                matches.Add(match);
-                            }
-                            else
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Pink), -1);
-                            }
-
-                            if (prevMatch == match) return matches;
-                            prevMatch = match;
-                        }
-                        else
-                        {
-                            break;
-                        }
-
-                        imgSrc.Bitmap.Save(NodImages.CompareResultY, ImageFormat.Png);
-                    }
-                }
+                return new List<UIPoint>();
             }
 
-            return matches;
+            return result.Select(rect => new UIPoint(new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), rect)).ToList();
         }
 
-        public Rectangle? FindTemplateMatchWithYConstraintSingle(String templateImage, int yConstraint, bool lessThanY, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public UIPoint FindTemplateMatch(String templateImage, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            CaptureScreen(NodImages.CompareResultY);
+            var result = FindTemplateMatchImpl(templateImage, screenSection: screenSection, threshold: threshold, matchType: matchType);
 
-            //CaptureScreen(NodImages.CompareResultY);
-            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultY); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
-
-            using (Image<Bgr, byte> imgSrc = source.Copy())
+            if (result != null)
             {
-                while (true)
-                {
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchType))
-                    {
-                        double[] minValues, maxValues;
-                        Point[] minLocations, maxLocations;
-                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                        if (maxValues[0] > threshold)
-                        {
-                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
-
-                            if (lessThanY && match.Y < yConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                return match;
-                            }
-                            else if (!lessThanY && match.Y > yConstraint)
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Red), -1);
-                                return match;
-                            }
-                            else
-                            {
-                                imgSrc.Draw(match, new Bgr(Color.Pink), -1);
-                            }
-                        }
-                        else break;
-
-                        imgSrc.Bitmap.Save(NodImages.CompareResultY, ImageFormat.Png);
-                    }
-                }
+                return new UIPoint(new Point(result.Value.X + result.Value.Width / 2, result.Value.Y + result.Value.Height / 2), result.Value);
             }
 
             return null;
         }
 
-        public List<Point> FindTemplateMatches(String templateImage)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public List<UIPoint> FindTemplateMatch(List<String> templateImages, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            CaptureScreen(NodImages.CompareResultX);
-            //CaptureScreen(NodImages.CompareResultX);
-            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.CompareResultX); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
+            var result = FindTemplateMatchImpl(templateImages, screenSection: screenSection, threshold: threshold, matchType: matchType);
 
-            var matches = new List<Point>();
-            Rectangle prevMatch = new Rectangle();
-            using (Image<Bgr, byte> imgSrc = source.Copy())
+            return result.Select(item =>
             {
-                while (true)
-                {
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
-                    {
-                        var threshold = CvInvoke.Threshold(result, result, 0.75, 1, ThresholdType.ToZero);
-                        double[] minValues, maxValues;
-                        Point[] minLocations, maxLocations;
-                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                        if (maxValues[0] > threshold)
-                        {
-                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
-                            matches.Add(match.Location);
-
-                            if (prevMatch == match) return matches;
-                            prevMatch = match;
-                        }
-                        else
-                        {
-                            break;
-                        }
-
-                        imgSrc.Bitmap.Save(NodImages.CompareResultX, ImageFormat.Png);
-                    }
-                }
-            }
-
-            return matches;
+                if (item == null) return null;
+                return new UIPoint(new Point(item.Value.X + item.Value.Width / 2, item.Value.Y + item.Value.Height / 2), item.Value);
+            }).ToList();
         }
 
-        private bool containsTemplate(Image<Bgr, byte> imgSrc, Image<Bgr, byte> template, out Point[] maxLocations, out Point[] minLocations, double threshold = 0.9, TemplateMatchingType matchingType = TemplateMatchingType.CcoeffNormed)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public bool ContainsTemplateMatch(String templateImage, ScreenSection screenSection, double threshold = .75, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
-            {
-                var _threshold = CvInvoke.Threshold(result, result, threshold, 1, ThresholdType.ToZero);
-                double[] minValues, maxValues;
-                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                if (maxValues[0] > _threshold)
-                {
-                    return true;
-                }
-                return false;
-            }
+            var result = FindTemplateMatchImpl(templateImage, screenSection: ScreenSection.Game, threshold: threshold, matchType: matchType);
+            return result != null;
         }
 
-        public void ScanForItems(List<Item> whitelist, List<Item> blacklist, out List<Item> resultWhite, out List<Item> resultBlack)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="whitelist"></param>
+        /// <param name="blacklist"></param>
+        /// <param name="resultWhite"></param>
+        /// <param name="resultBlack"></param>
+        public void ScanForItems(ScreenSection section, List<Item> whitelist, List<Item> blacklist, out List<Item> resultWhite, out List<Item> resultBlack)
         {
+            String baseFile = NodImages.GameWindow.Replace(".png", "_" + section.ToString() + ".png");
+
             resultWhite = new List<Item>();
             resultBlack = new List<Item>();
 
-            CaptureScreen(NodImages.InventoryScan);
-            //CaptureScreen(NodImages.CompareResultX);
-            Image<Bgr, byte> source = new Image<Bgr, byte>(NodImages.InventoryScan); // Image B
-
-            Rectangle rect = new Rectangle(GameDimension.WIDTH, 0, source.Width - GameDimension.WIDTH, GameDimension.HEIGHT);
-
-            source = copySubImage(rect, source);
-            source.Save(NodImages.InventoryScan);
+            Image<Bgr, byte> source = CaptureScreen(baseFile, section);
 
             using (Image<Bgr, byte> imgSrc = source.Copy())
             {
                 for (int i = 0; i < whitelist.Count; i++)
                 {
                     Item currentItem = whitelist.ElementAt(i);
-                    Image<Bgr, byte> template = new Image<Bgr, byte>(currentItem.imageFile); // Image A
-
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
+                    Image<Bgr, byte> template = OpenImageFile(currentItem.imageFile); // Image A
 
                     Point[] minLocations, maxLocations;
-                    bool result = containsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold: .75);
+                    bool result = ContainsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold: currentItem.threshold);
 
                     if (result)
                     {
@@ -448,18 +236,18 @@ namespace NodBot.Code
                         resultWhite.Add(currentItem);
                     }
 
-                    imgSrc.Bitmap.Save(NodImages.InventoryScan, ImageFormat.Png);
+                    SaveImageFile(imgSrc, baseFile);
                 }
 
                 for (int i = 0; i < blacklist.Count; i++)
                 {
                     Item currentItem = blacklist.ElementAt(i);
-                    Image<Bgr, byte> template = new Image<Bgr, byte>(currentItem.imageFile); // Image A
+                    Image<Bgr, byte> template = OpenImageFile(currentItem.imageFile); // Image A
 
                     //updated and changed TemplateMatchingType- CcoeffNormed.
 
                     Point[] minLocations, maxLocations;
-                    bool result = containsTemplate(imgSrc, template, out maxLocations, out minLocations);
+                    bool result = ContainsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold:currentItem.threshold);
 
                     if (result)
                     {
@@ -468,85 +256,25 @@ namespace NodBot.Code
                         resultBlack.Add(currentItem);
                     }
 
-                    imgSrc.Bitmap.Save(NodImages.InventoryScan, ImageFormat.Png);
+                    SaveImageFile(imgSrc, baseFile);
                 }
             }
         }
 
-        public void findMatchTest(String baseImage, String templateImage, Color invMatchColor, Color storageMatchColor)
-        {
-            Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
-
-            var inventory = new List<Rectangle>();
-            var storage = new List<Rectangle>();
-
-            using (Image<Bgr, byte> imgSrc = source.Copy())
-            {
-                while (true)
-                {
-                    //updated and changed TemplateMatchingType- CcoeffNormed.
-                    using (Image<Gray, float> result = imgSrc.MatchTemplate(template, TemplateMatchingType.CcoeffNormed))
-                    {
-                        var threshold = CvInvoke.Threshold(result, result, 0.75, 1, ThresholdType.ToZero);
-                        double[] minValues, maxValues;
-                        Point[] minLocations, maxLocations;
-                        result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-                        if (maxValues[0] > threshold)
-                        {
-                            Rectangle match = new Rectangle(maxLocations[0], template.Size);
-
-                            if (match.X > 950)
-                            {
-                                imgSrc.Draw(match, new Bgr(invMatchColor), -1);
-                                inventory.Add(match);
-                            }
-                            else
-                            {
-                                if (match.Y > 800)
-                                {
-                                    imgSrc.Draw(match, new Bgr(storageMatchColor), -1);
-                                    storage.Add(match);
-                                }
-                                else
-                                {
-                                    imgSrc.Draw(match, new Bgr(Color.HotPink), -1);
-                                };
-                            }
-
-                            imgSrc.Bitmap.Save(NodImages.CompareResult, ImageFormat.Png);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            Console.Out.WriteLine("Complete: " + templateImage);
-        }
-
-
-        private Image<Bgr, byte> copySubImage(Rectangle rect, Image<Bgr, byte> image)
-        {
-            Rectangle roi = image.ROI;
-            image.ROI = rect;
-            Image<Bgr, byte> newImage = image.Copy();
-            image.ROI = roi;
-
-            return newImage;
-        }
-
-        public bool isRectEmpty(Rectangle rect, String baseImage)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="baseImage"></param>
+        /// <returns></returns>
+        public bool IsRectEmpty(Rectangle rect, String baseImage, ScreenSection screenSection)
         {
             try
             {
-                //CaptureScreen();
-                CaptureScreen(baseImage);
+                Image<Bgr, byte> source = CaptureScreen(baseImage);
+                Image<Bgr, byte> filteredSource = copySubImage(rect, source);
 
-                Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
-                copySubImage(rect, source).Save(NodImages.Temp_Inventory_1);
-                Image<Bgr, byte> filteredSource = new Image<Bgr, byte>(NodImages.Temp_Inventory_1);
+                SaveImageFile(filteredSource, NodImages.Temp_Inventory_1);
 
                 var avgColors = filteredSource.GetAverage();
                 if (avgColors.Red < 38 && avgColors.Blue < 38 && avgColors.Green < 38)
@@ -563,108 +291,222 @@ namespace NodBot.Code
             return false;
         }
 
-        public bool isRectEmpty(String baseImage)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screen"></param>
+        /// <returns></returns>
+        public bool ContainsMatch(String templateImage, ScreenSection screenSection)
         {
-            try
+            CaptureScreen(NodImages.GameWindow, screenSection: screenSection); //Take Screenshot
+            String baseFile = NodImages.GameWindow.Replace(".png", "_" + screenSection.ToString() + ".png");
+            return Draw(templateImage, baseFile, out Mat image, false) != null;
+        }
+
+        #endregion
+
+        #region Private helper functions
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        private Image<Bgr, byte> OpenImageFile(String filename)
+        {
+            lock (filename)
             {
-                CaptureScreen();
+                return new Image<Bgr, byte>(filename);
+            }
+        }
 
-                Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="filename"></param>
+        private void SaveImageFile(Image<Bgr, byte> image, String filename)
+        {
+            lock (filename)
+            {
+                image.Save(filename);
+            }
+        }
 
-                var temp2 = source.GetAverage();
-                var temp = source.CountNonzero();
-                if (temp2.Red < 5 && temp2.Blue < 5 && temp2.Green < 5)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="updateCurrentScreen"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        private List<Rectangle> FindTemplateMatchesImpl(String templateImage, ScreenSection screenSection = ScreenSection.All, bool updateCurrentScreen = false, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        {
+            String baseFile = NodImages.GameWindow.Replace(".png", "_" + screenSection.ToString() + ".png");
+
+            Image<Bgr, byte> source = CaptureScreen(baseFile);
+            Image<Bgr, byte> template = OpenImageFile(templateImage); // Image A
+
+            source = copySubImage(screenSection.getSubRect(source), source);
+            SaveImageFile(source, baseFile);
+
+            var matches = new List<Rectangle>();
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                while (true)
+                {
+                    Point[] minLocations, maxLocations;
+                    bool result = ContainsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold: threshold, matchingType: matchType);
+                    if (result)
+                    {
+                        Rectangle match = new Rectangle(maxLocations[0], template.Size);
+
+                        imgSrc.Draw(match, new Bgr(Color.Red), -1);
+
+                        match.X += screenSection.getXOffset();
+                        match.Y += screenSection.getYOffset();
+
+                        matches.Add(match);
+                    }
+                    else break;
+
+                    SaveImageFile(imgSrc, baseFile);
+                }
+            }
+
+            return matches;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="updateCurrentScreen"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        private Rectangle? FindTemplateMatchImpl(String templateImage, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        {
+            String baseFile = NodImages.GameWindow.Replace(".png", "_" + screenSection.ToString() + ".png");
+
+            Image<Bgr, byte> source = CaptureScreen(baseFile, screenSection);
+            Image<Bgr, byte> template = OpenImageFile(templateImage); // Image A
+
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                while (true)
+                {
+
+                    Point[] minLocations, maxLocations;
+                    bool result = ContainsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold: threshold, matchingType: matchType);
+                    if (result)
+                    {
+                        Rectangle match = new Rectangle(maxLocations[0], template.Size);
+                        imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                        SaveImageFile(imgSrc, baseFile);
+
+                        match.X += screenSection.getXOffset();
+                        match.Y += screenSection.getYOffset();
+
+                        return match;
+                    }
+                    else break;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImage"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="updateCurrentScreen"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        private List<Rectangle?> FindTemplateMatchImpl(List<String> templateImage, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        {
+            String baseFile = NodImages.GameWindow.Replace(".png", "_" + screenSection.ToString() + ".png");
+
+            Image<Bgr, byte> source = CaptureScreen(baseFile, screenSection);
+            Image<Bgr, byte> template;
+
+            List<Rectangle?> matchResult = new List<Rectangle?>();
+
+            using (Image<Bgr, byte> imgSrc = source.Copy())
+            {
+                templateImage.ForEach(str =>
+                {
+                    template = OpenImageFile(str); // Image A
+
+                    Point[] minLocations, maxLocations;
+                    bool result = ContainsTemplate(imgSrc, template, out maxLocations, out minLocations, threshold: threshold, matchingType: matchType);
+                    if (result)
+                    {
+                        Rectangle match = new Rectangle(maxLocations[0], template.Size);
+                        imgSrc.Draw(match, new Bgr(Color.Red), -1);
+                        SaveImageFile(imgSrc, baseFile);
+
+                        match.X += screenSection.getXOffset();
+                        match.Y += screenSection.getYOffset();
+                        matchResult.Add(match);
+
+                    }
+                    else matchResult.Add(null);
+                });
+            }
+
+            return matchResult;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="imgSrc"></param>
+        /// <param name="template"></param>
+        /// <param name="maxLocations"></param>
+        /// <param name="minLocations"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchingType"></param>
+        /// <returns></returns>
+        private bool ContainsTemplate(Image<Bgr, byte> imgSrc, Image<Bgr, byte> template, out Point[] maxLocations, out Point[] minLocations, double threshold = 0.9, TemplateMatchingType matchingType = TemplateMatchingType.CcoeffNormed)
+        {
+            using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchingType))
+            {
+                SaveImageFile(imgSrc, "Images//Poft//__1.png");
+                SaveImageFile(template, "Images//Poft//__2.png");
+
+                var _threshold = CvInvoke.Threshold(result, result, threshold, 1, ThresholdType.ToZero);
+                double[] minValues, maxValues;
+                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+                if (maxValues[0] > _threshold)
                 {
                     return true;
                 }
-
                 return false;
-
             }
-            catch (Exception ex)
-            {
-                Console.Out.WriteLine(ex.StackTrace);
-            }
-            return false;
         }
 
-        public bool doesRectContainTemplateImage(Rectangle rect, String templateImage, String baseImage)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        private Image<Bgr, byte> copySubImage(Rectangle rect, Image<Bgr, byte> image)
         {
-            try
-            {
-                CaptureScreen();
+            Rectangle roi = image.ROI;
+            image.ROI = rect;
+            Image<Bgr, byte> newImage = image.Copy();
+            image.ROI = roi;
 
-                Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
-                Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image 
-
-                template.Bitmap.Save(NodImages.Temp_Inventory_2);
-
-                rect = new Rectangle(rect.X + 1, rect.Y + 1, template.Width, template.Height);
-
-                copySubImage(rect, source).Save(NodImages.Temp_Inventory_1);
-                Image<Bgr, byte> filteredSource = new Image<Bgr, byte>(NodImages.Temp_Inventory_1);
-                //filteredSource.Bitmap.Save(NodImages.Temp_Inventory_1);
-                //Image<Bgr, byte> filteredSource = copySubImage(rect, source);
-
-                using (Image<Gray, float> result = filteredSource.MatchTemplate(template, TemplateMatchingType.CcorrNormed))
-                {
-                    var threshold = CvInvoke.Threshold(result, result, 0.95, 1, ThresholdType.ToZero);
-                    double[] minValues, maxValues;
-                    Point[] minLocations, maxLocations;
-                    result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-
-                    // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
-                    if (maxValues[0] > threshold)
-                    {
-                        return true;
-                    }
-
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Out.WriteLine(ex.StackTrace);
-                // Sometimes throws exception if template match is not found
-                // Ignore
-            }
-            return false;
-        }
-
-        public Point? FindMatchTemplate(String baseImage, String templateImage, bool updateCurrentScreen = false, String postfix = "", double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
-        {
-            if (updateCurrentScreen) CaptureScreen(NodImages.CurrentSS);
-
-            Image<Bgr, byte> source = new Image<Bgr, byte>(baseImage); // Image B
-            Image<Bgr, byte> template = new Image<Bgr, byte>(templateImage); // Image A
-            Image<Bgr, byte> imageToShow = source.Copy();
-
-            using (Image<Gray, float> result = source.MatchTemplate(template, matchType))
-            {
-                double[] minValues, maxValues;
-                Point[] minLocations, maxLocations;
-                result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
-
-                // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
-                if (maxValues[0] > threshold)
-                {
-                    // This is a match. Do something with it, for example draw a rectangle around it.
-                    Rectangle match = new Rectangle(maxLocations[0], template.Size);
-                    imageToShow.Draw(match, new Bgr(Color.Red), 3);
-
-
-                    imageToShow.Bitmap.Save(NodImages.CompareResult.Replace(".png", postfix + ".png"), ImageFormat.Png);
-                    imageToShow.Bitmap.Save(baseImage, ImageFormat.Png);
-
-                    Console.Out.WriteLine("Found [" + templateImage + "] in [" + baseImage + "] >> " + maxValues[0]);
-                    return maxLocations[0];
-                }
-
-                Console.Out.WriteLine("Failed to find [" + templateImage + "] in [" + baseImage + "] >> " + maxValues[0]);
-
-                new Bitmap(20, 20).Save(NodImages.CompareResult);
-                return null;
-            }
+            return newImage;
         }
 
         /// <summary>
@@ -728,6 +570,17 @@ namespace NodBot.Code
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="modelImage"></param>
+        /// <param name="observedImage"></param>
+        /// <param name="matchTime"></param>
+        /// <param name="modelKeyPoints"></param>
+        /// <param name="observedKeyPoints"></param>
+        /// <param name="matches"></param>
+        /// <param name="mask"></param>
+        /// <param name="homography"></param>
         private void FindMatchSIFT(Mat modelImage, Mat observedImage, out long matchTime, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography)
         {
             int k = 2;
@@ -840,15 +693,17 @@ namespace NodBot.Code
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="updateScreen"></param>
+        /// <returns></returns>
         private Bitmap GetScreenCapture(bool updateScreen = true)
         {
             IntPtr hWnd = gameWindow;
             try
             {
-
                 bool res = UpdateWindow(hWnd);
-
-
 
                 Rectangle rctForm = new Rectangle();
                 GetWindowRect(hWnd, ref rctForm);
@@ -872,33 +727,27 @@ namespace NodBot.Code
                 finally
                 {
                     graphics.ReleaseHdc(hDC);
+                    graphics.Dispose();
+                    ReleaseDC(hWnd, val);
                 }
 
-                //pImage.Save(NodImages.PlayerDebug, ImageFormat.Png);
                 return pImage;
             }
             catch (Exception ex)
             {
                 // There was a problem, stopping bot
-                //logger.sendLog(ex.StackTrace, LogType.ERROR);
+                logger.sendLog(ex.Message, LogType.ERROR);
+                logger.sendLog(ex.StackTrace, LogType.ERROR);
                 Console.Out.WriteLine(ex.StackTrace);
-                token.Cancel();
+                if (token != null) token.Cancel();
             }
-            //finally
-            //{
-            //    bool result = UpdateWindow(hWnd);
-            //    if (result) Console.Out.WriteLine("Updated handle successffully?");
-            //    else
-            //    {
-            //        Console.Out.WriteLine("Well that was a dud..");
-            //        IntPtr lastErr = GetLastError();
-            //        Console.Out.WriteLine(lastErr);
-            //    }
-            //}
 
             return new Bitmap(0, 0);
         }
 
+        #endregion
+
+        #region User32.dll Functions
         /***
          * 
          * 
@@ -909,6 +758,9 @@ namespace NodBot.Code
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetWindowDC(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -925,6 +777,6 @@ namespace NodBot.Code
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool UpdateWindow(IntPtr hWnd);
 
-
+        #endregion
     }
 }
