@@ -24,7 +24,7 @@ namespace NodBot.Code
         private ArenaService arenaService;
         private MagicService magicService;
         private TimeService timeService;
-
+        private SeqMining miningService;
         private bool isInArenaQueue = false;
 
         /// <summary>
@@ -43,6 +43,7 @@ namespace NodBot.Code
             grindService = new GrindService(imageService, nodInputService, logger, this);
             arenaService = new ArenaService(imageService, nodInputService, logger, this);
             magicService = new MagicService(nodInputService);
+            miningService = new SeqMining(tokenSource, logger);
         }
 
         /// <summary>
@@ -93,7 +94,7 @@ namespace NodBot.Code
 
                         if (Settings.RESOURCE_MINING && imageService.ContainsTemplateMatch(NodImages.MiningIcon, ScreenSection.Game))
                         {
-                            new SeqMining(tokenSource, logger).Start().Wait();
+                            miningService.Start().Wait();
                             timeService.delay(1000);
                         }
 

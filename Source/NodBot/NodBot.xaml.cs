@@ -14,6 +14,14 @@ using NodBot.Code.Services;
 using Emgu.CV;
 using System.Collections;
 using NodBot.Code.Enums;
+using System.Windows.Media;
+using System.Runtime.InteropServices;
+using Size = System.Windows.Size;
+using System.Windows.Interop;
+using NodBot.Code.Overlay;
+using Process.NET.Windows;
+using Process.NET;
+using Process.NET.Memory;
 
 namespace NodBot
 {
@@ -21,12 +29,9 @@ namespace NodBot
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class NodBotAI : Window
+    public partial class NodBotAI : OverlayPlugin
     {
         bool isRunning = false;
-
-        private SeqGrind mGrindSequence;
-        private SeqTownWalk mTownWalkSequence;
 
         private Logger mLogger;
         private NodiatisInputService mInput;
@@ -41,14 +46,13 @@ namespace NodBot
         private Progress<string> progressLog;
         private string[] mNodBotOptions = { "Farm", "Town Walk(T4)", "Town Walk(T5)" };
 
-        public NodBotAI()
-        {
-            InitializeComponent();
-            init();
-        }
+        public Boolean IsActivated { get; set; }
+
+
 
         private void init()
         {
+            
             this.Title = "Player - " + Settings.Player.playerName;
 
             // init logger
@@ -85,30 +89,9 @@ namespace NodBot
         /// <param name="e"></param>
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
-            //ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
-            //var iconPoint = test.FindTemplateMatch(NodImages.Silk_T6, screenSection: ScreenSection.Inventory, threshold: 0.75);
-
-            //if(iconPoint != null)
-            //{
-            //    mInventory.DeleteItem(iconPoint);
-            //}
 
 
-            /*
-             * var iconPoint = test.FindTemplateMatch(NodImages.Exit, screenSection: ScreenSection.Game, threshold:0.75);
-            var iconPoint = mInventory.GetFirstEmptyInventorySpace();
-            var result = test.ContainsMatch(NodImages.Exit, ScreenSection.Game)
-            if (iconPoint == null)
-                Console.Out.WriteLine("oops");
-            else
-            {
-                mInput.inputService.moveMouse(iconPoint.X, iconPoint.Y);
-                Console.Out.WriteLine("oops");
-            }
-            */
-            //test.FindMatchTemplate("Images//Poft//__source_rock.png", "Images//Poft//__template_rock.png", threshold: 0.952, matchType: Emgu.CV.CvEnum.TemplateMatchingType.CcorrNormed);
 
-            if (mInventory != null) mInventory.SortInventory();
         }
 
         /// <summary>
@@ -125,6 +108,7 @@ namespace NodBot
 
         private SeqBase mCurrentSequence;
         private int grindOption = 0;
+
         /// <summary>
         /// This function handles starting the selected bot sequence to execute.
         /// 
@@ -402,5 +386,280 @@ namespace NodBot
         {
             return JsonConvert.SerializeObject(settings);
         }
+
+
+
+        /***
+         * 
+         * 
+         * Overlay setup
+         * 
+         * 
+         */
+        private IWindow _targetWindow;
+
+        public NodBotAI()
+        {
+            InitializeComponent();
+            init();
+            DumbStartOverlay();
+            this.Show();
+        }
+
+        public void StartOverlay()
+        {
+            var process = System.Diagnostics.Process.GetProcessesByName("Nodiatis").Where(p => p.MainWindowTitle == Settings.Player.playerName).FirstOrDefault();
+
+            if (process == null) return;
+
+            var _processSharp = new ProcessSharp(process, MemoryType.Remote);
+            // var _overlay = new OverlayImpl();
+
+            // var wpfOverlay = (OverlayImpl)_overlay;
+
+            // This is done to focus on the fact the Init method
+            // is overriden in the wpf overlay demo in order to set the
+            // wpf overlay window instance
+            Initialize(_processSharp.WindowFactory.MainWindow);
+            Enable();
+
+            while (true)
+            {
+                Update();
+            }
+        }
+
+        public void DumbStartOverlay()
+        {
+            var process = System.Diagnostics.Process.GetProcessesByName("Nodiatis").Where(p => p.MainWindowTitle == Settings.Player.playerName).FirstOrDefault();
+
+            if (process == null) return;
+
+            var _processSharp = new ProcessSharp(process, MemoryType.Remote);
+            _targetWindow = _processSharp.WindowFactory.MainWindow;
+            TargetWindow = _targetWindow;
+
+            _tickEngine.Interval = TimeSpan.FromMilliseconds(updateRate);
+            _tickEngine.PreTick += OnPreTick;
+            _tickEngine.Tick += OnTick;
+
+
+            //StartOverlay();
+            UpdateWindow();
+            Enable();
+
+            var task = Task.Run(() =>
+            {
+                while (true)
+                {
+                    Update();
+                }
+            });
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="OverlayWindow" /> class.
+        /// </summary>
+        /// <param name="targetWindow">The window.</param>
+        public NodBotAI(IWindow targetWindow)
+        {
+            InitializeComponent();
+            init();
+            StartOverlay();
+        }
+
+        public event EventHandler<DrawingContext> Draw;
+
+        /// <summary>
+        ///     Updates this instance.
+        /// </summary>
+        public void UpdateWindow()
+        {
+            if (hasOverlay)
+            {
+                Width = _targetWindow.Width;
+                Height = _targetWindow.Height;
+                Left = _targetWindow.X;
+                Top = _targetWindow.Y;
+            }
+            else UpdateWindow2();
+        }
+
+        public void UpdateWindow2()
+        {
+            Width = 180;
+            Height = 25;
+            Left = _targetWindow.X + (_targetWindow.Width / 2) - 90;
+            Top = _targetWindow.Y;
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="E:System.Windows.Window.SourceInitialized" /> event.
+        /// </summary>
+        /// <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            // We need to do this in order to allow shapes
+            // drawn on the canvas to be click-through. 
+            // There is no other way to do this.
+            // Source: https://social.msdn.microsoft.com/Forums/en-US/c32889d3-effa-4b82-b179-76489ffa9f7d/how-to-clicking-throughpassing-shapesellipserectangle?forum=wpf
+           // this.MakeWindowTransparent();
+        }
+
+        /// <summary>
+        ///     When overridden in a derived class, participates in rendering operations that are directed by the layout system.
+        ///     The rendering instructions for this element are not used directly when this method is invoked, and are instead
+        ///     preserved for later asynchronous use by layout and drawing.
+        /// </summary>
+        /// <param name="drawingContext">
+        ///     The drawing instructions for a specific element. This context is provided to the layout
+        ///     system.
+        /// </param>
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            OnDraw(drawingContext);
+            base.OnRender(drawingContext);
+        }
+
+        /// <summary>
+        ///     Adds the specified element.
+        /// </summary>
+        /// <param name="element">The element.</param>
+        public void Add(UIElement element) => OverlayGrid.Children.Add(element);
+
+        /// <summary>
+        ///     Removes the specified element.
+        /// </summary>
+        /// <param name="element">The element.</param>
+        public void Remove(UIElement element) => OverlayGrid.Children.Remove(element);
+
+        /// <summary>
+        ///     Adds the specified element.
+        /// </summary>
+        /// <param name="element">The element.</param>
+        /// <param name="index">The index.</param>
+        public void Add(UIElement element, int index) => OverlayGrid.Children[index] = element;
+
+        /// <summary>
+        ///     Removes the specified index.
+        /// </summary>
+        /// <param name="index">The index.</param>
+        public void Remove(int index) => OverlayGrid.Children.RemoveAt(index);
+
+
+
+
+
+
+
+
+
+
+       
+
+
+
+
+
+
+
+
+
+
+
+
+        // Used to limit update rates via timestamps 
+        // This way we can avoid thread issues with wanting to delay updates
+        private readonly TickEngine _tickEngine = new TickEngine();
+
+
+
+        private int updateRate = 1000 / 60;
+
+
+        public override void Enable()
+        {
+            _tickEngine.IsTicking = true;
+            base.Enable();
+        }
+
+        public override void Disable()
+        {
+            _tickEngine.IsTicking = false;
+            base.Disable();
+        }
+
+        public override void Initialize(IWindow targetWindow)
+        {
+            // Set target window by calling the base method
+            base.Initialize(targetWindow);
+            _targetWindow = targetWindow;
+
+            //OverlayWindow = new NodBotAI(targetWindow);
+            Show();
+
+
+            // Set up update interval and register events for the tick engine.
+            _tickEngine.Interval = TimeSpan.FromMilliseconds(updateRate);
+            //_tickEngine.PreTick += OnPreTick;
+            _tickEngine.Tick += OnTick;
+        }
+
+        private void OnTick(object sender, EventArgs eventArgs)
+        {
+            // This will only be true if the target window is active
+            // (or very recently has been, depends on your update rate)
+            if (IsVisible)
+            {
+                UpdateWindow();
+            }
+        }
+
+        private void OnPreTick(object sender, EventArgs eventArgs)
+        {
+            //var activated = ((RemoteWindow)TargetWindow).IsActivated;
+            var targetActivated = TargetWindow.IsActivated;
+            var visible = IsVisible;
+            var activated = IsActivated;
+
+            // Ensure window is shown or hidden correctly prior to updating
+            if (!targetActivated  && !activated && visible)
+            {
+                //Console.Out.WriteLine("HIDE :: {0} :: {1}", !targetActivated, visible);
+                //Hide();
+            }
+
+            else if (targetActivated && !visible)
+            {
+                Console.Out.WriteLine("SHOW :: {0} :: {1}", targetActivated, !visible);
+                Show();
+            }
+        }
+
+        public override void Update() => _tickEngine.Pulse();
+
+        bool hasOverlay = false;
+        private void overlay_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (!hasOverlay)
+            {
+                hasOverlay = true;
+            }
+            else
+            {
+                hasOverlay = false;
+            }
+        }
+
+
+        /// <summary>
+        ///     Called when [draw].
+        /// </summary>
+        /// <param name="e">The e.</param>
+        protected virtual void OnDraw(DrawingContext e) => Draw?.Invoke(this, e);
+
+
     }
 }

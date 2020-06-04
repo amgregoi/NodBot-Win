@@ -19,6 +19,9 @@ using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
+using Process.NET;
+using Process.NET.Memory;
+using NodBot.Code.Overlay;
 
 namespace NodBot
 {
@@ -57,7 +60,14 @@ namespace NodBot
                     readSettingFile();
                     System.IO.Directory.CreateDirectory("Images\\" + Settings.Player.playerName);
 
-                    new NodBotAI().Show();
+
+
+                    var process = System.Diagnostics.Process.GetProcessesByName("Nodiatis").Where(p => p.MainWindowTitle == Settings.Player.playerName).FirstOrDefault();
+
+                    if (process == null) return;
+
+
+                    new NodBotAI();
                     this.Close();
                 }
             }
@@ -65,33 +75,6 @@ namespace NodBot
             {
                 Console.Out.WriteLine(ex.Message);
                 Console.Out.WriteLine(ex.StackTrace);
-            }
-        }
-
-        private void NeutralButton_Click(object sender, RoutedEventArgs e)
-        {
-            if(playerLoaded)
-            {
-                ImageService test = new ImageService(InputService.getNodiatisWindowHandle());
-                test.CaputreNeutralPoint();
-
-
-
-                new NodBotAI().Show();
-                this.Close();
-            }
-        }
-
-        private void DoneButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (playerLoaded && playerNeutralSet)
-            {
-                new NodBotAI().Show();
-                this.Close();
-            }
-            else
-            {
-                // TODO :: display requirement that hasn't been met.
             }
         }
 

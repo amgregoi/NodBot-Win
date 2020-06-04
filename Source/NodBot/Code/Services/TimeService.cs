@@ -59,6 +59,8 @@ namespace NodBot.Code.Services
         /// <returns></returns>
         public bool takeBreak(int killCount)
         {
+            if (true) return true; // Disable breaking
+
             int breakTime = 20000; // 20 seconds, TODO :: place break timer in settings file?
             int lRandomRoundSize = new Random().Next(30, 40); // TODO :: place range in settings file?
             if (killCount > lRandomRoundSize)

@@ -5,15 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NodBot"
         mc:Ignorable="d"
-        Title="NodBot Setup" Height="232.19" Width="244.781">
+        Title="NodBot Setup" Height="155.484" Width="213.684">
     <Grid Margin="0,0,36,47">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="37"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Button x:Name="create_profile" Content="Load profile" HorizontalAlignment="Left" Margin="21,32,0,0" VerticalAlignment="Top" Width="97" Click="LoadButton_Click" Height="21" RenderTransformOrigin="-0.228,-4.254" Grid.ColumnSpan="2"/>
-        <Button x:Name="neutral_position" Content="Neutral Position" HorizontalAlignment="Left" Margin="21,96,0,0" VerticalAlignment="Top" Width="97" Click="NeutralButton_Click" Height="21" RenderTransformOrigin="-0.228,-4.254" Grid.ColumnSpan="2"/>
-        <Label x:Name="label" Content="You must take a screenshot of your neutral &#xD;&#xA;position out of combat to inform NodBot &#xD;&#xA;when it has successfully left combat" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="21,122,-30,-24" Width="210" Height="56" FontSize="10" Grid.ColumnSpan="2"/>
         <Label x:Name="label_profile" Content="No profile loaded" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="21,53,0,0" Width="234" Height="28" FontSize="10" Grid.ColumnSpan="2"/>
 
     </Grid>

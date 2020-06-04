@@ -34,7 +34,7 @@ namespace NodBot.Code.Enums
                     result = new Rectangle(XOffset + GameDimension.WIDTH.Value(windowVal: source.Width), YOffset, source.Width - XOffset - GameDimension.WIDTH.Value(windowVal: source.Width), GameDimension.HEIGHT.Value(windowVal: source.Height) - YOffset);
                     break;
                 case ScreenSection.Storage:
-                    result = new Rectangle(XOffset, YOffset + GameDimension.HEIGHT.Value(), source.Width - XOffset, source.Height - YOffset - GameDimension.HEIGHT.Value(windowVal: source.Width));
+                    result = new Rectangle(0, GameDimension.HEIGHT.Value(), source.Width, source.Height - GameDimension.HEIGHT.Value(windowVal: source.Height));
                     break;
                 case ScreenSection.All:
                 default:
@@ -50,7 +50,7 @@ namespace NodBot.Code.Enums
             switch (section)
             {
                 case ScreenSection.Storage:
-                    return GameDimension.HEIGHT.Value() + YOffset;
+                    return GameDimension.HEIGHT.Value();
                 case ScreenSection.Game:
                 case ScreenSection.MiniGame:
                 case ScreenSection.Inventory:
@@ -70,9 +70,9 @@ namespace NodBot.Code.Enums
                     return GameDimension.WIDTH.Value() + XOffset;
                 case ScreenSection.Game:
                 case ScreenSection.MiniGame:
-                case ScreenSection.Storage:
                     return XOffset;
                 case ScreenSection.All:
+                case ScreenSection.Storage:
                 default:
                     return 0;
             }

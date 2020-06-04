@@ -77,6 +77,8 @@ namespace NodBot.Code.Services
 
                 foreach (Item item in blackList)
                 {
+                    StackItems(item.imageFile).Wait();
+
                     Console.Out.WriteLine("Deleting item.. " + item.imageFile);
                     var itemPoint = imageService.FindTemplateMatch(item.imageFile, screenSection: ScreenSection.Inventory, threshold: item.threshold);
                     if(itemPoint != null) DeleteItem(itemPoint).Wait();
@@ -104,9 +106,12 @@ namespace NodBot.Code.Services
         {
             if (storage == null || storage.Count == 0)
             {
-                Console.Out.WriteLine("Storage full");
                 storage = imageService.FindTemplateMatches(NodImages.Empty_Black, ScreenSection.Storage);
-                if (storage.Count == 0) return;
+                if (storage.Count == 0)
+                {
+                    Console.Out.WriteLine("Storage full");
+                    return;
+                }
             }
 
             List<UIPoint> items = getItemLocations(itemImage);
@@ -117,13 +122,6 @@ namespace NodBot.Code.Services
 
                 UIPoint item0 = items[0];
                 UIPoint item1 = items[1];
-
-                if (true)
-                {
-                    mouseInput.moveMouse(item0.X, item0.Y);
-                    mouseInput.moveMouse(item1.X, item1.Y);
-                    //return;
-                }
 
                 mouseInput.dragTo(item0.X, item0.Y, item1.X, item1.Y, true).Wait();
 
@@ -196,7 +194,7 @@ namespace NodBot.Code.Services
 
             Task.Delay(100).Wait();
 
-            var destroy = imageService.FindTemplateMatch(NodImages.DestroyItem, ScreenSection.Inventory, threshold:0.65);
+            var destroy = imageService.FindTemplateMatch(NodImages.DestroyItem, ScreenSection.Inventory, threshold:0.55);
             if (destroy == null) return;
             mouseInput.leftClick(destroy);
 

@@ -13,7 +13,7 @@ namespace NodBot.Code
         public int id;
         public String imageFile;
         public double threshold;
-        public Item(int id, ItemType itemType, String file, double threshold = 0.95)
+        public Item(int id, ItemType itemType, String file, double threshold = 0.85)
         {
             this.id = id;
             this.itemType = itemType;
@@ -120,9 +120,15 @@ namespace NodBot.Code
             itemWhiteList.Add(new Item(120, ItemType.Ore, "Images\\ore\\t20.png"));
             itemWhiteList.Add(new Item(121, ItemType.Ore, "Images\\ore\\t21.png"));
             itemWhiteList.Add(new Item(122, ItemType.Ore, "Images\\ore\\t22.png"));
+            itemWhiteList.Add(new Item(123, ItemType.Ore, "Images\\ore\\t23.png", 0.95));
+            itemWhiteList.Add(new Item(124, ItemType.Ore, "Images\\ore\\t24.png"));
+            itemWhiteList.Add(new Item(125, ItemType.Ore, "Images\\ore\\t25.png"));
+            itemWhiteList.Add(new Item(126, ItemType.Ore, "Images\\ore\\t26.png"));
+            itemWhiteList.Add(new Item(127, ItemType.Ore, "Images\\ore\\t27.png"));
 
+            itemWhiteList.Add(new Item(1020, ItemType.Silk, "Images\\silk\\t20.png"));
             itemWhiteList.Add(new Item(1021, ItemType.Silk, "Images\\silk\\t21.png"));
-            itemWhiteList.Add(new Item(1022, ItemType.Silk, "Images\\silk\\t22.png"));
+            itemWhiteList.Add(new Item(1022, ItemType.Silk, "Images\\silk\\t22.png", 0.95));
             itemWhiteList.Add(new Item(1025, ItemType.Silk, "Images\\silk\\t25.png"));
         }
 
@@ -145,12 +151,16 @@ namespace NodBot.Code
             itemBlackList.Add(new Item(1010, ItemType.Silk, "Images\\silk\\t10.png"));
             itemBlackList.Add(new Item(1011, ItemType.Silk, "Images\\silk\\t11.png"));
             itemBlackList.Add(new Item(1012, ItemType.Silk, "Images\\silk\\t12.png"));
+            itemBlackList.Add(new Item(1013, ItemType.Silk, "Images\\silk\\t13.png"));
             itemBlackList.Add(new Item(1014, ItemType.Silk, "Images\\silk\\t14.png"));
             itemBlackList.Add(new Item(1015, ItemType.Silk, "Images\\silk\\t15.png"));
+            itemBlackList.Add(new Item(1016, ItemType.Silk, "Images\\silk\\t16.png"));
+            itemBlackList.Add(new Item(1017, ItemType.Silk, "Images\\silk\\t17.png"));
+            itemBlackList.Add(new Item(1018, ItemType.Silk, "Images\\silk\\t18.png"));
             itemBlackList.Add(new Item(1019, ItemType.Silk, "Images\\silk\\t19.png"));
 
 
-            itemBlackList.Add(new Item(101, ItemType.Ore, "Images\\ore\\t1.png"));
+            itemBlackList.Add(new Item(101, ItemType.Ore, "Images\\ore\\t1.png", 0.95));
             itemBlackList.Add(new Item(102, ItemType.Ore, "Images\\ore\\t2.png"));
             itemBlackList.Add(new Item(103, ItemType.Ore, "Images\\ore\\t3.png"));
             itemBlackList.Add(new Item(104, ItemType.Ore, "Images\\ore\\t4.png"));

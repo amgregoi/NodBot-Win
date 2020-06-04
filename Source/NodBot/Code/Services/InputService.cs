@@ -33,7 +33,16 @@ namespace NodBot.Code
         public IntPtr getGameWindow()
         {
             return game_hwnd;
-            //return FindWindow(null, Settings.WINDOW_NAME);
+        }
+
+        public IntPtr FindWindow(String windowName)
+        {
+            return FindWindow(null, windowName);
+        }
+
+        public void ResetWindowPosition()
+        {
+            MoveWindow(game_hwnd, 50, 50, 1450, 1050, true);
         }
 
         /// <summary>
@@ -65,6 +74,79 @@ namespace NodBot.Code
             Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        [DllImport("user32.dll")]
+        static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
+
+
+        public static IntPtr MakeLParam(int x, int y) => new IntPtr((y << 16) | (x & 0xFFFF));
+        public void leftClick(int x, int y)
+        {
+            SetForegroundWindow(game_hwnd);
+            //moveMouse(x, y);
+
+            POINT lPoint = new POINT
+            {
+                X = x,
+                Y = y
+            };
+
+            //ScreenToClient(game_hwnd, ref lPoint);
+
+            //SetCursorPos(lPoint.X, lPoint.Y);
+
+            var testlParam = MakeLParam(lPoint.X, lPoint.Y);
+            SendMessage(game_hwnd, WM_LBUTTON_DOWN, new IntPtr(0x0001), testlParam);
+            Task.Delay(100).Wait();
+            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, testlParam);
+
+            /*
+            moveMouse(x, y);
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, Convert.ToUInt32(x), Convert.ToUInt32(y), 0, 0);
+            Task.Delay(50);
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, Convert.ToUInt32(x), Convert.ToUInt32(y+75), 0, 0);
+            mLogger.info("Trying to click something..");
+            */
+        }
+
+
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
+
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         public void rightClick(UIPoint point = null)
         {
@@ -271,6 +353,9 @@ namespace NodBot.Code
 
         [DllImport("user32.dll")]
         static extern bool keybd_event(int bVk, int bScan, int dwFlags, int dwExtraInfo);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
 
 
         /// <summary>
