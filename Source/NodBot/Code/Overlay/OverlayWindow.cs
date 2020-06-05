@@ -1,5 +1,9 @@
-﻿using Process.NET.Windows;
+﻿using Process.NET;
+using Process.NET.Memory;
+using Process.NET.Windows;
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -15,18 +19,10 @@ namespace NodBot.Code.Overlay
         // Used to limit update rates via timestamps 
         // This way we can avoid thread issues with wanting to delay updates
         private readonly TickEngine _tickEngine = new TickEngine();
-        private Ellipse _ellipse;
-
-        private bool _isDisposed;
 
         private bool _isSetup;
 
-        private int updateRate = 1000 / 60;
-
-        // Shapes used in the demo
-        private Line _line;
-        private Polygon _polygon;
-        private Rectangle _rectangle;
+        private int updateRate = 1000 / 60; // 60fps
 
         public override void Enable()
         {
@@ -48,7 +44,7 @@ namespace NodBot.Code.Overlay
             // Setup which overlay you want to display
             // OverlayWindow -> Example overlay
             // NodBotAi -> User interface overlay
-            OverlayWindow = new NodBotAI(targetWindow);
+            OverlayWindow = (NodBotAI)this;
             OverlayWindow.Show();
 
             // For demo, show how to use settings
@@ -78,59 +74,34 @@ namespace NodBot.Code.Overlay
                 //SetUp();
                 _isSetup = true;
             }
-;
+
             //var activated = ((RemoteWindow)TargetWindow).IsActivated;
             var targetActivated = TargetWindow.IsActivated;
             var visible = OverlayWindow.IsVisible;
-            var activated = OverlayWindow.IsActivated;
 
-            // Ensure window is shown or hidden correctly prior to updating
-            if (!targetActivated  && !activated && visible)
+            //Console.Out.WriteLine("IsFocused :: {0}", this.IsFocused);
+            
+            if(!targetActivated && !this.IsActive && visible)
             {
-                Console.Out.WriteLine("HIDE :: {0} :: {1}", !targetActivated, visible);
                 OverlayWindow.Hide();
             }
 
-            else if (targetActivated && !visible)
+            if (targetActivated && !visible)
             {
-                Console.Out.WriteLine("SHOW :: {0} :: {1}", targetActivated, !visible);
                 OverlayWindow.Show();
+                this.Activate();
             }
         }
 
         public override void Update() => _tickEngine.Pulse();
 
-        // Clear objects
-        public override void Dispose()
-        {
-            if (_isDisposed)
-            {
-                return;
-            }
 
-            if (IsEnabled)
-            {
-                Disable();
-            }
 
-            OverlayWindow?.Hide();
-            OverlayWindow?.Close();
-            OverlayWindow = null;
-            _tickEngine.Stop();
-
-            base.Dispose();
-            _isDisposed = true;
-        }
-
-        ~OverlayWindow()
-        {
-            Dispose();
-        }
-
-        // Random shapes.. thanks Julian ^_^
+        // Example of drawing items on the overlay, might do some image drawing based on what the bot is doing
+        // Highlighting inventory slots when sorting etc.. Future project..
         private void SetUp()
         {
-            _polygon = new Polygon
+           var _polygon = new Polygon
             {
                 Points = new PointCollection(5) {
                     new Point(100, 150),
@@ -147,10 +118,9 @@ namespace NodBot.Code.Overlay
             };
 
             OverlayWindow.Add(_polygon);
-            _polygon.MouseUp += new MouseButtonEventHandler(MoseUpEvent);
 
             // Create a line
-            _line = new Line
+           var  _line = new Line
             {
                 X1 = 100,
                 X2 = 300,
@@ -160,12 +130,10 @@ namespace NodBot.Code.Overlay
                 StrokeThickness = 2
             };
 
-            _line.MouseUp += new MouseButtonEventHandler(MoseUpEvent);
-
             OverlayWindow.Add(_line);
 
             // Create an ellipse (circle)
-            _ellipse = new Ellipse
+           var _ellipse = new Ellipse
             {
                 Width = 15,
                 Height = 15,
@@ -175,10 +143,9 @@ namespace NodBot.Code.Overlay
             };
 
             OverlayWindow.Add(_ellipse);
-            _ellipse.MouseUp += new MouseButtonEventHandler(MoseUpEvent);
 
             // Create a rectangle
-            _rectangle = new Rectangle
+           var _rectangle = new Rectangle
             {
                 RadiusX = 2,
                 RadiusY = 2,
@@ -192,13 +159,9 @@ namespace NodBot.Code.Overlay
             };
 
             OverlayWindow.Add(_rectangle);
-            _rectangle.MouseUp += new MouseButtonEventHandler(MoseUpEvent);
-
         }
 
-        private void MoseUpEvent(object sender, MouseButtonEventArgs e)
-        {
-            Console.Out.WriteLine("Wooo :: {0}", sender);
-        }
+
+
     }
 }

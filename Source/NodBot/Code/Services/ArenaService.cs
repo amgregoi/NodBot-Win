@@ -27,7 +27,7 @@ namespace NodBot.Code.Services
 
         public async Task StartCombat()
         {
-            mLogger.sendMessage("Starting Attack", LogType.INFO);
+            mLogger.info("Starting Attack");
 
 
             timeService.delay(500);

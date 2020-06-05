@@ -66,7 +66,7 @@ namespace NodBot.Code.Services
             if (killCount > lRandomRoundSize)
             {
                 breakTime += new Random().Next(800, 4500);
-                mLogger.sendMessage("Taking short break: " + breakTime + "s", LogType.INFO);
+                mLogger.info("Taking short break: " + breakTime + "s");
 
                 delay(breakTime);
                 return true;

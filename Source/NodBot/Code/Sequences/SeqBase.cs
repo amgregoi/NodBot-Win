@@ -32,7 +32,7 @@ namespace NodBot.Code
 
         public virtual async Task Start()
         {
-            logger.sendLog("Base Method NOT IMPLEMENTED", LogType.INFO);
+            logger.info("Base Method NOT IMPLEMENTED");
             await Task.Yield();
         }
 

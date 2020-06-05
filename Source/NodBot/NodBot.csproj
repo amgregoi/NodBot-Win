@@ -116,6 +116,7 @@
     <Compile Include="Code\Services\ArenaService.cs" />
     <Compile Include="Code\Services\GrindService.cs" />
     <Compile Include="Code\Services\InventoryService.cs" />
+    <Compile Include="Code\Services\IOService.cs" />
     <Compile Include="Code\Services\MagicService.cs" />
     <Compile Include="Code\Services\TimeService.cs" />
     <Compile Include="Code\WhiteList.cs" />

@@ -109,14 +109,14 @@ namespace NodBot.Code
             {
                 try
                 {
-                    logger.sendMessage("Scanning: " + chest, LogType.DEBUG);
+                    logger.debug("Scanning: " + chest);
                     point = Draw(chest, NodImages.GameWindow_Game, out lImage);
                     if (debug) CvInvoke.Imshow(chest, lImage);
                     if (point != null) break;
                 }
                 catch (Exception ex)
                 {
-                    logger.sendMessage(ex.ToString(), LogType.WARNING);
+                    logger.error(ex);
                 }
             }
 
@@ -736,9 +736,7 @@ namespace NodBot.Code
             catch (Exception ex)
             {
                 // There was a problem, stopping bot
-                logger.sendLog(ex.Message, LogType.ERROR);
-                logger.sendLog(ex.StackTrace, LogType.ERROR);
-                Console.Out.WriteLine(ex.StackTrace);
+                logger.error(ex);
                 if (token != null) token.Cancel();
             }
 

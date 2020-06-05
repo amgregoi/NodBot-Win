@@ -37,7 +37,6 @@ namespace NodBot.Code
             }
             else
             {
-                logger.sendMessage("super rip", LogType.ERROR);
                 startMining();
             }
         }
@@ -100,7 +99,7 @@ namespace NodBot.Code
                 else tokenSource.Cancel();
             }
 
-            logger.sendMessage("Done with rocks..", LogType.ERROR);
+            logger.info("Done with rocks..");
 
         }
     }

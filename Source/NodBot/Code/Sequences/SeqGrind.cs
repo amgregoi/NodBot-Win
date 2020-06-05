@@ -101,7 +101,7 @@ namespace NodBot.Code
                         // TODO :: Make resource waiting a property, off by default atm
                         if (Settings.WAIT_FOR_RESOURCES && !imageService.ContainsTemplateMatch(NodImages.PlayerResourceMinimum, screenSection: ScreenSection.Game))
                         {
-                            logger.sendLog("Waiting for resources to regen", LogType.INFO);
+                            logger.info("Waiting for resources to regen");
                             timeService.delay(3000);
                             continue;
                         }
@@ -131,7 +131,7 @@ namespace NodBot.Code
 
                         for (int i = 13; i >= 0; i--)
                         {
-                            logger.sendMessage("Starting arena in ~" + i + "secs", LogType.INFO);
+                            logger.info("Starting arena in ~" + i + "secs");
                             Task.Delay(1000).Wait();
                         }
 
@@ -151,9 +151,7 @@ namespace NodBot.Code
                 catch (Exception ex)
                 {
                     if (ex is OperationCanceledException) break;
-
-                    logger.sendLog(ex.Message, LogType.WARNING);
-                    logger.sendLog(ex.StackTrace, LogType.WARNING);
+                    logger.error(ex);
                 }
             }
         }
@@ -167,7 +165,7 @@ namespace NodBot.Code
         {
             if (combatState > SequenceState.WAIT)
             {
-                logger.sendMessage("Currently in combat.", LogType.DEBUG);
+                logger.debug("Currently in combat.");
             }
 
             if (Settings.Player.useMagic)

@@ -7,19 +7,9 @@ using NodBot.Code;
 using System.Threading;
 using Microsoft.Win32;
 using System.IO;
-using NodBot.Model;
-using Newtonsoft.Json;
-using System.Drawing;
 using NodBot.Code.Services;
-using Emgu.CV;
-using System.Collections;
-using NodBot.Code.Enums;
 using System.Windows.Media;
-using System.Runtime.InteropServices;
-using Size = System.Windows.Size;
-using System.Windows.Interop;
 using NodBot.Code.Overlay;
-using Process.NET.Windows;
 using Process.NET;
 using Process.NET.Memory;
 
@@ -29,30 +19,49 @@ namespace NodBot
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class NodBotAI : OverlayPlugin
+    public partial class NodBotAI : OverlayWindow
     {
-        bool isRunning = false;
+        bool IsNodBotActive = false;
+        private SeqBase mCurrentSequence;
+        private int grindOption = 0;
 
+
+        // Window services
+        private IOService IOService = new IOService();
+
+        // Sequence Services
         private Logger mLogger;
         private NodiatisInputService mInput;
         private InventoryService mInventory;
 
+        // Overlay data points
         private int kill_count = 0, chest_count = 0;
-        private CancellationTokenSource cts;
-        private bool isSequenceInit = false;
-
         private Progress<int> progressKillCount;
         private Progress<int> progressChestCount;
         private Progress<string> progressLog;
-        private string[] mNodBotOptions = { "Farm", "Town Walk(T4)", "Town Walk(T5)" };
 
-        public Boolean IsActivated { get; set; }
+        private string[] NodBotOptions = { "Farm", "Town Walk(T4)", "Town Walk(T5)" };
 
+        // Async cancellation token
+        private CancellationTokenSource cts;
 
-
-        private void init()
+        /// <summary>
+        /// 
+        /// </summary>
+        public NodBotAI()
         {
-            
+            InitializeComponent();
+            Init();
+            StartOverlay();
+            this.Show();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void Init()
+        {
+
             this.Title = "Player - " + Settings.Player.playerName;
 
             // init logger
@@ -66,197 +75,13 @@ namespace NodBot
 
             // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-            options_combo.Items.Add(mNodBotOptions[0]);
-            options_combo.Items.Add(mNodBotOptions[1]);
-            options_combo.Items.Add(mNodBotOptions[2]);
+            options_combo.Items.Add(NodBotOptions[0]);
+            options_combo.Items.Add(NodBotOptions[1]);
+            options_combo.Items.Add(NodBotOptions[2]);
             options_combo.SelectedIndex = 0;
         }
 
-        private void initSequences()
-        {
-            if (isSequenceInit) return;
-            isSequenceInit = true;
-
-        }
-
-        CancellationTokenSource inventoryCancel = new CancellationTokenSource();
-
-        /// <summary>
-        /// This function handles click events for the UI Test button.
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TestButton_Click(object sender, RoutedEventArgs e)
-        {
-
-
-
-        }
-
-        /// <summary>
-        /// This function handles click events for the UI Start button.
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (isRunning) stopGrind();
-            else startGrind();
-        }
-
-        private SeqBase mCurrentSequence;
-        private int grindOption = 0;
-
-        /// <summary>
-        /// This function handles starting the selected bot sequence to execute.
-        /// 
-        /// </summary>
-        private void startGrind()
-        {
-            initSequences();
-
-            try
-            {
-                mLogger.sendMessage("Starting bot", LogType.INFO);
-                start_button.Content = "Stop";
-                grindOption = options_combo.SelectedIndex;
-            }
-            catch (Exception ex)
-            {
-                Console.Out.WriteLine(ex.StackTrace);
-            }
-
-            cts = new CancellationTokenSource();
-
-            cts.Token.Register(() =>
-            {
-                if (!isManualStop) startGrind();
-                else Console.Out.WriteLine("Stop button was pressed");
-
-                isManualStop = false;
-            });
-
-            Task.Run(async () =>
-            {
-                isRunning = true;
-                if (grindOption == 0)
-                {
-                    mCurrentSequence = new SeqGrind(cts, mLogger, progressKillCount, progressChestCount);
-                    await mCurrentSequence.Start();
-                }
-                else if (grindOption == 2 || grindOption == 3)
-                {
-                    mCurrentSequence = new SeqTownWalk(cts, mLogger);
-                    await ((SeqTownWalk)mCurrentSequence).Start(grindOption == 3);
-                }
-            });
-        }
-
-        bool isManualStop = false;
-        /// <summary>
-        /// This function handles stopping the currently running bot sequence.
-        /// 
-        /// </summary>
-        private void stopGrind()
-        {
-            isManualStop = true;
-            mLogger.sendMessage("Stopping bot", LogType.INFO);
-            this.Dispatcher.Invoke(() =>
-            {
-                start_button.Content = "Start";
-                isRunning = false;
-                if (cts != null)
-                {
-                    cts.Cancel();
-                    cts = null;
-                }
-            });
-        }
-
-        /// <summary>
-        /// This event handler toggles the Settings based on the events 
-        /// of from the various CheckBoxes in the UI.
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            switch (((CheckBox)sender).Name)
-            {
-                case "pilgrimage_checkbox":
-                    Settings.PILGRIMAGE = true; // Is on a pilgrimage
-                    mLogger.sendMessage("PILGRIMAGE ON", LogType.INFO);
-                    break;
-                case "chest_checkbox":
-                    Settings.CHESTS = false; // Will not look for chests
-                    mLogger.sendMessage("CHESTS OFF", LogType.INFO);
-                    break;
-                case "debug_checkbox":
-                    Settings.DEBUG = true;
-                    mLogger.sendMessage("DEBUG ON", LogType.INFO);
-                    break;
-                case "arena_checkbox":
-                    Settings.ARENA = true;
-                    break;
-                case "bossing_checkbox":
-                    Settings.BOSSING = true;
-                    break;
-                case "resource_wait":
-                    Settings.WAIT_FOR_RESOURCES = true;
-                    break;
-                case "option_mining":
-                    Settings.RESOURCE_MINING = true;
-                    break;
-                case "manage_inventory":
-                    Settings.MANAGE_INVENTORY = true;
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// This event handler toggles the Settings based on the events of from 
-        /// the various CheckBoxes in the UI.
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CheckBox_UnChecked(object sender, RoutedEventArgs e)
-        {
-            switch (((CheckBox)sender).Name)
-            {
-                case "pilgrimage_checkbox":
-                    Settings.PILGRIMAGE = false; // Is not on a pilgrimage
-                    mLogger.sendMessage("PILGRIMAGE OFF", LogType.INFO);
-                    break;
-                case "chest_checkbox":
-                    Settings.CHESTS = true; // Will look for chests  
-                    mLogger.sendMessage("CHESTS OFF", LogType.INFO);
-                    break;
-                case "debug_checkbox":
-                    Settings.DEBUG = false;
-                    mLogger.sendMessage("DEBUG OFF", LogType.INFO);
-                    break;
-                case "arena_checkbox":
-                    Settings.ARENA = false;
-                    break;
-                case "bossing_checkbox":
-                    Settings.BOSSING = false;
-                    break;
-                case "resource_wait":
-                    Settings.WAIT_FOR_RESOURCES = false;
-                    break;
-                case "option_mining":
-                    Settings.RESOURCE_MINING = false;
-                    break;
-                case "manage_inventory":
-                    Settings.MANAGE_INVENTORY = false;
-                    break;
-
-            }
-        }
+        #region Overlay Update Events
 
         /// <summary>
         /// This function updates the UI kill counter.
@@ -278,24 +103,7 @@ namespace NodBot
             chest_counter_label.Content = chest_count;
         }
 
-        /// <summary>
-        /// This function clears the textbox log of all its content.
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
-        {
-            log_textbox.Clear();
-        }
 
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            new NodBotInit().Show();
-
-            stopGrind();
-            this.Close();
-        }
 
         /// <summary>
         /// This function adds messages to the textbox log on the GUI.
@@ -314,6 +122,143 @@ namespace NodBot
             log_textbox.ScrollToEnd();
         }
 
+        #endregion Overlay Update Events
+
+
+        #region Window Even Handlers
+
+        /// <summary>
+        /// This function handles click events for the UI Test button.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TestButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// This function handles click events for the UI Start button.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (IsNodBotActive) stopGrind();
+            else startGrind();
+        }
+
+        /// <summary>
+        /// This event handler toggles the Settings based on the events 
+        /// of from the various CheckBoxes in the UI.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            switch (((CheckBox)sender).Name)
+            {
+                case "pilgrimage_checkbox":
+                    Settings.PILGRIMAGE = true; // Is on a pilgrimage
+                    mLogger.info("PILGRIMAGE ON");
+                    break;
+                case "chest_checkbox":
+                    Settings.CHESTS = false; // Will not look for chests
+                    mLogger.info("CHESTS OFF");
+                    break;
+                case "debug_checkbox":
+                    Settings.DEBUG = true;
+                    mLogger.info("DEBUG ON");
+                    break;
+                case "arena_checkbox":
+                    Settings.ARENA = true;
+                    mLogger.info("ARENA ON");
+                    break;
+                case "bossing_checkbox":
+                    Settings.BOSSING = true;
+                    mLogger.info("BOSSING ON");
+                    break;
+                case "resource_wait":
+                    Settings.WAIT_FOR_RESOURCES = true;
+                    mLogger.info("WAITING FOR RESOURCES ON");
+                    break;
+                case "option_mining":
+                    Settings.RESOURCE_MINING = true;
+                    mLogger.info("MINING ON");
+                    break;
+                case "manage_inventory":
+                    Settings.MANAGE_INVENTORY = true;
+                    mLogger.info("MANAGE INVENTORY ON");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// This event handler toggles the Settings based on the events of from 
+        /// the various CheckBoxes in the UI.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBox_UnChecked(object sender, RoutedEventArgs e)
+        {
+            switch (((CheckBox)sender).Name)
+            {
+                case "pilgrimage_checkbox":
+                    Settings.PILGRIMAGE = false; // Is not on a pilgrimage
+                    mLogger.info("PILGRIMAGE OFF");
+                    break;
+                case "chest_checkbox":
+                    Settings.CHESTS = true; // Will look for chests  
+                    mLogger.info("CHESTS OFF");
+                    break;
+                case "debug_checkbox":
+                    Settings.DEBUG = false;
+                    mLogger.info("DEBUG OFF");
+                    break;
+                case "arena_checkbox":
+                    Settings.ARENA = false;
+                    mLogger.info("ARENA OFF");
+                    break;
+                case "bossing_checkbox":
+                    Settings.BOSSING = false;
+                    mLogger.info("BOSSING OFF");
+                    break;
+                case "resource_wait":
+                    Settings.WAIT_FOR_RESOURCES = false;
+                    mLogger.info("WAITING FOR RESOURCES OFF");
+                    break;
+                case "option_mining":
+                    Settings.RESOURCE_MINING = false;
+                    mLogger.info("MINING OFF");
+                    break;
+                case "manage_inventory":
+                    Settings.MANAGE_INVENTORY = false;
+                    mLogger.info("MANAGE INVENTORY OFF");
+                    break;
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NeutralMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
+            test.CaputreNeutralPoint();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ProfileMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var fileContent = string.Empty;
@@ -333,9 +278,9 @@ namespace NodBot
                     //Get the path of specified file
                     filePath = openFileDialog.FileName;
                     Settings.SETTINGS_FILE = openFileDialog.FileName;
-                    readSettingFile();
+                    IOService.readSettingFile();
                     this.Title = "Player - " + Settings.WINDOW_NAME;
-                    System.IO.Directory.CreateDirectory("Images\\" + Settings.Player.playerName);
+                    Directory.CreateDirectory("Images\\" + Settings.Player.playerName);
                 }
             }
             catch (Exception ex)
@@ -344,49 +289,32 @@ namespace NodBot
                 Console.Out.WriteLine(ex.StackTrace);
             }
 
-            init();
+            Init();
         }
 
-        private void NeutralMenuItem_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// This function clears the textbox log of all its content.
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            ImageService test = new ImageService(cts, mLogger, InputService.getNodiatisWindowHandle());
-            test.CaputreNeutralPoint();
+            log_textbox.Clear();
         }
 
-        private void readSettingFile()
+        private void Window_Closed(object sender, EventArgs e)
         {
-            string[] lines = System.IO.File.ReadAllLines(Settings.SETTINGS_FILE);
+            new NodBotInit().Show();
 
-            string json = File.ReadAllText(Settings.SETTINGS_FILE);
-            PlayerSettings settings = DeserializePlayerSettings(json);
-
-            string test = SerializePlayerSettings(settings);
-
-            if (settings.playerName == null || settings.playerName.Length == 0)
-            {
-                // Player Name required
-                return;
-            }
-
-            Settings.Player = settings;
-            Settings.WINDOW_NAME = settings.playerName;
+            stopGrind();
+            this.Close();
         }
 
-        public PlayerSettings DeserializePlayerSettings(string json)
-        {
-            return JsonConvert.DeserializeObject<PlayerSettings>(json);
-        }
+        #endregion Window Even Handlers
 
-        private void options_combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
 
-        }
-
-        public String SerializePlayerSettings(PlayerSettings settings)
-        {
-            return JsonConvert.SerializeObject(settings);
-        }
-
+        #region Overlay Setup
 
 
         /***
@@ -396,15 +324,8 @@ namespace NodBot
          * 
          * 
          */
-        private IWindow _targetWindow;
-
-        public NodBotAI()
-        {
-            InitializeComponent();
-            init();
-            DumbStartOverlay();
-            this.Show();
-        }
+        public event EventHandler<DrawingContext> Draw;
+        private bool hasOverlay = false;
 
         public void StartOverlay()
         {
@@ -413,39 +334,13 @@ namespace NodBot
             if (process == null) return;
 
             var _processSharp = new ProcessSharp(process, MemoryType.Remote);
-            // var _overlay = new OverlayImpl();
-
-            // var wpfOverlay = (OverlayImpl)_overlay;
 
             // This is done to focus on the fact the Init method
             // is overriden in the wpf overlay demo in order to set the
             // wpf overlay window instance
+            //Initialize(_processSharp.WindowFactory.MainWindow);
             Initialize(_processSharp.WindowFactory.MainWindow);
-            Enable();
-
-            while (true)
-            {
-                Update();
-            }
-        }
-
-        public void DumbStartOverlay()
-        {
-            var process = System.Diagnostics.Process.GetProcessesByName("Nodiatis").Where(p => p.MainWindowTitle == Settings.Player.playerName).FirstOrDefault();
-
-            if (process == null) return;
-
-            var _processSharp = new ProcessSharp(process, MemoryType.Remote);
-            _targetWindow = _processSharp.WindowFactory.MainWindow;
-            TargetWindow = _targetWindow;
-
-            _tickEngine.Interval = TimeSpan.FromMilliseconds(updateRate);
-            _tickEngine.PreTick += OnPreTick;
-            _tickEngine.Tick += OnTick;
-
-
-            //StartOverlay();
-            UpdateWindow();
+         
             Enable();
 
             var task = Task.Run(() =>
@@ -458,39 +353,38 @@ namespace NodBot
         }
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="OverlayWindow" /> class.
-        /// </summary>
-        /// <param name="targetWindow">The window.</param>
-        public NodBotAI(IWindow targetWindow)
-        {
-            InitializeComponent();
-            init();
-            StartOverlay();
-        }
-
-        public event EventHandler<DrawingContext> Draw;
-
-        /// <summary>
         ///     Updates this instance.
         /// </summary>
         public void UpdateWindow()
         {
-            if (hasOverlay)
+            try
             {
-                Width = _targetWindow.Width;
-                Height = _targetWindow.Height;
-                Left = _targetWindow.X;
-                Top = _targetWindow.Y;
+                if (hasOverlay)
+                {
+                    Width = TargetWindow.Width;
+                    Height = TargetWindow.Height;
+                    Left = TargetWindow.X;
+                    Top = TargetWindow.Y + 2;
+                }
+                else UpdateWindow2();
             }
-            else UpdateWindow2();
+            catch(Exception ex)
+            {
+                Console.Out.WriteLine(ex.Message);
+                Console.Out.WriteLine(ex.StackTrace);
+                Application.Current.Shutdown();
+            }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void UpdateWindow2()
         {
             Width = 180;
             Height = 25;
-            Left = _targetWindow.X + (_targetWindow.Width / 2) - 90;
-            Top = _targetWindow.Y;
+            Left = TargetWindow.X + (TargetWindow.Width / 2) - 90;
+            Top = TargetWindow.Y+2;
         }
 
         /// <summary>
@@ -504,7 +398,7 @@ namespace NodBot
             // drawn on the canvas to be click-through. 
             // There is no other way to do this.
             // Source: https://social.msdn.microsoft.com/Forums/en-US/c32889d3-effa-4b82-b179-76489ffa9f7d/how-to-clicking-throughpassing-shapesellipserectangle?forum=wpf
-           // this.MakeWindowTransparent();
+            // this.MakeWindowTransparent();
         }
 
         /// <summary>
@@ -547,119 +441,75 @@ namespace NodBot
         /// <param name="index">The index.</param>
         public void Remove(int index) => OverlayGrid.Children.RemoveAt(index);
 
-
-
-
-
-
-
-
-
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-        // Used to limit update rates via timestamps 
-        // This way we can avoid thread issues with wanting to delay updates
-        private readonly TickEngine _tickEngine = new TickEngine();
-
-
-
-        private int updateRate = 1000 / 60;
-
-
-        public override void Enable()
-        {
-            _tickEngine.IsTicking = true;
-            base.Enable();
-        }
-
-        public override void Disable()
-        {
-            _tickEngine.IsTicking = false;
-            base.Disable();
-        }
-
-        public override void Initialize(IWindow targetWindow)
-        {
-            // Set target window by calling the base method
-            base.Initialize(targetWindow);
-            _targetWindow = targetWindow;
-
-            //OverlayWindow = new NodBotAI(targetWindow);
-            Show();
-
-
-            // Set up update interval and register events for the tick engine.
-            _tickEngine.Interval = TimeSpan.FromMilliseconds(updateRate);
-            //_tickEngine.PreTick += OnPreTick;
-            _tickEngine.Tick += OnTick;
-        }
-
-        private void OnTick(object sender, EventArgs eventArgs)
-        {
-            // This will only be true if the target window is active
-            // (or very recently has been, depends on your update rate)
-            if (IsVisible)
-            {
-                UpdateWindow();
-            }
-        }
-
-        private void OnPreTick(object sender, EventArgs eventArgs)
-        {
-            //var activated = ((RemoteWindow)TargetWindow).IsActivated;
-            var targetActivated = TargetWindow.IsActivated;
-            var visible = IsVisible;
-            var activated = IsActivated;
-
-            // Ensure window is shown or hidden correctly prior to updating
-            if (!targetActivated  && !activated && visible)
-            {
-                //Console.Out.WriteLine("HIDE :: {0} :: {1}", !targetActivated, visible);
-                //Hide();
-            }
-
-            else if (targetActivated && !visible)
-            {
-                Console.Out.WriteLine("SHOW :: {0} :: {1}", targetActivated, !visible);
-                Show();
-            }
-        }
-
-        public override void Update() => _tickEngine.Pulse();
-
-        bool hasOverlay = false;
-        private void overlay_Click(object sender, RoutedEventArgs e)
-        {
-
-            if (!hasOverlay)
-            {
-                hasOverlay = true;
-            }
-            else
-            {
-                hasOverlay = false;
-            }
-        }
-
-
         /// <summary>
         ///     Called when [draw].
         /// </summary>
         /// <param name="e">The e.</param>
         protected virtual void OnDraw(DrawingContext e) => Draw?.Invoke(this, e);
 
+        private void overlay_Click(object sender, RoutedEventArgs e)
+        {
+            hasOverlay = !hasOverlay;
+        }
 
+        #endregion Overlay Setup
+
+
+        /// <summary>
+        /// This function handles starting the selected bot sequence to execute.
+        /// 
+        /// </summary>
+        private void startGrind()
+        {
+            try
+            {
+                mLogger.info("Starting bot");
+                start_button.Content = "Stop";
+                grindOption = options_combo.SelectedIndex;
+
+
+                cts = new CancellationTokenSource();
+
+                cts.Token.Register(() => { stopGrind(); });
+
+                Task.Run(async () =>
+                {
+                    IsNodBotActive = true;
+                    if (grindOption == 0)
+                    {
+                        mCurrentSequence = new SeqGrind(cts, mLogger, progressKillCount, progressChestCount);
+                        await mCurrentSequence.Start();
+                    }
+                    else if (grindOption == 2 || grindOption == 3)
+                    {
+                        mCurrentSequence = new SeqTownWalk(cts, mLogger);
+                        await ((SeqTownWalk)mCurrentSequence).Start(grindOption == 3);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                mLogger.error(ex);
+            }
+        }
+
+        /// <summary>
+        /// This function handles stopping the currently running bot sequence.
+        /// 
+        /// </summary>
+        private void stopGrind()
+        {
+            mLogger.info("Stopping bot");
+            this.Dispatcher.Invoke(() =>
+            {
+                start_button.Content = "Start";
+                IsNodBotActive = false;
+                if (cts != null)
+                {
+                    cts.Cancel();
+                    cts = null;
+                }
+            });
+        }
     }
 }

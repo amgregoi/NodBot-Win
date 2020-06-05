@@ -46,7 +46,7 @@ namespace NodBot.Code.Services
         {
             grindCallback.setState(SequenceState.INIT);
 
-            logger.sendMessage("Starting Combat", LogType.INFO);
+            logger.info("Starting Combat");
             nodInput.InitiateFight();
             timeService.delay(750);
 
@@ -75,11 +75,11 @@ namespace NodBot.Code.Services
             if (grindCallback.getState() == SequenceState.BOT_START)
             {
                 grindCallback.setState(SequenceState.ATTACK);
-                logger.sendMessage("Already in combat", LogType.DEBUG);
+                logger.debug("Already in combat");
                 return;
             }
 
-            logger.sendMessage("Starting Attack", LogType.INFO);
+            logger.info("Starting Attack");
             timeService.delay(TimeService.OffsetLength.Short);
 
             // start auto attack [A/S]
@@ -126,24 +126,24 @@ namespace NodBot.Code.Services
             if (grindCallback.getState() == SequenceState.BOT_START)
                 grindCallback.setState(SequenceState.WAIT_2);
 
-            logger.sendMessage("Ending combat", LogType.INFO);
+            logger.info("Ending combat");
 
             if (!Settings.PILGRIMAGE)
             {
                 // loot trophies
                 if (!Settings.BOSSING) // SKIP loot if bossing
                 {
-                    logger.sendMessage("Lotting trophies", LogType.INFO);
+                    logger.info("Lotting trophies");
                     nodInput.LootTrophies();
                 }
-                else logger.sendMessage("Skipped looting trophies?", LogType.INFO);
+                else logger.info("Skipped looting trophies?");
                 
                 timeService.delay(2000, TimeService.OffsetLength.Medium);
 
                 // loot chest
                 if (Settings.CHESTS)
                 {
-                    logger.sendMessage("Starting search for chests.", LogType.INFO);
+                    logger.info("Starting search for chests.");
                     Point? coord = imageService.FindChestCoord();
                     if (coord != null)
                     {
@@ -152,11 +152,11 @@ namespace NodBot.Code.Services
                     }
                     timeService.delay(2000, TimeService.OffsetLength.Medium);
                 }
-                else logger.sendMessage("Skipped chests?", LogType.INFO);
+                else logger.info("Skipped chests?");
             }
             else
             {
-                logger.sendMessage("Pilgrimage Active, skipping trophies and chests.", LogType.DEBUG);
+                logger.debug("Pilgrimage Active, skipping trophies and chests.");
                 timeService.delay(250, TimeService.OffsetLength.Short);
             }
 

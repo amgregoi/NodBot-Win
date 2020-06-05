@@ -169,7 +169,7 @@ namespace NodBot.Code
         public void sendLeftMouseClickWithWindowHandler(int x, int y, bool aLeftClick)
         {
             String coord = "(" + x + ", " + y + ")";
-            mLogger.sendMessage("Sending left mouse click: " + coord, LogType.DEBUG);
+            mLogger.debug("Sending left mouse click: " + coord);
 
             // Convert x,y coordinates to int pointer
             // IntPtr coords = new IntPtr((y << 16) | x); // lparam
@@ -247,7 +247,7 @@ namespace NodBot.Code
         public void sendKeyboardClick(Keyboard_Actions action)
         {
             String lInput = Enum.GetName(typeof(Keyboard_Actions_Keys), action);
-            mLogger.sendMessage("Sending keyboard input: [" + lInput + "]", LogType.DEBUG);
+            mLogger.debug("Sending keyboard input: [" + lInput + "]");
 
             SendMessage(game_hwnd, WM_KEYDOWN, new IntPtr((uint)action), IntPtr.Zero);
             SendMessage(game_hwnd, WM_KEYUP, new IntPtr((uint)action), IntPtr.Zero);
