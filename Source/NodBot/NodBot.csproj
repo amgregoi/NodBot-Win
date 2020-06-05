@@ -105,12 +105,12 @@
     <Compile Include="Code\Enums\SequenceState.cs" />
     <Compile Include="Code\ItemList.cs" />
     <Compile Include="Code\Model\UIPoint.cs" />
-    <Compile Include="Code\Overlay\Native.cs" />
-    <Compile Include="Code\Overlay\OverlayImpl.cs" />
+    <Compile Include="Code\Overlay\Common\Native.cs" />
+    <Compile Include="Code\Overlay\OverlayWindow.cs" />
     <Compile Include="Code\Overlay\OverlayPlugin.cs" />
-    <Compile Include="Code\Overlay\TickEngine.cs" />
-    <Compile Include="Code\Overlay\WaitTimer.cs" />
-    <Compile Include="Code\Overlay\WindowExtensions.cs" />
+    <Compile Include="Code\Overlay\Common\TickEngine.cs" />
+    <Compile Include="Code\Overlay\Common\WaitTimer.cs" />
+    <Compile Include="Code\Overlay\Common\WindowExtensions.cs" />
     <Compile Include="Code\Overlay\WpfOverlayPlugin.cs" />
     <Compile Include="Code\Sequences\SeqMining.cs" />
     <Compile Include="Code\Services\ArenaService.cs" />

@@ -10,7 +10,7 @@ using OverlayWindow = NodBot.NodBotAI;
 namespace NodBot.Code.Overlay
 {
 
-    public class OverlayImpl : WpfOverlayPlugin
+    public class OverlayWindow : WpfOverlayPlugin
     {
         // Used to limit update rates via timestamps 
         // This way we can avoid thread issues with wanting to delay updates
@@ -122,7 +122,7 @@ namespace NodBot.Code.Overlay
             _isDisposed = true;
         }
 
-        ~OverlayImpl()
+        ~OverlayWindow()
         {
             Dispose();
         }
