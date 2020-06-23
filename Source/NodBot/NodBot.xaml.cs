@@ -135,8 +135,23 @@ namespace NodBot
         /// <param name="e"></param>
         private void TestButton_Click(object sender, RoutedEventArgs e)
         {
+            hasOverlay = false;
 
+            Task.Run(() =>
+            {
+
+                mLogger.error("Overlay off..");
+                Task.Delay(2000).Wait();
+
+                mLogger.error("Starting sort..");
+                mInventory.SortInventory().Wait();
+
+                mLogger.error("");
+
+            });
         }
+
+
 
         /// <summary>
         /// This function handles click events for the UI Start button.

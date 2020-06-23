@@ -330,6 +330,7 @@ namespace NodBot.Code
         {
             lock (filename)
             {
+                if (!System.IO.File.Exists(filename)) System.IO.File.CreateText(filename);
                 image.Save(filename);
             }
         }
@@ -479,9 +480,6 @@ namespace NodBot.Code
         {
             using (Image<Gray, float> result = imgSrc.MatchTemplate(template, matchingType))
             {
-                SaveImageFile(imgSrc, "Images//Poft//__1.png");
-                SaveImageFile(template, "Images//Poft//__2.png");
-
                 var _threshold = CvInvoke.Threshold(result, result, threshold, 1, ThresholdType.ToZero);
                 double[] minValues, maxValues;
                 result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);

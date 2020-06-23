@@ -1,6 +1,7 @@
 ﻿using NodBot.Code.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -66,34 +67,48 @@ namespace NodBot.Code
 
         private void setupWhiteList()
         {
-            itemWhiteList.Add(new Item(10001, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t1.png"));
-            itemWhiteList.Add(new Item(10002, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t2.png"));
-            itemWhiteList.Add(new Item(10003, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t3.png"));
-            itemWhiteList.Add(new Item(10004, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t4.png"));
+            var trophyId = 10001;
+            string[] folderEntries = Directory.GetDirectories("Images\\trophy");
+            foreach (String zone in folderEntries)
+            {
+                var title = zone.Split(new char[] { '\\' }).Last();
+                string[] fileEntries = Directory.GetFiles(zone);
+                foreach(String file in fileEntries)
+                {
+                    itemWhiteList.Add(new Item(trophyId, ItemType.Trophy, file));
+                }
 
-            itemWhiteList.Add(new Item(10011, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t1.png"));
-            itemWhiteList.Add(new Item(10012, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t2.png"));
-            itemWhiteList.Add(new Item(10013, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t3.png"));
-            itemWhiteList.Add(new Item(10014, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t4.png"));
+            }
 
-            itemWhiteList.Add(new Item(10021, ItemType.Trophy, "Images\\trophy\\Rocklands\\t1.png"));
-            itemWhiteList.Add(new Item(10022, ItemType.Trophy, "Images\\trophy\\Rocklands\\t2.png"));
-            itemWhiteList.Add(new Item(10023, ItemType.Trophy, "Images\\trophy\\Rocklands\\t3.png"));
-            itemWhiteList.Add(new Item(10024, ItemType.Trophy, "Images\\trophy\\Rocklands\\t4.png"));
 
-            itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t1.png"));
-            itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t2.png"));
-            itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t3.png"));
-            itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t4.png"));
+            //itemWhiteList.Add(new Item(10001, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t1.png"));
+            //itemWhiteList.Add(new Item(10002, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t2.png"));
+            //itemWhiteList.Add(new Item(10003, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t3.png"));
+            //itemWhiteList.Add(new Item(10004, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t4.png"));
 
-            itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\DMV\\t1.png"));
-            itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\DMV\\t2.png"));
-            itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\DMV\\t3.png"));
-            itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\DMV\\t4.png"));
+            //itemWhiteList.Add(new Item(10011, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t1.png"));
+            //itemWhiteList.Add(new Item(10012, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t2.png"));
+            //itemWhiteList.Add(new Item(10013, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t3.png"));
+            //itemWhiteList.Add(new Item(10014, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t4.png"));
 
-            itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t1.png"));
-            itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t2.png"));
-            itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t3.png"));
+            //itemWhiteList.Add(new Item(10021, ItemType.Trophy, "Images\\trophy\\Rocklands\\t1.png"));
+            //itemWhiteList.Add(new Item(10022, ItemType.Trophy, "Images\\trophy\\Rocklands\\t2.png"));
+            //itemWhiteList.Add(new Item(10023, ItemType.Trophy, "Images\\trophy\\Rocklands\\t3.png"));
+            //itemWhiteList.Add(new Item(10024, ItemType.Trophy, "Images\\trophy\\Rocklands\\t4.png"));
+
+            //itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t1.png"));
+            //itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t2.png"));
+            //itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t3.png"));
+            //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t4.png"));
+
+            //itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\DMV\\t1.png"));
+            //itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\DMV\\t2.png"));
+            //itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\DMV\\t3.png"));
+            //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\DMV\\t4.png"));
+
+            //itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t1.png"));
+            //itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t2.png"));
+            //itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t3.png"));
             //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t4.png"));
 
 
