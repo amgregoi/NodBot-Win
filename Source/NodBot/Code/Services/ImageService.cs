@@ -328,10 +328,16 @@ namespace NodBot.Code
         /// <param name="filename"></param>
         private void SaveImageFile(Image<Bgr, byte> image, String filename)
         {
-            lock (filename)
+            try
             {
-                if (!System.IO.File.Exists(filename)) System.IO.File.CreateText(filename);
-                image.Save(filename);
+                lock (filename)
+                {
+                    image.Save(filename);
+                }
+            }catch(Exception ex)
+            {
+                Console.Out.WriteLine(ex.Message);
+                Console.Out.WriteLine(ex.StackTrace);
             }
         }
 
