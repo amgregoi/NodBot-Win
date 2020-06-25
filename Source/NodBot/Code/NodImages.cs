@@ -14,6 +14,8 @@ namespace NodBot.Code
 
         public String PATH { get { return mPath; } }
 
+        public static String BASE { get { return new NodImages("").PATH; } }
+
         public static String Exit { get { return new NodImages("exit.png").PATH; } }
         public static String ButtonYes { get { return new NodImages("button_yes.png").PATH; } }
         public static String ButtonNo { get { return new NodImages("button_no.png").PATH; } }
@@ -33,6 +35,8 @@ namespace NodBot.Code
         public static String Rock3 { get { return new NodImages("mining/rock_3.png").PATH; } }
         public static String Rock4 { get { return new NodImages("mining/rock_4.png").PATH; } }
         public static String MiningIcon { get { return new NodImages("mining/icon.png").PATH; } }
+        public static String GardeningIcon { get { return new NodImages("gardening/icon.png").PATH; } }
+        public static String GardenDust { get { return new NodImages("gardening/garden_base.png").PATH; } }
 
         // Combat + Arena
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }

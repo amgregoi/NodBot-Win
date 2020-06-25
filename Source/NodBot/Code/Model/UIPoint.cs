@@ -14,6 +14,11 @@ namespace NodBot.Code.Model
             return new UIPoint(new Point(), new Rectangle());
         }
 
+        public static UIPoint New(Rectangle rect)
+        {
+            return new UIPoint(new Point(rect.X + rect.Width / 2, rect.Y + rect.Height/2), rect);
+        }
+
         private Point _point;
         private Rectangle _rect;
 

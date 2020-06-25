@@ -53,14 +53,6 @@ namespace NodBot.Code.Services
             //increment kill count
             killCounter++;
             grindCallback.updateKillCounter();
-
-            if (Settings.MANAGE_INVENTORY)
-            {
-                _ = Task.Run(() =>
-                  {
-                      if (inventoryService != null) inventoryService.SortInventory();
-                  });
-            }
         }
 
         /// <summary>
@@ -113,6 +105,14 @@ namespace NodBot.Code.Services
             // long wait at start of combat
             //await delay (20000 + generateOffset(15000));
             grindCallback.setState(SequenceState.ATTACK);
+
+            if (Settings.MANAGE_INVENTORY)
+            {
+                _ = Task.Run(() =>
+                {
+                    if (inventoryService != null) inventoryService.SortInventory();
+                });
+            }
         }
 
         /// <summary>

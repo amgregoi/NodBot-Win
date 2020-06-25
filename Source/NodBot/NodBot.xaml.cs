@@ -140,13 +140,10 @@ namespace NodBot
             Task.Run(() =>
             {
 
-                mLogger.error("Overlay off..");
-                Task.Delay(2000).Wait();
-
-                mLogger.error("Starting sort..");
+                Task.Delay(1000).Wait();
+                //new SeqGardening(new CancellationTokenSource(), mLogger).Start().Wait();
                 mInventory.SortInventory().Wait();
 
-                mLogger.error("");
 
             });
         }
@@ -204,6 +201,10 @@ namespace NodBot
                     Settings.RESOURCE_MINING = true;
                     mLogger.info("MINING ON");
                     break;
+                case "option_garden":
+                    //Settings.RESOURCE_GARDEN = true;
+                    mLogger.info("GARDEN ON");
+                    break;
                 case "manage_inventory":
                     Settings.MANAGE_INVENTORY = true;
                     mLogger.info("MANAGE INVENTORY ON");
@@ -254,7 +255,10 @@ namespace NodBot
                     Settings.MANAGE_INVENTORY = false;
                     mLogger.info("MANAGE INVENTORY OFF");
                     break;
-
+                case "option_garden":
+                    Settings.RESOURCE_GARDEN = false;
+                    mLogger.info("GARDEN OFF");
+                    break;
             }
         }
 

@@ -112,6 +112,7 @@
     <Compile Include="Code\Overlay\Common\WaitTimer.cs" />
     <Compile Include="Code\Overlay\Common\WindowExtensions.cs" />
     <Compile Include="Code\Overlay\WpfOverlayPlugin.cs" />
+    <Compile Include="Code\Sequences\SeqGardening.cs" />
     <Compile Include="Code\Sequences\SeqMining.cs" />
     <Compile Include="Code\Services\ArenaService.cs" />
     <Compile Include="Code\Services\GrindService.cs" />

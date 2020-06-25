@@ -61,12 +61,17 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="screenSection"></param>
-        public Image<Bgr, byte> CaptureScreen(String filePath, ScreenSection screenSection = ScreenSection.All)
+        public Image<Bgr, byte> CaptureScreen(String filePath, ScreenSection screenSection = ScreenSection.All, Rectangle? rect = null)
         {
             Bitmap pImage = GetScreenCapture();
             Image<Bgr, byte> source = new Image<Bgr, byte>(pImage);
 
             source = copySubImage(screenSection.getSubRect(source), source);
+            if(rect != null)
+            {
+                source = copySubImage(rect.Value, source);
+            }
+
             filePath = filePath.Replace(".png", "_" + screenSection.ToString() + ".png");
             SaveImageFile(source, filePath);
 
@@ -92,6 +97,23 @@ namespace NodBot.Code
             else SaveImageFile(current, NodImages.NeutralSS);
 
             pImage.Dispose();
+        }
+
+        /// <summary>
+        /// TODO :: Needs to be updated, still functional
+        /// </summary>
+        public Image<Bgr, byte> CaptureRect(ScreenSection section, Rectangle rect, String name)
+        {
+            Bitmap pImage = GetScreenCapture();
+            Image<Bgr, byte> source = new Image<Bgr, byte>(pImage);
+
+            source = copySubImage(section.getSubRect(source), source);
+
+            Image<Bgr, byte> result= copySubImage(rect, source);
+            SaveImageFile(result, NodImages.BASE+name);
+
+            pImage.Dispose();
+            return result;
         }
 
         /// <summary>
@@ -176,9 +198,9 @@ namespace NodBot.Code
         /// <param name="threshold"></param>
         /// <param name="matchType"></param>
         /// <returns></returns>
-        public List<UIPoint> FindTemplateMatch(List<String> templateImages, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        public List<UIPoint> FindTemplateMatch(List<String> templateImages, ScreenSection screenSection, Rectangle? rect=null, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            var result = FindTemplateMatchImpl(templateImages, screenSection: screenSection, threshold: threshold, matchType: matchType);
+            var result = FindTemplateMatchImpl(templateImages, screenSection: screenSection, rect: rect, threshold: threshold, matchType: matchType);
 
             return result.Select(item =>
             {
@@ -195,9 +217,9 @@ namespace NodBot.Code
         /// <param name="threshold"></param>
         /// <param name="matchType"></param>
         /// <returns></returns>
-        public bool ContainsTemplateMatch(String templateImage, ScreenSection screenSection, double threshold = .75, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        public bool ContainsTemplateMatch(String templateImage, ScreenSection screenSection, Rectangle? rect = null, double threshold = .75, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
-            var result = FindTemplateMatchImpl(templateImage, screenSection: ScreenSection.Game, threshold: threshold, matchType: matchType);
+            var result = FindTemplateMatchImpl(templateImage, screenSection: screenSection, rect:rect, threshold: threshold, matchType: matchType);
             return result != null;
         }
 
@@ -387,6 +409,13 @@ namespace NodBot.Code
             return matches;
         }
 
+        public bool isMatch(Image<Bgr, byte> image1, Image<Bgr, byte> image2)
+        {
+            Point[] minLocations, maxLocations;
+            bool result = ContainsTemplate(image1, image2, out maxLocations, out minLocations, threshold: 0.75f);
+            return result;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -396,11 +425,11 @@ namespace NodBot.Code
         /// <param name="threshold"></param>
         /// <param name="matchType"></param>
         /// <returns></returns>
-        private Rectangle? FindTemplateMatchImpl(String templateImage, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        private Rectangle? FindTemplateMatchImpl(String templateImage, ScreenSection screenSection, Rectangle? rect = null, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
             String baseFile = NodImages.GameWindow.Replace(".png", "_" + screenSection.ToString() + ".png");
 
-            Image<Bgr, byte> source = CaptureScreen(baseFile, screenSection);
+            Image<Bgr, byte> source = CaptureScreen(baseFile, screenSection, rect);
             Image<Bgr, byte> template = OpenImageFile(templateImage); // Image A
 
             using (Image<Bgr, byte> imgSrc = source.Copy())
@@ -437,11 +466,11 @@ namespace NodBot.Code
         /// <param name="threshold"></param>
         /// <param name="matchType"></param>
         /// <returns></returns>
-        private List<Rectangle?> FindTemplateMatchImpl(List<String> templateImage, ScreenSection screenSection, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        private List<Rectangle?> FindTemplateMatchImpl(List<String> templateImage, ScreenSection screenSection, Rectangle? rect = null, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
         {
             String baseFile = NodImages.GameWindow.Replace(".png", "_" + screenSection.ToString() + ".png");
 
-            Image<Bgr, byte> source = CaptureScreen(baseFile, screenSection);
+            Image<Bgr, byte> source = CaptureScreen(baseFile, screenSection, rect);
             Image<Bgr, byte> template;
 
             List<Rectangle?> matchResult = new List<Rectangle?>();

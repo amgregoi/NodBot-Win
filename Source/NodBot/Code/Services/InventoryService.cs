@@ -51,7 +51,6 @@ namespace NodBot.Code.Services
             });
         }
 
-
         public List<UIPoint> getItemLocations(String itemImage)
         {
             List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Inventory, threshold:0.85)
@@ -104,16 +103,6 @@ namespace NodBot.Code.Services
 
         public async Task StackItems(String itemImage)
         {
-            if (storage == null || storage.Count == 0)
-            {
-                storage = imageService.FindTemplateMatches(NodImages.Empty_Black, ScreenSection.Storage);
-                if (storage.Count == 0)
-                {
-                    Console.Out.WriteLine("Storage full");
-                    return;
-                }
-            }
-
             List<UIPoint> items = getItemLocations(itemImage);
 
             Console.Out.WriteLine("Starting item stack for: " + itemImage);
@@ -140,10 +129,16 @@ namespace NodBot.Code.Services
                 }
                 else
                 {
-                    if (storage == null)
+                    if (storage == null || storage.Count == 0)
                     {
                         items.RemoveAt(0);
-                        return;
+
+                        storage = imageService.FindTemplateMatches(NodImages.Empty_Black, ScreenSection.Storage);
+                        if (storage.Count == 0)
+                        {
+                            Console.Out.WriteLine("Storage full");
+                            return;
+                        }
                     }
 
                     // Move to storage

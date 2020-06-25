@@ -25,6 +25,7 @@ namespace NodBot.Code
         private MagicService magicService;
         private TimeService timeService;
         private SeqMining miningService;
+        private SeqGardening gardenService;
         private bool isInArenaQueue = false;
 
         /// <summary>
@@ -44,6 +45,7 @@ namespace NodBot.Code
             arenaService = new ArenaService(imageService, nodInputService, logger, this);
             magicService = new MagicService(nodInputService);
             miningService = new SeqMining(tokenSource, logger);
+            gardenService = new SeqGardening(tokenSource, logger);
         }
 
         /// <summary>
@@ -98,6 +100,14 @@ namespace NodBot.Code
                             timeService.delay(1000);
                         }
 
+                        if (Settings.RESOURCE_GARDEN && imageService.ContainsTemplateMatch(NodImages.GardeningIcon, ScreenSection.Game))
+                        {
+                            gardenService.Start().Wait();
+                            timeService.delay(1000);
+                        }
+
+                        token.ThrowIfCancellationRequested();
+
                         // TODO :: Make resource waiting a property, off by default atm
                         if (Settings.WAIT_FOR_RESOURCES && !imageService.ContainsTemplateMatch(NodImages.PlayerResourceMinimum, screenSection: ScreenSection.Game))
                         {
@@ -105,6 +115,8 @@ namespace NodBot.Code
                             timeService.delay(3000);
                             continue;
                         }
+
+                        token.ThrowIfCancellationRequested();
 
                         if (Settings.ARENA && !imageService.ContainsTemplateMatch(NodImages.ArenaVerify, ScreenSection.Game))
                         {
@@ -121,6 +133,8 @@ namespace NodBot.Code
                                 }
                             }
                         }
+
+                        token.ThrowIfCancellationRequested();
 
                         grindService.enterCombat().Wait();
                         Task.Delay(1500).Wait();

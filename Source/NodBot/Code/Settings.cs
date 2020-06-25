@@ -15,6 +15,7 @@ namespace NodBot.Code
         public static bool BOSSING { get; set; } = false;
         public static bool WAIT_FOR_RESOURCES { get; set; } = false;
         public static bool RESOURCE_MINING { get; set; } = false;
+        public static bool RESOURCE_GARDEN { get; set; } = false;
         public static bool MANAGE_INVENTORY { get; set; } = false;
 
         public static bool ARENA { get; set; } = false;

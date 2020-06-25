@@ -59,6 +59,7 @@
             <CheckBox x:Name="resource_wait" Content="Wait for Resources" HorizontalAlignment="Left" Margin="104,102,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="123" Grid.ColumnSpan="2" />
             <CheckBox x:Name="option_mining" Content="Mining" HorizontalAlignment="Left" Margin="1,124,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="66" />
             <CheckBox x:Name="manage_inventory" Content="Manage Inventory" HorizontalAlignment="Left" Margin="104,124,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="123" Grid.ColumnSpan="2" />
+            <CheckBox x:Name="option_garden" Content="Garden" HorizontalAlignment="Left" Margin="1,142,0,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_UnChecked" Height="15" Width="66" />
         </Grid>
     </Grid>
 </src:OverlayWindow>

@@ -12,7 +12,7 @@ namespace NodBot.Code.Enums
 {
     public enum ScreenSection
     {
-        All, Game, Inventory, Storage, MiniGame
+        All, Game, Inventory, Storage, MiniGame, MiniGameNoOffset
     }
 
     public static class ScreenSectionExtension
@@ -26,6 +26,9 @@ namespace NodBot.Code.Enums
             {
                 case ScreenSection.Game:
                     result = new Rectangle(XOffset, YOffset, GameDimension.WIDTH.Value(windowVal: source.Width) - XOffset, GameDimension.HEIGHT.Value(windowVal: source.Height) - YOffset);
+                    break;
+                case ScreenSection.MiniGameNoOffset:
+                    result = new Rectangle(0, 0, GameDimension.WIDTH_NO_SIDE_BAR.Value(windowVal: source.Width), GameDimension.HEIGHT_NO_CHAT.Value(windowVal: source.Height));
                     break;
                 case ScreenSection.MiniGame:
                     result = new Rectangle(XOffset, YOffset, GameDimension.WIDTH_NO_SIDE_BAR.Value(windowVal: source.Width) - XOffset, GameDimension.HEIGHT_NO_CHAT.Value(windowVal: source.Height) - YOffset);
