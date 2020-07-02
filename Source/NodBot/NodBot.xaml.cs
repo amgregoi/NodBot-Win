@@ -202,7 +202,7 @@ namespace NodBot
                     mLogger.info("MINING ON");
                     break;
                 case "option_garden":
-                    //Settings.RESOURCE_GARDEN = true;
+                    Settings.RESOURCE_GARDEN = true;
                     mLogger.info("GARDEN ON");
                     break;
                 case "manage_inventory":

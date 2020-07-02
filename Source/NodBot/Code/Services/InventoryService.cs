@@ -51,9 +51,18 @@ namespace NodBot.Code.Services
             });
         }
 
-        public List<UIPoint> getItemLocations(String itemImage)
+        public List<UIPoint> getItemInventoryLocations(String itemImage)
         {
-            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Inventory, threshold:0.85)
+            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Inventory, threshold: 0.85)
+                .OrderByDescending(item => item.Y)
+                .ThenByDescending(item => item.X)
+                .ToList();
+            return items;
+        }
+
+        public List<UIPoint> getItemStorageLocations(String itemImage)
+        {
+            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Storage, threshold: 0.85)
                 .OrderByDescending(item => item.Y)
                 .ThenByDescending(item => item.X)
                 .ToList();
@@ -71,7 +80,8 @@ namespace NodBot.Code.Services
 
                 foreach (Item item in whiteList)
                 {
-                    StackItems(item.imageFile).Wait();
+                    if (item.itemType == ItemType.Ore) StackItemToStorage(item.imageFile).Wait();
+                    else StackItems(item.imageFile).Wait();
                 }
 
                 foreach (Item item in blackList)
@@ -101,9 +111,9 @@ namespace NodBot.Code.Services
         }
 
 
-        public async Task StackItems(String itemImage)
+        private async Task StackItems(String itemImage)
         {
-            List<UIPoint> items = getItemLocations(itemImage);
+            List<UIPoint> items = getItemInventoryLocations(itemImage);
 
             Console.Out.WriteLine("Starting item stack for: " + itemImage);
             while (items.Count > 1)
@@ -171,6 +181,58 @@ namespace NodBot.Code.Services
             Console.Out.WriteLine("Completed item stack for: " + itemImage);
             return;
         }
+
+
+        private async Task StackItemToStorage(String itemImage)
+        {
+            List<UIPoint> inventory = getItemInventoryLocations(itemImage);
+            List<UIPoint> storage = getItemStorageLocations(itemImage);
+
+            while (inventory.Count > 0)
+            {
+                UIPoint inventoryItem = inventory[0];
+                UIPoint storageItem = storage.FirstOrDefault();
+                if(storageItem == null)
+                {
+                    storageItem = GetFirstEmptyStorageSpace();
+                    if (storageItem == null) return;
+                }
+
+                mouseInput.dragTo(inventoryItem.X, inventoryItem.Y, storageItem.X, storageItem.Y, true).Wait();
+
+                // Move cursor out of the way
+                Task.Delay(250).Wait();
+                mouseInput.moveMouse(100, 100);
+                Task.Delay(400).Wait();
+
+                bool isSlotEmpty = imageService.IsRectEmpty(inventoryItem.Rect, NodImages.GameWindow, screenSection: ScreenSection.Inventory);
+
+                if (isSlotEmpty)
+                {
+                    inventory.RemoveAt(0);
+                }
+                else
+                {
+                    if (storage.Count == 0)
+                    {
+                        inventory.RemoveAt(0);
+                        continue;
+                    }
+                    else storage.RemoveAt(0);
+
+                    Task.Delay(250).Wait();
+                }
+
+                // move item[1] into item[2]
+                // scan location of item[1]
+                // if(location == empty) items.remove(1)
+            }
+
+
+            return;
+        }
+
+
 
         public UIPoint GetFirstEmptyInventorySpace()
         {

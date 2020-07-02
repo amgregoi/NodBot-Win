@@ -91,6 +91,8 @@ namespace NodBot.Code
                             Task.Delay(1000).Wait();
 
                             clickPoint(i,j).Wait();
+                            
+                            Task.Delay(150).Wait();
 
                             var icon = imageService.CaptureRect(ScreenSection.MiniGameNoOffset, points[i, j].Rect, String.Format("gardening\\slot{0}-{1}.png", i, j));
                             icons[i, j] = icon;

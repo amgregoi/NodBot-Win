@@ -80,55 +80,11 @@ namespace NodBot.Code
 
             }
 
-
-            //itemWhiteList.Add(new Item(10001, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t1.png"));
-            //itemWhiteList.Add(new Item(10002, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t2.png"));
-            //itemWhiteList.Add(new Item(10003, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t3.png"));
-            //itemWhiteList.Add(new Item(10004, ItemType.Trophy, "Images\\trophy\\NDreadMountain\\t4.png"));
-
-            //itemWhiteList.Add(new Item(10011, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t1.png"));
-            //itemWhiteList.Add(new Item(10012, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t2.png"));
-            //itemWhiteList.Add(new Item(10013, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t3.png"));
-            //itemWhiteList.Add(new Item(10014, ItemType.Trophy, "Images\\trophy\\NorthPassage\\t4.png"));
-
-            //itemWhiteList.Add(new Item(10021, ItemType.Trophy, "Images\\trophy\\Rocklands\\t1.png"));
-            //itemWhiteList.Add(new Item(10022, ItemType.Trophy, "Images\\trophy\\Rocklands\\t2.png"));
-            //itemWhiteList.Add(new Item(10023, ItemType.Trophy, "Images\\trophy\\Rocklands\\t3.png"));
-            //itemWhiteList.Add(new Item(10024, ItemType.Trophy, "Images\\trophy\\Rocklands\\t4.png"));
-
-            //itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t1.png"));
-            //itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t2.png"));
-            //itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t3.png"));
-            //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\SouthPassage\\t4.png"));
-
-            //itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\DMV\\t1.png"));
-            //itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\DMV\\t2.png"));
-            //itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\DMV\\t3.png"));
-            //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\DMV\\t4.png"));
-
-            //itemWhiteList.Add(new Item(10031, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t1.png"));
-            //itemWhiteList.Add(new Item(10032, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t2.png"));
-            //itemWhiteList.Add(new Item(10033, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t3.png"));
-            //itemWhiteList.Add(new Item(10034, ItemType.Trophy, "Images\\trophy\\GoblinSwamp\\t4.png"));
-
-
             itemWhiteList.Add(new Item(1, ItemType.Potion, "Images\\gate.png"));
             itemWhiteList.Add(new Item(2, ItemType.Potion, "Images\\recall.png"));
             itemWhiteList.Add(new Item(3, ItemType.Item, "Images\\heroic_ess.png"));
 
 
-            //itemWhiteList.Add(new Item(101, ItemType.Ore, "Images\\ore\\t1.png"));
-            //itemWhiteList.Add(new Item(102, ItemType.Ore, "Images\\ore\\t2.png"));
-            //itemWhiteList.Add(new Item(103, ItemType.Ore, "Images\\ore\\t3.png"));
-            //itemWhiteList.Add(new Item(104, ItemType.Ore, "Images\\ore\\t4.png"));
-            //itemWhiteList.Add(new Item(105, ItemType.Ore, "Images\\ore\\t5.png"));
-            //itemWhiteList.Add(new Item(106, ItemType.Ore, "Images\\ore\\t6.png"));
-            //itemWhiteList.Add(new Item(108, ItemType.Ore, "Images\\ore\\t8.png"));
-            //itemWhiteList.Add(new Item(110, ItemType.Ore, "Images\\ore\\t10.png"));
-            //itemWhiteList.Add(new Item(112, ItemType.Ore, "Images\\ore\\t12.png"));
-            //itemWhiteList.Add(new Item(113, ItemType.Ore, "Images\\ore\\t13.png"));
-            //itemWhiteList.Add(new Item(115, ItemType.Ore, "Images\\ore\\t15.png"));
-            //itemWhiteList.Add(new Item(116, ItemType.Ore, "Images\\ore\\t15.png"));
             itemWhiteList.Add(new Item(117, ItemType.Ore, "Images\\ore\\t17.png"));
             itemWhiteList.Add(new Item(118, ItemType.Ore, "Images\\ore\\t18.png"));
             itemWhiteList.Add(new Item(119, ItemType.Ore, "Images\\ore\\t19.png"));
@@ -140,6 +96,9 @@ namespace NodBot.Code
             itemWhiteList.Add(new Item(125, ItemType.Ore, "Images\\ore\\t25.png"));
             itemWhiteList.Add(new Item(126, ItemType.Ore, "Images\\ore\\t26.png"));
             itemWhiteList.Add(new Item(127, ItemType.Ore, "Images\\ore\\t27.png"));
+            itemWhiteList.Add(new Item(128, ItemType.Ore, "Images\\ore\\t28.png"));
+            itemWhiteList.Add(new Item(129, ItemType.Ore, "Images\\ore\\t29.png"));
+            itemWhiteList.Add(new Item(130, ItemType.Ore, "Images\\ore\\t30.png"));
 
             itemWhiteList.Add(new Item(1020, ItemType.Silk, "Images\\silk\\t20.png"));
             itemWhiteList.Add(new Item(1021, ItemType.Silk, "Images\\silk\\t21.png"));

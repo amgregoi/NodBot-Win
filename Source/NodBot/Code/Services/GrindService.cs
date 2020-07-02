@@ -75,7 +75,7 @@ namespace NodBot.Code.Services
             timeService.delay(TimeService.OffsetLength.Short);
 
             // start auto attack [A/S]
-            if (Settings.Player.isMelee)
+            if (Settings.Player.isMelee || Settings.Player.magic.usesStaff)
             {
                 // TODO :: Verify  this autoshoot function works
                 if (Settings.Player.startCombatRangeSwapMelee)
