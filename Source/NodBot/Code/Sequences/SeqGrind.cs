@@ -85,7 +85,7 @@ namespace NodBot.Code
                     if (combatState >= SequenceState.WAIT && imageService.ContainsMatch(NodImages.Exit, screenSection:ScreenSection.Game))
                     {
                         // Wait for inventory service to finish running
-                        while (inventoryService.isRunning) Task.Delay(500).Wait();
+                        //while (inventoryService.isRunning) Task.Delay(500).Wait();
 
                         grindService.EndCombat().Wait();
                         if (Settings.MANAGE_INVENTORY && inventoryService.IsStorageEmpty) token.ThrowIfCancellationRequested();
@@ -109,11 +109,19 @@ namespace NodBot.Code
                         token.ThrowIfCancellationRequested();
 
                         // TODO :: Make resource waiting a property, off by default atm
-                        if (Settings.WAIT_FOR_RESOURCES && !imageService.ContainsTemplateMatch(NodImages.PlayerResourceMinimum, screenSection: ScreenSection.Game))
+                        if(Settings.WAIT_FOR_HEALTH || Settings.WAIT_FOR_ENERGY || Settings.WAIT_FOR_MANA)
                         {
-                            logger.info("Waiting for resources to regen");
-                            timeService.delay(3000);
-                            continue;
+                            var resources = new List<String>();
+                            if (Settings.WAIT_FOR_HEALTH) resources.Add(NodImages.PlayerResourceHealth);
+                            if (Settings.WAIT_FOR_ENERGY) resources.Add(NodImages.PlayerResourceEnergy);
+                            if (Settings.WAIT_FOR_MANA) resources.Add(NodImages.PlayerResourceMana);
+
+                            if(!imageService.ContainsAllTemplates(resources, screenSection: ScreenSection.Game, threshold:0.85f))
+                            {
+                                logger.info("Waiting for resources to regen");
+                                timeService.delay(3000);
+                                continue;
+                            }
                         }
 
                         token.ThrowIfCancellationRequested();
@@ -132,6 +140,12 @@ namespace NodBot.Code
                                     break;
                                 }
                             }
+                        }
+
+                        if (Settings.MANAGE_INVENTORY && inventoryService.IsStorageEmpty)
+                        {
+                            tokenSource.Cancel();
+                            logger.info("Stopping bot, storage is full.");
                         }
 
                         token.ThrowIfCancellationRequested();

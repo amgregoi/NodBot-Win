@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -21,6 +22,8 @@ namespace NodBot.Code
         //
         private IntPtr game_hwnd;
         private Logger mLogger;
+        private Semaphore _mutex;
+
         //
         public IntPtr GAME { get { return game_hwnd; } }
 
@@ -28,6 +31,38 @@ namespace NodBot.Code
         {
             game_hwnd = FindWindow(null, handleTitle);
             mLogger = aLogger;
+            initMutex();
+        }
+
+
+        private void initMutex()
+        {
+
+            try
+            {
+                _mutex = Semaphore.OpenExisting("nodbot_win_2020");
+            }
+            catch
+            {
+                //the specified mutex doesn't exist, we should create it
+                _mutex = new Semaphore(1,25, "nodbot_win_2020"); //these names need to match.
+            }
+        }
+
+        public void Dispose()
+        {
+            _mutex.Dispose();
+            _mutex.Close();
+        }
+
+        public void SemaUp()
+        {
+            _mutex.WaitOne();
+        }
+
+        public void SemaDown()
+        {
+            _mutex.Release();
         }
 
         public IntPtr getGameWindow()
@@ -64,6 +99,14 @@ namespace NodBot.Code
 
         public void leftClick(UIPoint point = null)
         {
+
+            _mutex.WaitOne();
+            doLeftClick(point);
+            _mutex.Release();
+        }
+
+        public void doLeftClick(UIPoint point = null)
+        {
             if (point != null)
             {
                 moveMouse(point.X, point.Y);
@@ -79,76 +122,14 @@ namespace NodBot.Code
 
 
 
-
-
-
-
-
-
-
-
-
-        [DllImport("user32.dll")]
-        static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
-
-
-        public static IntPtr MakeLParam(int x, int y) => new IntPtr((y << 16) | (x & 0xFFFF));
-        public void leftClick(int x, int y)
+        public void rightClick(UIPoint point = null)
         {
-            SetForegroundWindow(game_hwnd);
-            //moveMouse(x, y);
-
-            POINT lPoint = new POINT
-            {
-                X = x,
-                Y = y
-            };
-
-            //ScreenToClient(game_hwnd, ref lPoint);
-
-            //SetCursorPos(lPoint.X, lPoint.Y);
-
-            var testlParam = MakeLParam(lPoint.X, lPoint.Y);
-            SendMessage(game_hwnd, WM_LBUTTON_DOWN, new IntPtr(0x0001), testlParam);
-            Task.Delay(100).Wait();
-            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, testlParam);
-
-            /*
-            moveMouse(x, y);
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, Convert.ToUInt32(x), Convert.ToUInt32(y), 0, 0);
-            Task.Delay(50);
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, Convert.ToUInt32(x), Convert.ToUInt32(y+75), 0, 0);
-            mLogger.info("Trying to click something..");
-            */
+            _mutex.WaitOne();
+            doRightClick(point);
+            _mutex.Release();
         }
 
-
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
-        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const int MOUSEEVENTF_RIGHTUP = 0x10;
-
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
-
-        [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        public void rightClick(UIPoint point = null)
+        private void doRightClick(UIPoint point = null)
         {
             if (point != null)
             {
@@ -167,6 +148,45 @@ namespace NodBot.Code
         /// <param name="x"></param>
         /// <param name="y"></param>
         public void sendLeftMouseClickWithWindowHandler(int x, int y, bool aLeftClick)
+        {
+            _mutex.WaitOne();
+            String coord = "(" + x + ", " + y + ")";
+            mLogger.debug("Sending left mouse click: " + coord);
+
+            // Convert x,y coordinates to int pointer
+            // IntPtr coords = new IntPtr((y << 16) | x); // lparam
+
+            // Retrieve the rectangle of game handle window
+            Rectangle rect = new Rectangle();
+            GetWindowRect(game_hwnd, ref rect);
+
+            // Retrieves current window and cursor state, so it can be restored
+            IntPtr lCurrentWindow = GetForegroundWindow();
+            POINT lCurrentCursor;
+            GetCursorPos(out lCurrentCursor);
+
+            // Bring the game handle window to the foreground for mouse click
+            SetForegroundWindow(game_hwnd);
+
+            // Set curosr to x,y coords + offset of the game handle window
+            SetCursorPos(rect.X + x, rect.Y + y);
+
+            Task.Delay(50).Wait();
+
+            if (aLeftClick) doLeftClick();
+            else doRightClick();
+
+            // Brings back the previous forground window, if not game handle window
+            if (lCurrentWindow != game_hwnd)
+                SetForegroundWindow(lCurrentWindow);
+
+            // Restore Cursor Position
+            SetCursorPos(lCurrentCursor.X, lCurrentCursor.Y);
+
+            _mutex.Release();
+        }
+
+        public void sendLeftMouseClickWithWindowHandlerNoMutex(int x, int y, bool aLeftClick)
         {
             String coord = "(" + x + ", " + y + ")";
             mLogger.debug("Sending left mouse click: " + coord);
@@ -189,22 +209,23 @@ namespace NodBot.Code
             // Set curosr to x,y coords + offset of the game handle window
             SetCursorPos(rect.X + x, rect.Y + y);
 
-            Task.Delay(50).ContinueWith(_ =>
-            {
-                if (aLeftClick) leftClick();
-                else rightClick();
+            Task.Delay(50).Wait();
 
-                // Brings back the previous forground window, if not game handle window
-                if (lCurrentWindow != game_hwnd)
-                    SetForegroundWindow(lCurrentWindow);
+            if (aLeftClick) doLeftClick();
+            else doRightClick();
 
-                // Restore Cursor Position
-                SetCursorPos(lCurrentCursor.X, lCurrentCursor.Y);
-            });
+            // Brings back the previous forground window, if not game handle window
+            if (lCurrentWindow != game_hwnd)
+                SetForegroundWindow(lCurrentWindow);
+
+            // Restore Cursor Position
+            SetCursorPos(lCurrentCursor.X, lCurrentCursor.Y);
         }
 
         public Task<bool> dragTo(int x, int y, int x2, int y2, bool withShiftKey = true)
         {
+            _mutex.WaitOne();
+
             // Retrieve the rectangle of game handle window
             Rectangle rect = new Rectangle();
             GetWindowRect(game_hwnd, ref rect);
@@ -228,7 +249,7 @@ namespace NodBot.Code
 
             Task.Delay(100).Wait();
 
-             SetCursorPos(rect.X + x2, rect.Y + y2);
+            SetCursorPos(rect.X + x2, rect.Y + y2);
             Task.Delay(100).Wait();
             SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
             Task.Delay(50);
@@ -236,6 +257,8 @@ namespace NodBot.Code
             Task.Delay(100).Wait();
 
             keybd_event(0x10, 0, 0x02, 0); // Shift Up
+
+            _mutex.Release();
 
             return Task.FromResult<bool>(true);
         }
@@ -246,11 +269,13 @@ namespace NodBot.Code
         /// <param name="action"></param>
         public void sendKeyboardClick(Keyboard_Actions action)
         {
+            _mutex.WaitOne();
             String lInput = Enum.GetName(typeof(Keyboard_Actions_Keys), action);
             mLogger.debug("Sending keyboard input: [" + lInput + "]");
 
             SendMessage(game_hwnd, WM_KEYDOWN, new IntPtr((uint)action), IntPtr.Zero);
             SendMessage(game_hwnd, WM_KEYUP, new IntPtr((uint)action), IntPtr.Zero);
+            _mutex.Release();
         }
 
         /// <summary>

@@ -66,6 +66,7 @@ namespace NodBot.Code
                 }
                 else
                 {
+                    nodInputService.inputService.SemaUp();
                     for (int i = -2; i < 2; i++)
                     {
                         int newX = point.X + (i * 60);
@@ -74,11 +75,12 @@ namespace NodBot.Code
                         if (newX > 800) newX = 800;
                         else if (newX < 0) newX = 10;
 
-                        nodInputService.ClickOnPoint(newX, point.Y, true);
-                        Task.Delay(75).Wait();
-                        nodInputService.ClickOnPoint(newX2, point.Y, true);
-                        Task.Delay(75).Wait();
+                        nodInputService.ClickOnPointNoMutex(newX, point.Y, true);
+                        //Task.Delay(75).Wait();
+                        nodInputService.ClickOnPointNoMutex(newX2, point.Y, true);
+                        //Task.Delay(75).Wait();
                     }
+                    nodInputService.inputService.SemaDown();
                 }
 
                 Task.Delay(500).Wait();

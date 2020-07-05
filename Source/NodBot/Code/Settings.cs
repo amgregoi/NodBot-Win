@@ -13,7 +13,9 @@ namespace NodBot.Code
         public static bool CHESTS { get; set; } = true;
         public static bool PILGRIMAGE { get; set; } = false;
         public static bool BOSSING { get; set; } = false;
-        public static bool WAIT_FOR_RESOURCES { get; set; } = false;
+        public static bool WAIT_FOR_HEALTH { get; set; } = false;
+        public static bool WAIT_FOR_ENERGY { get; set; } = false;
+        public static bool WAIT_FOR_MANA { get; set; } = false;
         public static bool RESOURCE_MINING { get; set; } = false;
         public static bool RESOURCE_GARDEN { get; set; } = false;
         public static bool MANAGE_INVENTORY { get; set; } = false;

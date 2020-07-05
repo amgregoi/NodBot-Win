@@ -17,6 +17,11 @@ namespace NodBot.Code
             inputService = new InputService(Settings.WINDOW_NAME, this.logger);
         }
 
+        public void Dispose()
+        {
+            inputService.Dispose();
+        }
+
         public void moveUp()
         {
             inputService.sendKeyboardClick(InputService.Keyboard_Actions.MOVE_UP);
@@ -110,6 +115,13 @@ namespace NodBot.Code
         public void ClickOnPoint(int aX, int aY, bool aLeftClick)
         {
             inputService.sendLeftMouseClickWithWindowHandler(aX, aY, aLeftClick);
+        }
+
+        public void ClickOnPointNoMutex(int aX, int aY, bool aLeftClick)
+        {
+            inputService.moveMouse(aX, aY);
+            inputService.doLeftClick();
+            //inputService.doLeftClick(aX, aY, aLeftClick);
         }
 
         public void MoveCursorTo(int aX, int aY)

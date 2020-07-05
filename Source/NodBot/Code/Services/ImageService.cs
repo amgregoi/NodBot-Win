@@ -124,7 +124,8 @@ namespace NodBot.Code
         public Point? FindChestCoord(bool debug = false)
         {
             Mat lImage;
-            CaptureScreen(NodImages.GameWindow, ScreenSection.Game); // Always update current screen before locating chest
+            Image<Bgr, byte> screen = CaptureScreen(NodImages.GameWindow, ScreenSection.Game); // Always update current screen before locating chest
+
             String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3 };
             Point? point = null;
             foreach (String chest in chestImages)
@@ -147,9 +148,12 @@ namespace NodBot.Code
                 Point result = point.Value;
                 result.X += ScreenSection.Game.getXOffset();
                 result.Y += ScreenSection.Game.getYOffset();
+
+                //screen.Save(String.Format("Images\\chests\\valid\\chest_{0}_{1}_{2}.png", result.X, result.Y, DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond));
                 return result;
             }
 
+            //screen.Save(String.Format("Images\\chests\\invalid\\chest_{0}.png", DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond));
             return null;
         }
 
@@ -221,6 +225,28 @@ namespace NodBot.Code
         {
             var result = FindTemplateMatchImpl(templateImage, screenSection: screenSection, rect:rect, threshold: threshold, matchType: matchType);
             return result != null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateImages"></param>
+        /// <param name="screenSection"></param>
+        /// <param name="rect"></param>
+        /// <param name="threshold"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public bool ContainsAllTemplates(List<String> templateImages, ScreenSection screenSection, Rectangle? rect = null, double threshold = .95, TemplateMatchingType matchType = TemplateMatchingType.CcoeffNormed)
+        {
+            var rects = FindTemplateMatchImpl(templateImages, screenSection: screenSection, rect: rect, threshold: threshold, matchType: matchType);
+
+            var result = true;
+            rects.ForEach(item =>
+            {
+                if (item == null) result = false;
+            });
+
+            return result;
         }
 
         /// <summary>

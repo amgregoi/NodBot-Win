@@ -53,6 +53,14 @@ namespace NodBot.Code.Services
             //increment kill count
             killCounter++;
             grindCallback.updateKillCounter();
+
+            if (Settings.MANAGE_INVENTORY && !inventoryService.isRunning)
+            {
+                _ = Task.Run(() =>
+                {
+                    if (inventoryService != null) inventoryService.SortInventory();
+                });
+            }
         }
 
         /// <summary>
@@ -105,14 +113,6 @@ namespace NodBot.Code.Services
             // long wait at start of combat
             //await delay (20000 + generateOffset(15000));
             grindCallback.setState(SequenceState.ATTACK);
-
-            if (Settings.MANAGE_INVENTORY)
-            {
-                _ = Task.Run(() =>
-                {
-                    if (inventoryService != null) inventoryService.SortInventory();
-                });
-            }
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace NodBot.Code.Services
                 }
                 else logger.info("Skipped looting trophies?");
                 
-                timeService.delay(2000, TimeService.OffsetLength.Medium);
+                timeService.delay(2500, TimeService.OffsetLength.Medium);
 
                 // loot chest
                 if (Settings.CHESTS)

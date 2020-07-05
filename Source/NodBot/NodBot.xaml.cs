@@ -59,6 +59,15 @@ namespace NodBot
         /// <summary>
         /// 
         /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            mInput.Dispose();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void Init()
         {
 
@@ -75,6 +84,7 @@ namespace NodBot
 
             // Component inits
             log_textbox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            if (options_combo.Items.Count > 0) return;
             options_combo.Items.Add(NodBotOptions[0]);
             options_combo.Items.Add(NodBotOptions[1]);
             options_combo.Items.Add(NodBotOptions[2]);
@@ -142,8 +152,8 @@ namespace NodBot
 
                 Task.Delay(1000).Wait();
                 //new SeqGardening(new CancellationTokenSource(), mLogger).Start().Wait();
-                mInventory.SortInventory().Wait();
-
+                //mInventory.SortInventory().Wait();
+                mInventory.GetFirstEmptyStorageSpace();
 
             });
         }
@@ -184,6 +194,7 @@ namespace NodBot
                 case "debug_checkbox":
                     Settings.DEBUG = true;
                     mLogger.info("DEBUG ON");
+                    border_debug.Visibility = Visibility.Visible;
                     break;
                 case "arena_checkbox":
                     Settings.ARENA = true;
@@ -194,8 +205,16 @@ namespace NodBot
                     mLogger.info("BOSSING ON");
                     break;
                 case "resource_wait":
-                    Settings.WAIT_FOR_RESOURCES = true;
+                    Settings.WAIT_FOR_HEALTH = true;
                     mLogger.info("WAITING FOR RESOURCES ON");
+                    break;
+                case "resource_wait_mana":
+                    Settings.WAIT_FOR_MANA = true;
+                    mLogger.info("WAITING FOR RESOURCE MANA ON");
+                    break;
+                case "resource_wait_energy":
+                    Settings.WAIT_FOR_ENERGY = true;
+                    mLogger.info("WAITING FOR RESOURCE ENERGY ON");
                     break;
                 case "option_mining":
                     Settings.RESOURCE_MINING = true;
@@ -234,6 +253,7 @@ namespace NodBot
                 case "debug_checkbox":
                     Settings.DEBUG = false;
                     mLogger.info("DEBUG OFF");
+                    border_debug.Visibility = Visibility.Hidden;
                     break;
                 case "arena_checkbox":
                     Settings.ARENA = false;
@@ -244,8 +264,16 @@ namespace NodBot
                     mLogger.info("BOSSING OFF");
                     break;
                 case "resource_wait":
-                    Settings.WAIT_FOR_RESOURCES = false;
-                    mLogger.info("WAITING FOR RESOURCES OFF");
+                    Settings.WAIT_FOR_HEALTH = false;
+                    mLogger.info("WAITING FOR RESOURCE HEALTH OFF");
+                    break;
+                case "resource_wait_mana":
+                    Settings.WAIT_FOR_MANA = false;
+                    mLogger.info("WAITING FOR RESOURCE MANA OFF");
+                    break;
+                case "resource_wait_energy":
+                    Settings.WAIT_FOR_ENERGY = false;
+                    mLogger.info("WAITING FOR RESOURCE ENERGY OFF");
                     break;
                 case "option_mining":
                     Settings.RESOURCE_MINING = false;

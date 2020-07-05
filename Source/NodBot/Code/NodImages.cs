@@ -42,7 +42,9 @@ namespace NodBot.Code
         public static String InCombat { get { return new NodImages("incombat.png").PATH; } }
         public static String Arena { get { return new NodImages("arena.png").PATH; } }
         public static String ArenaVerify { get { return new NodImages("arena_queue_check.png").PATH; } }
-        public static String PlayerResourceMinimum { get { return new NodImages("player_resource_minimum.png").PATH; } }
+        public static String PlayerResourceHealth { get { return new NodImages("player_resource_health.png").PATH; } }
+        public static String PlayerResourceEnergy { get { return new NodImages("player_resource_energy.png").PATH; } }
+        public static String PlayerResourceMana { get { return new NodImages("player_resource_mana.png").PATH; } }
 
         // Town Walking
         public static String Town4 { get { return new NodImages("town4.png").PATH; } }

@@ -32,43 +32,21 @@ namespace NodBot.Code.Services
 
         public bool isRunning = false;
 
-        private List<UIPoint> storage;
         private readonly ImageService imageService = new ImageService(InputService.getNodiatisWindowHandle());
         private readonly InputService mouseInput;
 
-        public bool IsStorageEmpty => storage.Count == 0;
+        public bool IsStorageEmpty => GetFirstEmptyStorageSpace() == null;
 
         public InventoryService(InputService input)
         {
             instance = this;
             mouseInput = input;
-
-            Task.Run(() =>
-            {
-                storage = imageService.FindTemplateMatches(NodImages.Empty_Black, ScreenSection.Storage)
-                    .OrderBy(item => item.Y)
-                    .ThenBy(item => item.X).ToList();
-            });
         }
 
-        public List<UIPoint> getItemInventoryLocations(String itemImage)
-        {
-            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Inventory, threshold: 0.85)
-                .OrderByDescending(item => item.Y)
-                .ThenByDescending(item => item.X)
-                .ToList();
-            return items;
-        }
-
-        public List<UIPoint> getItemStorageLocations(String itemImage)
-        {
-            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Storage, threshold: 0.85)
-                .OrderByDescending(item => item.Y)
-                .ThenByDescending(item => item.X)
-                .ToList();
-            return items;
-        }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public async Task SortInventory()
         {
             try
@@ -110,7 +88,57 @@ namespace NodBot.Code.Services
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public UIPoint GetFirstEmptyInventorySpace()
+        {
+            return imageService.FindTemplateMatch(NodImages.Empty_Black, ScreenSection.Inventory);
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public UIPoint GetFirstEmptyStorageSpace()
+        {
+            return imageService.FindTemplateMatch(NodImages.Empty_Black, screenSection: ScreenSection.Storage);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="itemImage"></param>
+        /// <returns></returns>
+        private List<UIPoint> getItemInventoryLocations(String itemImage)
+        {
+            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Inventory, threshold: 0.85)
+                .OrderByDescending(item => item.Y)
+                .ThenByDescending(item => item.X)
+                .ToList();
+            return items;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="itemImage"></param>
+        /// <returns></returns>
+        private List<UIPoint> getItemStorageLocations(String itemImage)
+        {
+            List<UIPoint> items = imageService.FindTemplateMatches(itemImage, ScreenSection.Storage, threshold: 0.85)
+                .OrderByDescending(item => item.Y)
+                .ThenByDescending(item => item.X)
+                .ToList();
+            return items;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="itemImage"></param>
+        /// <returns></returns>
         private async Task StackItems(String itemImage)
         {
             List<UIPoint> items = getItemInventoryLocations(itemImage);
@@ -139,20 +167,17 @@ namespace NodBot.Code.Services
                 }
                 else
                 {
-                    if (storage == null || storage.Count == 0)
+                    UIPoint storageSlot = GetFirstEmptyStorageSpace();
+                    if(storageSlot == null)
                     {
-                        items.RemoveAt(0);
-
-                        storage = imageService.FindTemplateMatches(NodImages.Empty_Black, ScreenSection.Storage);
-                        if (storage.Count == 0)
-                        {
-                            Console.Out.WriteLine("Storage full");
-                            return;
-                        }
+                        Console.Out.WriteLine("Storage Full");
+                        items.RemoveAt(1);
+                        continue;
                     }
 
+
                     // Move to storage
-                    UIPoint storageSlot = storage[0];
+                    
                     //Rectangle storageSlot = getEmptyStorageSlot().GetValueOrDefault(); 
                     // TODO :: Find and cache storage on bot start
                     // when storage is filled we will turn bot off
@@ -165,9 +190,7 @@ namespace NodBot.Code.Services
                     }
 
                     mouseInput.dragTo(item1.X, item1.Y, storageSlot.X, storageSlot.Y, true).Wait();
-
-                    storage.RemoveAt(0);
-                    items.RemoveAt(0);
+                    items.RemoveAt(1);
 
                     Task.Delay(250).Wait();
                 }
@@ -182,7 +205,11 @@ namespace NodBot.Code.Services
             return;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="itemImage"></param>
+        /// <returns></returns>
         private async Task StackItemToStorage(String itemImage)
         {
             List<UIPoint> inventory = getItemInventoryLocations(itemImage);
@@ -232,26 +259,18 @@ namespace NodBot.Code.Services
             return;
         }
 
-
-
-        public UIPoint GetFirstEmptyInventorySpace()
-        {
-            return imageService.FindTemplateMatch(NodImages.Empty_Black, ScreenSection.Inventory);
-        }
-
-        public UIPoint GetFirstEmptyStorageSpace()
-        {
-            return imageService.FindTemplateMatch(NodImages.Empty_Black, screenSection: ScreenSection.Storage);
-        }
-
-        private int menuItemHeight = 16;
-        public async Task DeleteItem(UIPoint item)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        private async Task DeleteItem(UIPoint item)
         {
             mouseInput.rightClick(item);
 
             Task.Delay(100).Wait();
 
-            var destroy = imageService.FindTemplateMatch(NodImages.DestroyItem, ScreenSection.Inventory, threshold:0.55);
+            var destroy = imageService.FindTemplateMatch(NodImages.DestroyItem, ScreenSection.Inventory, threshold: 0.55);
             if (destroy == null) return;
             mouseInput.leftClick(destroy);
 

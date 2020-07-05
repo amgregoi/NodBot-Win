@@ -33,6 +33,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Emgu.CV.World">
       <HintPath>libs\Emgu.CV.World.dll</HintPath>
@@ -180,6 +183,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="icon.ico" />
     <Content Include="libs\concrt140.dll" />
     <Content Include="libs\cvextern.dll" />
     <None Include="Settings\items.json">
