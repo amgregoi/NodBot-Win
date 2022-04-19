@@ -16,9 +16,30 @@ using NodBot.Code.Enums;
 using NodBot.Code.Model;
 using System.Collections;
 using System.Text.RegularExpressions;
+using Emgu.CV.OCR;
+using IronOcr;
 
 namespace NodBot.Code
 {
+    public static class Contour
+    {
+        public static VectorOfVectorOfPoint FindContours(this Image<Gray, byte> image, out Mat hierarchy, ChainApproxMethod method = ChainApproxMethod.ChainApproxSimple, Emgu.CV.CvEnum.RetrType type = RetrType.List)
+        {
+            //Check that all parameters are valid.
+            VectorOfVectorOfPoint result = new VectorOfVectorOfPoint();
+
+            hierarchy = new Mat();
+
+            if (method == Emgu.CV.CvEnum.ChainApproxMethod.ChainCode)
+            {
+                throw new Exception("Chain Code not implemented, sorry try again later");
+            }
+
+            CvInvoke.FindContours(image, result, hierarchy, type, method);
+            return result;
+        }
+    }
+
     public class ImageService
     {
         private readonly CancellationTokenSource token;
@@ -36,6 +57,101 @@ namespace NodBot.Code
         {
             gameWindow = gameWindowHandle;
         }
+
+
+
+        public string testReadText()
+        {
+            /*
+            Tesseract ocr = new Tesseract(Tesseract., "eng", OcrEngineMode.Default);
+            ocr.PageSegMode = PageSegMode.SingleChar;
+
+            Image<Bgr, byte> emguImageOCR = testBitmap.ToImage<Bgr, byte>();
+            Image<Gray, byte> emguImageOCRGray = emguImageOCR.Convert<Gray, byte>();
+
+            emguImageOCRGray._ThresholdBinary(new Gray(235), new Gray(255));
+            ocr.SetImage(emguImageOCRGray);
+            ocr.Recognize();
+
+            Console.WriteLine(ocr.GetUTF8Text());
+
+            return ocr.GetUTF8Text();
+            */
+
+            var Ocr = new IronTesseract(); // nothing to configure
+            Ocr.Language = OcrLanguage.English;
+            Ocr.Configuration.TesseractVersion = TesseractVersion.Tesseract5;
+            Ocr.Configuration.WhiteListCharacters = "1234567890,";
+
+            var result = "Default";
+            using (var Input = new OcrInput())
+            {
+                Image<Bgr, byte> image = OpenImageFile(NodImages.Town4CoordTest);
+                image = image.Resize(20, Inter.Linear);
+
+                //image._ThresholdToZero(new Bgr(150, 150, 150));
+
+                Image<Gray, byte> grayImage = image.Convert<Gray, byte>();
+
+                grayImage = grayImage.Dilate(15);
+                grayImage = grayImage.Erode(4);
+                grayImage._ThresholdToZero(new Gray(185));
+                //Input.Dilate(true);
+                //Input.Erode(true);
+
+                grayImage.Save("Images\\coords\\output.png");
+                Input.AddImage(grayImage.Bitmap);
+
+                Input.DeepCleanBackgroundNoise();
+                //Input.Sharpen();
+                //Input.DeNoise();
+                //Input.Contrast();
+               
+              
+                var Result = Ocr.Read(Input);
+                
+                Console.WriteLine(">>" + Result.Text + ">>"+ Result.Confidence);
+
+                result = Result.Text;
+            }
+
+            return result;
+        }
+
+
+
+        public int testStuff()
+        {
+
+            Image<Gray, byte> source = new Image<Gray, byte>("Images//test/botcheck.png");
+            Image<Bgr, byte> finalCopy = OpenImageFile("Images//test/botcheck.png");
+            //var result = FindContours(source);
+
+            Mat hierarchy;
+            List<Rectangle> segmentRectangles = new List<Rectangle>();
+            VectorOfVectorOfPoint contours = Contour.FindContours(source, out hierarchy, ChainApproxMethod.ChainApproxSimple, RetrType.List);
+            int contCount = contours.Size;
+            for (int i = 0; i < contCount; i++)
+            {
+                using (VectorOfPoint contour = contours[i])
+                {
+                    segmentRectangles.Add(CvInvoke.BoundingRectangle(contour));
+                    if (true)
+                    {
+                        finalCopy.Draw(CvInvoke.BoundingRectangle(contour), new Bgr(255, 0, 0), 5);
+                    }
+                }
+
+            }
+            hierarchy.Bitmap.Save("Images//test//botcheck-hierarchy.png");
+            finalCopy.Save("Images//test/botcheck-contours.png");
+            return segmentRectangles.Count;
+        }
+
+
+
+
+
 
         #region Public Fucntion API
 
@@ -123,34 +239,40 @@ namespace NodBot.Code
         /// <returns></returns>
         public Point? FindChestCoord(bool debug = false)
         {
-            Mat lImage;
-            Image<Bgr, byte> screen = CaptureScreen(NodImages.GameWindow, ScreenSection.Game); // Always update current screen before locating chest
-
-            String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3 };
-            Point? point = null;
-            foreach (String chest in chestImages)
+            try
             {
-                try
-                {
-                    logger.debug("Scanning: " + chest);
-                    point = Draw(chest, NodImages.GameWindow_Game, out lImage);
-                    if (debug) CvInvoke.Imshow(chest, lImage);
-                    if (point != null) break;
-                }
-                catch (Exception ex)
-                {
-                    logger.error(ex);
-                }
-            }
+                Mat lImage;
+                Image<Bgr, byte> screen = CaptureScreen(NodImages.GameWindow, ScreenSection.Game); // Always update current screen before locating chest
 
-            if (point != null)
+                String[] chestImages = { NodImages.Chest1, NodImages.Chest2, NodImages.Chest3, NodImages.Chest12, NodImages.Chest22, NodImages.Chest32 };
+                Point? point = null;
+                foreach (String chest in chestImages)
+                {
+                    try
+                    {
+                        logger.debug("Scanning: " + chest);
+                        point = Draw(chest, NodImages.GameWindow_Game, out lImage);
+                        if (debug) CvInvoke.Imshow(chest, lImage);
+                        if (point != null) break;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.error(ex);
+                    }
+                }
+
+                if (point != null)
+                {
+                    Point result = point.Value;
+                    result.X += ScreenSection.Game.getXOffset();
+                    result.Y += ScreenSection.Game.getYOffset();
+
+                    //screen.Save(String.Format("Images\\chests\\valid\\chest_{0}_{1}_{2}.png", result.X, result.Y, DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond));
+                    return result;
+                }
+            }catch(Exception ex)
             {
-                Point result = point.Value;
-                result.X += ScreenSection.Game.getXOffset();
-                result.Y += ScreenSection.Game.getYOffset();
-
-                //screen.Save(String.Format("Images\\chests\\valid\\chest_{0}_{1}_{2}.png", result.X, result.Y, DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond));
-                return result;
+                logger.error(ex);
             }
 
             //screen.Save(String.Format("Images\\chests\\invalid\\chest_{0}.png", DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond));
@@ -361,7 +483,7 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        private Image<Bgr, byte> OpenImageFile(String filename)
+        public Image<Bgr, byte> OpenImageFile(String filename)
         {
             lock (filename)
             {
@@ -435,10 +557,10 @@ namespace NodBot.Code
             return matches;
         }
 
-        public bool isMatch(Image<Bgr, byte> image1, Image<Bgr, byte> image2)
+        public bool isMatch(Image<Bgr, byte> image1, Image<Bgr, byte> image2, double threshold = 0.70f)
         {
             Point[] minLocations, maxLocations;
-            bool result = ContainsTemplate(image1, image2, out maxLocations, out minLocations, threshold: 0.75f);
+            bool result = ContainsTemplate(image1, image2, out maxLocations, out minLocations, threshold:threshold);
             return result;
         }
 
@@ -711,8 +833,7 @@ namespace NodBot.Code
             using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
             {
                 Mat mask;
-                FindMatchSIFT(modelImage, observedImage, out matchTime, out modelKeyPoints, out observedKeyPoints, matches,
-                   out mask, out homography);
+                FindMatchSIFT(modelImage, observedImage, out matchTime, out modelKeyPoints, out observedKeyPoints, matches, out mask, out homography);
 
                 //Draw the matched keypoints
                 result = new Mat();

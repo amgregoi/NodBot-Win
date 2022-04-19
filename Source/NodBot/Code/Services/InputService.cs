@@ -11,13 +11,41 @@ namespace NodBot.Code
 {
     public class InputService
     {
-        // Mouse click values
-        private const int WM_RBUTTON_DOWN = 0x204;
-        private const int WM_RBUTTON_UP = 0x205;
-        private const int WM_LBUTTON_DOWN = 0x201;
-        private const int WM_LBUTTON_UP = 0x202;
-        private const int WM_KEYDOWN = 0x100;
-        private const int WM_KEYUP = 0x101;
+        public class SendMessageConst{
+            // Mouse click values
+            public const int WM_RBUTTON_DOWN = 0x204;
+            public const int WM_RBUTTON_UP = 0x205;
+            public const int WM_LBUTTON_DOWN = 0x201;
+            public const int WM_LBUTTON_UP = 0x202;
+            public const int WM_KEYDOWN = 0x100;
+            public const int WM_KEYUP = 0x101;
+        }
+
+        public class MouseEventConst
+        {
+            public const int WM_RBUTTON_DOWN = 0x0008;
+            public const int WM_RBUTTON_UP = 0x0010;
+            public const int WM_LBUTTON_DOWN = 0x0002;
+            public const int WM_LBUTTON_UP = 0x0004;
+        }
+
+        public class KeyBdEventConst
+        {
+            public const int KEYEVENTF_EXTENDEDKEY = 0x0001;
+            public const int KEYEVENTF_KEYUP = 0x0002;
+        }
+
+        public class WindowInfo
+        {
+            public IntPtr window;
+            public POINT cursorPos;
+
+            public WindowInfo(IntPtr window, POINT cursor)
+            {
+                this.window = window;
+                this.cursorPos = cursor;
+            }
+        }
 
         //
         private IntPtr game_hwnd;
@@ -90,14 +118,15 @@ namespace NodBot.Code
         }
 
         // Moves mouse
-        public void moveMouse(int x, int y)
+        public UIPoint moveMouse(int x, int y)
         {
             Rectangle rect = new Rectangle();
             GetWindowRect(game_hwnd, ref rect);
             SetCursorPos(rect.X + x, rect.Y + y);
+            return new UIPoint(new System.Drawing.Point(x, y), rect);
         }
 
-        public void leftClick(UIPoint point = null)
+        public void leftClick(UIPoint point)
         {
 
             _mutex.WaitOne();
@@ -105,7 +134,15 @@ namespace NodBot.Code
             _mutex.Release();
         }
 
-        public void doLeftClick(UIPoint point = null)
+        public void doubleLeftClick(UIPoint point)
+        {
+
+            _mutex.WaitOne();
+            doDoubleLeftClick(point);
+            _mutex.Release();
+        }
+
+        public void doLeftClick(UIPoint point)
         {
             if (point != null)
             {
@@ -113,23 +150,44 @@ namespace NodBot.Code
                 Task.Delay(100).Wait();
             }
 
-            SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            mouse_event(MouseEventConst.WM_LBUTTON_DOWN, point.X, point.Y, 0, 0);
+            // SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
             Task.Delay(100).Wait();
-            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+            //SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+            mouse_event(MouseEventConst.WM_LBUTTON_UP, point.X, point.Y, 0, 0);
+        }
+
+        public void doDoubleLeftClick(UIPoint point)
+        {
+            if (point != null)
+            {
+                moveMouse(point.X, point.Y);
+                Task.Delay(50).Wait();
+            }
+
+            mouse_event(MouseEventConst.WM_LBUTTON_DOWN, point.X, point.Y, 0, 0);
+            Task.Delay(50).Wait();
+            mouse_event(MouseEventConst.WM_LBUTTON_DOWN, point.X, point.Y, 0, 0);
+            // SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            Task.Delay(50).Wait();
+            //SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+            mouse_event(MouseEventConst.WM_LBUTTON_UP, point.X, point.Y, 0, 0);
+            Task.Delay(50).Wait();
+            mouse_event(MouseEventConst.WM_LBUTTON_UP, point.X, point.Y, 0, 0);
         }
 
 
 
 
 
-        public void rightClick(UIPoint point = null)
+        public void rightClick(UIPoint point)
         {
             _mutex.WaitOne();
             doRightClick(point);
             _mutex.Release();
         }
 
-        private void doRightClick(UIPoint point = null)
+        private void doRightClick(UIPoint point)
         {
             if (point != null)
             {
@@ -137,9 +195,32 @@ namespace NodBot.Code
                 Task.Delay(100).Wait();
             }
 
-            SendMessage(game_hwnd, WM_RBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
+            mouse_event(MouseEventConst.WM_RBUTTON_DOWN, point.X, point.Y, 0, 0);
+            //SendMessage(game_hwnd, WM_RBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
             Task.Delay(100).Wait();
-            SendMessage(game_hwnd, WM_RBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+            mouse_event(MouseEventConst.WM_RBUTTON_UP, point.X, point.Y, 0, 0);
+            //SendMessage(game_hwnd, WM_RBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+        }
+        
+        /***
+         * Sets current foreground window to Game, returns reference to previous foreground window to return to after input
+         */
+        private WindowInfo setForgroundGame()
+        {
+            // Retrieves current window and cursor state, so it can be restored
+            IntPtr lCurrentWindow = GetForegroundWindow();
+            POINT lCurrentCursor;
+            GetCursorPos(out lCurrentCursor);
+            // Bring the game handle window to the foreground for mouse click
+            SetForegroundWindow(game_hwnd);
+
+            return new WindowInfo(lCurrentWindow, lCurrentCursor);
+        } 
+
+        private void setForegroundWindow(WindowInfo wInfo)
+        {
+            SetForegroundWindow(wInfo.window);
+            SetCursorPos(wInfo.cursorPos.X, wInfo.cursorPos.Y);
         }
 
         /// <summary>
@@ -147,7 +228,7 @@ namespace NodBot.Code
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void sendLeftMouseClickWithWindowHandler(int x, int y, bool aLeftClick)
+        public void sendLeftMouseClickWithWindowHandler(int x, int y, bool aLeftClick, bool doubleClick)
         {
             _mutex.WaitOne();
             String coord = "(" + x + ", " + y + ")";
@@ -160,6 +241,7 @@ namespace NodBot.Code
             Rectangle rect = new Rectangle();
             GetWindowRect(game_hwnd, ref rect);
 
+            /*
             // Retrieves current window and cursor state, so it can be restored
             IntPtr lCurrentWindow = GetForegroundWindow();
             POINT lCurrentCursor;
@@ -167,21 +249,32 @@ namespace NodBot.Code
 
             // Bring the game handle window to the foreground for mouse click
             SetForegroundWindow(game_hwnd);
+            */
+
+            WindowInfo window = setForgroundGame();
 
             // Set curosr to x,y coords + offset of the game handle window
             SetCursorPos(rect.X + x, rect.Y + y);
-
+            UIPoint clickPoint = new UIPoint(new System.Drawing.Point(x, y), rect);
             Task.Delay(50).Wait();
 
-            if (aLeftClick) doLeftClick();
-            else doRightClick();
+            if (aLeftClick)
+            {
+                if (doubleClick) doDoubleLeftClick(clickPoint);
+                else doLeftClick(clickPoint);
+            }
+            else doRightClick(clickPoint);
 
+            /*
             // Brings back the previous forground window, if not game handle window
             if (lCurrentWindow != game_hwnd)
                 SetForegroundWindow(lCurrentWindow);
 
             // Restore Cursor Position
             SetCursorPos(lCurrentCursor.X, lCurrentCursor.Y);
+            */
+
+            setForegroundWindow(window);
 
             _mutex.Release();
         }
@@ -208,11 +301,12 @@ namespace NodBot.Code
 
             // Set curosr to x,y coords + offset of the game handle window
             SetCursorPos(rect.X + x, rect.Y + y);
-
+            UIPoint clickPoint = new UIPoint(new System.Drawing.Point(x, y), rect);
+            
             Task.Delay(50).Wait();
 
-            if (aLeftClick) doLeftClick();
-            else doRightClick();
+            if (aLeftClick) doLeftClick(clickPoint);
+            else doRightClick(clickPoint);
 
             // Brings back the previous forground window, if not game handle window
             if (lCurrentWindow != game_hwnd)
@@ -241,20 +335,17 @@ namespace NodBot.Code
             // Set curosr to x,y coords + offset of the game handle window
             keybd_event(0x10, 0, 0, 0); // Shift Down
 
+            var test1  = new UIPoint(new System.Drawing.Point(x,y), rect);
             SetCursorPos(rect.X + x, rect.Y + y);
-            Task.Delay(100).Wait();
-            SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-            Task.Delay(50);
-            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
+            doLeftClick(test1);
+
 
             Task.Delay(100).Wait();
 
+            var test2 = new UIPoint(new System.Drawing.Point(x2, y2), rect);
             SetCursorPos(rect.X + x2, rect.Y + y2);
-            Task.Delay(100).Wait();
-            SendMessage(game_hwnd, WM_LBUTTON_DOWN, IntPtr.Zero, IntPtr.Zero);
-            Task.Delay(50);
-            SendMessage(game_hwnd, WM_LBUTTON_UP, IntPtr.Zero, IntPtr.Zero);
-            Task.Delay(100).Wait();
+            doLeftClick(test2);
+
 
             keybd_event(0x10, 0, 0x02, 0); // Shift Up
 
@@ -273,8 +364,13 @@ namespace NodBot.Code
             String lInput = Enum.GetName(typeof(Keyboard_Actions_Keys), action);
             mLogger.debug("Sending keyboard input: [" + lInput + "]");
 
-            SendMessage(game_hwnd, WM_KEYDOWN, new IntPtr((uint)action), IntPtr.Zero);
-            SendMessage(game_hwnd, WM_KEYUP, new IntPtr((uint)action), IntPtr.Zero);
+            //SendMessage(game_hwnd, WM_KEYDOWN, new IntPtr((uint)action), IntPtr.Zero);
+            //SendMessage(game_hwnd, WM_KEYUP, new IntPtr((uint)action), IntPtr.Zero);
+
+            keybd_event((int)action, 0x45, KeyBdEventConst.KEYEVENTF_EXTENDEDKEY | 0, 0);
+            keybd_event((int)action, 0x45, KeyBdEventConst.KEYEVENTF_EXTENDEDKEY | KeyBdEventConst.KEYEVENTF_KEYUP, 0);
+
+
             _mutex.Release();
         }
 
@@ -332,8 +428,12 @@ namespace NodBot.Code
         /// <param name="wParam"></param>
         /// <param name="lParam"></param>
         /// <returns></returns>
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+        //[DllImport("user32.dll", CharSet = CharSet.Auto)]
+        //static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(long dwFlags, long dx, long dy, long cButtons, long dwExtraInfo);
+
 
         /// <summary>
         /// This function retrieves the window rectangle of the provided handle window

@@ -98,7 +98,7 @@ namespace NodBot.Code.Services
                 nodInput.AutoShoot();
             }
 
-            timeService.delay(1500, TimeService.OffsetLength.Medium);
+            timeService.delay(750, TimeService.OffsetLength.Medium);
 
             // start class ability [D/F]
             if (Settings.Player.usePrimaryClassAbility)

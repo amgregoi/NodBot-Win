@@ -21,5 +21,6 @@ namespace NodBot.Model
         // Will skip gem slots 3,4,5 if gem cycling is active to keep auras in play
         public bool usesAuras { get; set; }
 
+        public bool dcdd = true;
     }
 }

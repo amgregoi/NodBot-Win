@@ -74,7 +74,7 @@ namespace NodBot.Code
                     {
                         if (dialogItem != null)
                         {
-                            nodInputService.ClickOnPoint(dialogItem.X, dialogItem.Y, true);
+                            nodInputService.ClickOnPoint(dialogItem.X, dialogItem.Y, true, true);
                             forceContinue = true;
                         }
                     });
@@ -84,6 +84,8 @@ namespace NodBot.Code
 
                     if (combatState >= SequenceState.WAIT && imageService.ContainsMatch(NodImages.Exit, screenSection:ScreenSection.Game))
                     {
+                        // Leaving combat
+
                         // Wait for inventory service to finish running
                         //while (inventoryService.isRunning) Task.Delay(500).Wait();
 
@@ -93,6 +95,7 @@ namespace NodBot.Code
                     }
                     else if (combatState >= SequenceState.ATTACK && imageService.ContainsTemplateMatch(NodImages.NeutralSS, screenSection: ScreenSection.Game))
                     {
+                        // Starting combat
 
                         if (Settings.RESOURCE_MINING && imageService.ContainsTemplateMatch(NodImages.MiningIcon, ScreenSection.Game))
                         {
@@ -116,7 +119,7 @@ namespace NodBot.Code
                             if (Settings.WAIT_FOR_ENERGY) resources.Add(NodImages.PlayerResourceEnergy);
                             if (Settings.WAIT_FOR_MANA) resources.Add(NodImages.PlayerResourceMana);
 
-                            if(!imageService.ContainsAllTemplates(resources, screenSection: ScreenSection.Game, threshold:0.85f))
+                            if(!imageService.ContainsAllTemplates(resources, screenSection: ScreenSection.Game, threshold:0.80f))
                             {
                                 logger.info("Waiting for resources to regen");
                                 timeService.delay(3000);
@@ -151,10 +154,12 @@ namespace NodBot.Code
                         token.ThrowIfCancellationRequested();
 
                         grindService.enterCombat().Wait();
-                        Task.Delay(1500).Wait();
+                        Task.Delay(500).Wait();
                     }
                     else if (Settings.ARENA && imageService.ContainsTemplateMatch(NodImages.Arena, screenSection: ScreenSection.Game))
                     {
+                        // Entering Arena queue
+
                         if (!isInArenaQueue) continue; // Already in arena combat, don't restart count-down
 
                         for (int i = 13; i >= 0; i--)
@@ -169,6 +174,8 @@ namespace NodBot.Code
                     }
                     else if (combatState >= SequenceState.INIT && imageService.ContainsMatch(NodImages.InCombat, screenSection: ScreenSection.Game))
                     {
+                        // Entering combat
+
                         grindService.startCombat().Wait();
                     }
                     else
@@ -198,11 +205,26 @@ namespace NodBot.Code
 
             if (Settings.Player.useMagic)
             {
-                magicService.UseGemSlot();
-                magicService.UpdateNextGemSlot();
+                if (Settings.Player.magic.dcdd)
+                {
+                    if(imageService.ContainsTemplateMatch("images//test//g1.png", ScreenSection.GemPull, threshold: 0.50) || imageService.ContainsTemplateMatch("images//test//g3.png", ScreenSection.GemPull, threshold: 0.50))
+                    {
+                        magicService.UseGemSlot();
+                        magicService.UpdateNextGemSlot();
+                    }
+                    else
+                    {
+                        magicService.UseGemSlot();
+                    }
+                }
+                else
+                {
+                    magicService.UseGemSlot();
+                    magicService.UpdateNextGemSlot();
+                }
             }
 
-            timeService.delay(3000);
+            timeService.delay(1500);
         }
 
 

@@ -22,8 +22,11 @@ namespace NodBot.Code
         public static String DestroyItem { get { return new NodImages("destroy_item.png").PATH; } }
 
         public static String Chest1 { get { return new NodImages("chest1.png").PATH; } }
+        public static String Chest12 { get { return new NodImages("chest1-2.png").PATH; } }
         public static String Chest2 { get { return new NodImages("chest2.png").PATH; } }
+        public static String Chest22 { get { return new NodImages("chest2-2.png").PATH; } }
         public static String Chest3 { get { return new NodImages("chest3.png").PATH; } }
+        public static String Chest32 { get { return new NodImages("chest3-2.png").PATH; } }
         public static String Recall { get { return new NodImages("recall.png").PATH; } }
         public static String Handbook { get { return new NodImages("handbook.png").PATH; } }
         public static String Dust { get { return new NodImages("dust.png").PATH; } }
@@ -48,7 +51,12 @@ namespace NodBot.Code
 
         // Town Walking
         public static String Town4 { get { return new NodImages("town4.png").PATH; } }
+        public static String Town42 { get { return new NodImages("town4-2.png").PATH; } }
         public static String Town5 { get { return new NodImages("town5.png").PATH; } }
+        public static String Town52 { get { return new NodImages("town5-2.png").PATH; } }
+
+
+        public static String Town4CoordTest { get { return new NodImages("coords\\t4-test.png").PATH; } }
 
 
         // Inventory

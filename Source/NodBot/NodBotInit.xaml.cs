@@ -40,6 +40,12 @@ namespace NodBot
 
         private void LoadButton_Click(object sender, RoutedEventArgs e)
         {
+
+/*            var yesman = new ImageService(new NodiatisInputService(new Logger(new Progress<String>())).inputService.GAME);
+            yesman.testReadText();
+
+            return;*/
+
             var fileContent = string.Empty;
             var filePath = string.Empty;
 

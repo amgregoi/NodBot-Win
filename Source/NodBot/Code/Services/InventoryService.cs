@@ -53,12 +53,13 @@ namespace NodBot.Code.Services
             {
                 isRunning = true;
                 ItemList items = ItemList.Instance;
-
+                Console.Out.WriteLine("Scanning inventory");
                 imageService.ScanForItems(ScreenSection.Inventory, items.itemWhiteList, items.itemBlackList, out List<Item> whiteList, out List<Item> blackList);
+                Console.Out.WriteLine("Scanning complete");
 
                 foreach (Item item in whiteList)
                 {
-                    if (item.itemType == ItemType.Ore) StackItemToStorage(item.imageFile).Wait();
+                    if (item.itemType == ItemType.Resource) StackItemToStorage(item.imageFile).Wait();
                     else StackItems(item.imageFile).Wait();
                 }
 

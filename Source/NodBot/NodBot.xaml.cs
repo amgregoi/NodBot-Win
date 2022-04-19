@@ -12,6 +12,9 @@ using System.Windows.Media;
 using NodBot.Code.Overlay;
 using Process.NET;
 using Process.NET.Memory;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using NodBot.Code.Enums;
 
 namespace NodBot
 {
@@ -150,10 +153,27 @@ namespace NodBot
             Task.Run(() =>
             {
 
-                Task.Delay(1000).Wait();
+                //Task.Delay(1000).Wait();
+
+
+
                 //new SeqGardening(new CancellationTokenSource(), mLogger).Start().Wait();
-                //mInventory.SortInventory().Wait();
-                mInventory.GetFirstEmptyStorageSpace();
+                mInventory.SortInventory().Wait();
+
+
+
+
+                //var yesman = new ImageService(new NodiatisInputService(mLogger).inputService.GAME);
+                //yesman.testReadText();
+                /*
+                                int count = yesman.testStuff();
+                                Console.Out.WriteLine("Countour count >> " + count);
+                */                //                Image<Bgr, byte> image1 = yesman.OpenImageFile();
+                                  //                Image<Bgr, byte> image2 = yesman.OpenImageFile();
+
+                // var hasMatch = yesman.FindTemplateMatch("Images\\test\\g1.png", ScreenSection.All, .55) ;
+
+                //Console.Out.WriteLine(hasMatch);
 
             });
         }
@@ -218,10 +238,12 @@ namespace NodBot
                     break;
                 case "option_mining":
                     Settings.RESOURCE_MINING = true;
+                    ItemList.Instance.toggleMining(true);
                     mLogger.info("MINING ON");
                     break;
                 case "option_garden":
                     Settings.RESOURCE_GARDEN = true;
+                    ItemList.Instance.toggleGarden(true);
                     mLogger.info("GARDEN ON");
                     break;
                 case "manage_inventory":
@@ -277,6 +299,7 @@ namespace NodBot
                     break;
                 case "option_mining":
                     Settings.RESOURCE_MINING = false;
+                    ItemList.Instance.toggleGarden(false);
                     mLogger.info("MINING OFF");
                     break;
                 case "manage_inventory":
@@ -285,6 +308,7 @@ namespace NodBot
                     break;
                 case "option_garden":
                     Settings.RESOURCE_GARDEN = false;
+                    ItemList.Instance.toggleGarden(false);
                     mLogger.info("GARDEN OFF");
                     break;
             }

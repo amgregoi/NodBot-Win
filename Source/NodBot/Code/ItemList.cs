@@ -65,6 +65,7 @@ namespace NodBot.Code
             // TODO :: read items.json file and populate initial item list  
         }
 
+
         private void setupWhiteList()
         {
             var trophyId = 10001;
@@ -84,22 +85,6 @@ namespace NodBot.Code
             itemWhiteList.Add(new Item(2, ItemType.Potion, "Images\\recall.png"));
             itemWhiteList.Add(new Item(3, ItemType.Item, "Images\\heroic_ess.png"));
 
-
-            itemWhiteList.Add(new Item(117, ItemType.Ore, "Images\\ore\\t17.png"));
-            itemWhiteList.Add(new Item(118, ItemType.Ore, "Images\\ore\\t18.png"));
-            itemWhiteList.Add(new Item(119, ItemType.Ore, "Images\\ore\\t19.png"));
-            itemWhiteList.Add(new Item(120, ItemType.Ore, "Images\\ore\\t20.png"));
-            itemWhiteList.Add(new Item(121, ItemType.Ore, "Images\\ore\\t21.png"));
-            itemWhiteList.Add(new Item(122, ItemType.Ore, "Images\\ore\\t22.png"));
-            itemWhiteList.Add(new Item(123, ItemType.Ore, "Images\\ore\\t23.png", 0.95));
-            itemWhiteList.Add(new Item(124, ItemType.Ore, "Images\\ore\\t24.png"));
-            itemWhiteList.Add(new Item(125, ItemType.Ore, "Images\\ore\\t25.png"));
-            itemWhiteList.Add(new Item(126, ItemType.Ore, "Images\\ore\\t26.png"));
-            itemWhiteList.Add(new Item(127, ItemType.Ore, "Images\\ore\\t27.png"));
-            itemWhiteList.Add(new Item(128, ItemType.Ore, "Images\\ore\\t28.png"));
-            itemWhiteList.Add(new Item(129, ItemType.Ore, "Images\\ore\\t29.png"));
-            itemWhiteList.Add(new Item(130, ItemType.Ore, "Images\\ore\\t30.png"));
-
             itemWhiteList.Add(new Item(1020, ItemType.Silk, "Images\\silk\\t20.png"));
             itemWhiteList.Add(new Item(1021, ItemType.Silk, "Images\\silk\\t21.png"));
             itemWhiteList.Add(new Item(1022, ItemType.Silk, "Images\\silk\\t22.png", 0.95));
@@ -111,7 +96,6 @@ namespace NodBot.Code
         /// </summary>
         private void setupBlackList()
         {
-            itemWhiteList.Add(new Item(100, ItemType.Ore, "Images\\ore\\t0.png"));
 
             itemBlackList.Add(new Item(1001, ItemType.Silk, "Images\\silk\\t1.png"));
             itemBlackList.Add(new Item(1002, ItemType.Silk, "Images\\silk\\t2.png"));
@@ -129,28 +113,88 @@ namespace NodBot.Code
             itemBlackList.Add(new Item(1014, ItemType.Silk, "Images\\silk\\t14.png"));
             itemBlackList.Add(new Item(1015, ItemType.Silk, "Images\\silk\\t15.png"));
             itemBlackList.Add(new Item(1016, ItemType.Silk, "Images\\silk\\t16.png"));
-            itemBlackList.Add(new Item(1017, ItemType.Silk, "Images\\silk\\t17.png"));
-            itemBlackList.Add(new Item(1018, ItemType.Silk, "Images\\silk\\t18.png"));
-            itemBlackList.Add(new Item(1019, ItemType.Silk, "Images\\silk\\t19.png"));
+        }
+
+        public void toggleGarden(bool isEnable)
+        {
+            if (!isEnable)
+            {
+                itemWhiteList.RemoveAll(item => item.id > 20000 && item.id < 21000);
+                itemBlackList.RemoveAll(item => item.id > 20000 && item.id < 21000);
+                return;
+            }
+
+            itemWhiteList.Add(new Item(20017, ItemType.Resource, "Images\\vegetable\\t17.png"));
+            itemWhiteList.Add(new Item(20018, ItemType.Resource, "Images\\vegetable\\t18.png"));
+            itemWhiteList.Add(new Item(20019, ItemType.Resource, "Images\\vegetable\\t19.png"));
+            itemWhiteList.Add(new Item(20020, ItemType.Resource, "Images\\vegetable\\t20.png"));
+            itemWhiteList.Add(new Item(20021, ItemType.Resource, "Images\\vegetable\\t21.png"));
+            itemWhiteList.Add(new Item(20022, ItemType.Resource, "Images\\vegetable\\t22.png"));
+            itemWhiteList.Add(new Item(20023, ItemType.Resource, "Images\\vegetable\\t23.png"));
+            itemWhiteList.Add(new Item(20024, ItemType.Resource, "Images\\vegetable\\t24.png"));
+            itemWhiteList.Add(new Item(20025, ItemType.Resource, "Images\\vegetable\\t25.png"));
+            itemWhiteList.Add(new Item(20026, ItemType.Resource, "Images\\vegetable\\t26.png"));
 
 
-            itemBlackList.Add(new Item(101, ItemType.Ore, "Images\\ore\\t1.png", 0.95));
-            itemBlackList.Add(new Item(102, ItemType.Ore, "Images\\ore\\t2.png"));
-            itemBlackList.Add(new Item(103, ItemType.Ore, "Images\\ore\\t3.png"));
-            itemBlackList.Add(new Item(104, ItemType.Ore, "Images\\ore\\t4.png"));
-            itemBlackList.Add(new Item(105, ItemType.Ore, "Images\\ore\\t5.png"));
-            itemBlackList.Add(new Item(106, ItemType.Ore, "Images\\ore\\t6.png"));
-            itemBlackList.Add(new Item(107, ItemType.Ore, "Images\\ore\\t7.png"));
-            itemBlackList.Add(new Item(108, ItemType.Ore, "Images\\ore\\t8.png"));
-            itemBlackList.Add(new Item(109, ItemType.Ore, "Images\\ore\\t9.png"));
-            itemBlackList.Add(new Item(110, ItemType.Ore, "Images\\ore\\t10.png"));
-            itemBlackList.Add(new Item(111, ItemType.Ore, "Images\\ore\\t11.png"));
-            itemBlackList.Add(new Item(112, ItemType.Ore, "Images\\ore\\t12.png"));
-            itemBlackList.Add(new Item(113, ItemType.Ore, "Images\\ore\\t13.png", 0.80));
-            itemBlackList.Add(new Item(114, ItemType.Ore, "Images\\ore\\t14.png"));
-            itemBlackList.Add(new Item(115, ItemType.Ore, "Images\\ore\\t15.png"));
-            itemBlackList.Add(new Item(116, ItemType.Ore, "Images\\ore\\t16.png"));
+            //            itemBlackList.Add(new Item(201, ItemType.Resource, "Images\\vegetable\\t1.png"));
+            //            itemBlackList.Add(new Item(202, ItemType.Resource, "Images\\vegetable\\t2.png"));
+            itemBlackList.Add(new Item(20003, ItemType.Resource, "Images\\vegetable\\t3.png"));
+            itemBlackList.Add(new Item(20004, ItemType.Resource, "Images\\vegetable\\t4.png"));
+            itemBlackList.Add(new Item(20005, ItemType.Resource, "Images\\vegetable\\t5.png"));
+            itemBlackList.Add(new Item(20006, ItemType.Resource, "Images\\vegetable\\t6.png"));
+            itemBlackList.Add(new Item(20007, ItemType.Resource, "Images\\vegetable\\t7.png"));
+            itemBlackList.Add(new Item(20008, ItemType.Resource, "Images\\vegetable\\t8.png"));
+            itemBlackList.Add(new Item(20009, ItemType.Resource, "Images\\vegetable\\t9.png"));
+            itemBlackList.Add(new Item(20010, ItemType.Resource, "Images\\vegetable\\t10.png"));
+            itemBlackList.Add(new Item(20011, ItemType.Resource, "Images\\vegetable\\t11.png"));
+            itemBlackList.Add(new Item(20012, ItemType.Resource, "Images\\vegetable\\t12.png"));
+            itemBlackList.Add(new Item(20013, ItemType.Resource, "Images\\vegetable\\t13.png"));
+            itemBlackList.Add(new Item(20014, ItemType.Resource, "Images\\vegetable\\t14.png"));
+            itemBlackList.Add(new Item(20015, ItemType.Resource, "Images\\vegetable\\t15.png"));
+            itemBlackList.Add(new Item(20016, ItemType.Resource, "Images\\vegetable\\t16.png"));
+        }
 
+        public void toggleMining(bool isEnable)
+        {
+            if (!isEnable)
+            {
+                itemWhiteList.RemoveAll(item => item.id > 100 && item.id < 150);
+                itemBlackList.RemoveAll(item => item.id > 100 && item.id < 150);
+                return;
+            }
+
+            itemWhiteList.Add(new Item(117, ItemType.Resource, "Images\\ore\\t17.png"));
+            itemWhiteList.Add(new Item(118, ItemType.Resource, "Images\\ore\\t18.png"));
+            itemWhiteList.Add(new Item(119, ItemType.Resource, "Images\\ore\\t19.png"));
+            itemWhiteList.Add(new Item(120, ItemType.Resource, "Images\\ore\\t20.png"));
+            itemWhiteList.Add(new Item(121, ItemType.Resource, "Images\\ore\\t21.png"));
+            itemWhiteList.Add(new Item(122, ItemType.Resource, "Images\\ore\\t22.png"));
+            itemWhiteList.Add(new Item(123, ItemType.Resource, "Images\\ore\\t23.png", 0.95));
+            itemWhiteList.Add(new Item(124, ItemType.Resource, "Images\\ore\\t24.png"));
+            itemWhiteList.Add(new Item(125, ItemType.Resource, "Images\\ore\\t25.png"));
+            itemWhiteList.Add(new Item(126, ItemType.Resource, "Images\\ore\\t26.png"));
+            itemWhiteList.Add(new Item(127, ItemType.Resource, "Images\\ore\\t27.png"));
+            itemWhiteList.Add(new Item(128, ItemType.Resource, "Images\\ore\\t28.png"));
+            itemWhiteList.Add(new Item(129, ItemType.Resource, "Images\\ore\\t29.png"));
+            itemWhiteList.Add(new Item(130, ItemType.Resource, "Images\\ore\\t30.png"));
+
+
+            itemBlackList.Add(new Item(101, ItemType.Resource, "Images\\ore\\t1.png", 0.95));
+            itemBlackList.Add(new Item(102, ItemType.Resource, "Images\\ore\\t2.png"));
+            itemBlackList.Add(new Item(103, ItemType.Resource, "Images\\ore\\t3.png"));
+            itemBlackList.Add(new Item(104, ItemType.Resource, "Images\\ore\\t4.png"));
+            itemBlackList.Add(new Item(105, ItemType.Resource, "Images\\ore\\t5.png", 0.95));
+            itemBlackList.Add(new Item(106, ItemType.Resource, "Images\\ore\\t6.png"));
+            itemBlackList.Add(new Item(107, ItemType.Resource, "Images\\ore\\t7.png"));
+            itemBlackList.Add(new Item(108, ItemType.Resource, "Images\\ore\\t8.png"));
+            itemBlackList.Add(new Item(109, ItemType.Resource, "Images\\ore\\t9.png"));
+            itemBlackList.Add(new Item(110, ItemType.Resource, "Images\\ore\\t10.png"));
+            itemBlackList.Add(new Item(111, ItemType.Resource, "Images\\ore\\t11.png"));
+            itemBlackList.Add(new Item(112, ItemType.Resource, "Images\\ore\\t12.png"));
+            itemBlackList.Add(new Item(113, ItemType.Resource, "Images\\ore\\t13.png", 0.80));
+            itemBlackList.Add(new Item(114, ItemType.Resource, "Images\\ore\\t14.png"));
+            itemBlackList.Add(new Item(115, ItemType.Resource, "Images\\ore\\t15.png"));
+            itemBlackList.Add(new Item(116, ItemType.Resource, "Images\\ore\\t16.png"));
         }
 
         public Item getItemById(int id)

@@ -11,6 +11,8 @@ namespace NodBot.Code
     public class SeqTownWalk : SeqBase
     {
         private bool mTravelNorth = false;
+        private bool isMoving = true;
+
         private TimeService timeService;
 
         /// <summary>
@@ -18,8 +20,9 @@ namespace NodBot.Code
         /// user is in accordance to the specified towns.
         /// </summary>
         private Point mTown5Min = new Point(329, 322);
-        private Point mTown5Max = new Point(429, 352);
-        private Point mTown4Min = new Point(347, 315);
+        private Point mTown5Max = new Point(429, 354);
+        //private Point mTown4Min = new Point(347, 315);
+        private Point mTown4Min = new Point(370, 347);
         private Point mTown4Max = new Point(447, 315);
 
         /// <summary>
@@ -68,6 +71,8 @@ namespace NodBot.Code
                 {
                     //aTown = imageService.getMatchCoord(NodImages.Town5, NodImages.CurrentSS);
                     List<UIPoint> matches = imageService.FindTemplateMatches(NodImages.Town5);
+                    if (matches == null || matches.Count <= 0) matches = imageService.FindTemplateMatches(NodImages.Town52);
+
                     if (matches == null || matches.Count <= 0) aTown = null;
                     else aTown = matches[0];
 
@@ -89,6 +94,8 @@ namespace NodBot.Code
 
                     //aTown = imageService.getMatchCoord(NodImages.Town4, NodImages.CurrentSS);
                     List<UIPoint> matches = imageService.FindTemplateMatches(NodImages.Town4);
+                    if(matches == null || matches.Count <=0) matches = imageService.FindTemplateMatches(NodImages.Town42);
+
                     if (matches == null || matches.Count <= 0) aTown = null;
                     else aTown = matches[0];
 
@@ -111,6 +118,7 @@ namespace NodBot.Code
                     aPrev = aTown;
             }
         }
+
 
         /// <summary>
         /// This function checks for combat after moving, and if combat has started
@@ -137,6 +145,7 @@ namespace NodBot.Code
                 }
 
                 timeService.delay(3500);
+                isMoving = false;
             }
 
         }
@@ -162,7 +171,7 @@ namespace NodBot.Code
                     {
                         if (p.X >= mTown5Max.X) nodInputService.moveRight();
                         else if (p.X <= mTown5Min.X) nodInputService.moveLeft();
-                        else mTravelNorth = !mTravelNorth;
+                        else if (isMoving) mTravelNorth = !mTravelNorth;
                     }
                 }
                 else if (mTownSeenLast && !aTownSeen)
@@ -178,8 +187,8 @@ namespace NodBot.Code
             {
                 if (aTownSeen)
                 {
-                    if (p.Y < mTown4Min.Y) nodInputService.moveUp();
-                    else if (p.Y > mTown4Min.Y) nodInputService.moveDown();
+                    if (p.Y < mTown4Min.Y && (mTown4Min.Y - p.Y) > 40) nodInputService.moveUp();
+                    else if (p.Y > mTown4Min.Y && (p.Y - mTown4Min.Y) > 40) nodInputService.moveDown();
                     else
                     {
                         if (p.X <= mTown4Min.X) nodInputService.moveLeft();
@@ -197,6 +206,7 @@ namespace NodBot.Code
                 }
             }
             mTownSeenLast = aTownSeen;
+            isMoving = true;
         }
     }
 }

@@ -8,6 +8,6 @@ namespace NodBot.Code.Enums
 {
     public enum ItemType
     {
-        Trophy, Potion, Ore, Silk, Item
+        Trophy, Potion, Resource, Silk, Item
     }
 }

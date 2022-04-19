@@ -112,15 +112,15 @@ namespace NodBot.Code
             inputService.sendKeyboardClick(InputService.Keyboard_Actions.LOOT);
         }
 
-        public void ClickOnPoint(int aX, int aY, bool aLeftClick)
+        public void ClickOnPoint(int aX, int aY, bool aLeftClick, bool doubleClick = false)
         {
-            inputService.sendLeftMouseClickWithWindowHandler(aX, aY, aLeftClick);
+            inputService.sendLeftMouseClickWithWindowHandler(aX, aY, aLeftClick, doubleClick);
         }
 
         public void ClickOnPointNoMutex(int aX, int aY, bool aLeftClick)
         {
-            inputService.moveMouse(aX, aY);
-            inputService.doLeftClick();
+            Model.UIPoint point = inputService.moveMouse(aX, aY);
+            inputService.doLeftClick(point);
             //inputService.doLeftClick(aX, aY, aLeftClick);
         }
 
