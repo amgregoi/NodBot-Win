@@ -258,7 +258,7 @@ namespace NodBot.Code
                     catch (Exception ex)
                     {
                         logger.error(ex);
-                    }
+                      }
                 }
 
                 if (point != null)

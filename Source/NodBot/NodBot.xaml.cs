@@ -242,8 +242,8 @@ namespace NodBot
                     mLogger.info("MINING ON");
                     break;
                 case "option_garden":
-                    Settings.RESOURCE_GARDEN = true;
-                    ItemList.Instance.toggleGarden(true);
+                    //Settings.RESOURCE_GARDEN = true;
+                    //ItemList.Instance.toggleGarden(true);
                     mLogger.info("GARDEN ON");
                     break;
                 case "manage_inventory":
@@ -307,8 +307,8 @@ namespace NodBot
                     mLogger.info("MANAGE INVENTORY OFF");
                     break;
                 case "option_garden":
-                    Settings.RESOURCE_GARDEN = false;
-                    ItemList.Instance.toggleGarden(false);
+                    //Settings.RESOURCE_GARDEN = false;
+                    //ItemList.Instance.toggleGarden(false);
                     mLogger.info("GARDEN OFF");
                     break;
             }
