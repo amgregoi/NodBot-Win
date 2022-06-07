@@ -22,7 +22,7 @@ namespace NodBot.Code
     {
         public SeqGardening(CancellationTokenSource ct, Logger aLogger) : base(ct, aLogger) { }
 
-        private static int xOff = 15, yOff = 38, width = 60, height = 54;
+        private static int xOff = 30, yOff = 38, width = 60, height = 54;
 
         UIPoint[,] points = new UIPoint[4, 4]
             {
@@ -124,7 +124,7 @@ namespace NodBot.Code
 
                             if (firstPoint == null)
                             {
-                                logger.info(String.Format("first ({0},{1})", i,j));
+                                logger.info(String.Format("first ({0},{1})", i, j));
 
                                 firstPoint = new Point(i, j);
                                 if (CheckMatch(i, j))
@@ -149,10 +149,10 @@ namespace NodBot.Code
 
                                 Point? match = HasMatch(i, j, temp);
                                 if (match == null) continue;
-                                if (match.Value.X == temp.X && match.Value.Y == temp.Y) 
+                                if (match.Value.X == temp.X && match.Value.Y == temp.Y)
                                     continue;
 
-                                logger.info(String.Format("Found a previous match ({0},{1}) with Second",match.Value.X, match.Value.Y));
+                                logger.info(String.Format("Found a previous match ({0},{1}) with Second", match.Value.X, match.Value.Y));
                                 //Task.Delay(750).Wait(); // Wait for veggie icons to fade to get an accurate screen reading
                                 j--;
                                 isRepeat = true;

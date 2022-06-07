@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using NodBot.Code.Enums;
 using NodBot.Code.Model;
+using System;
+using System.Linq;
 
 namespace NodBot.Code
 {
@@ -63,6 +65,10 @@ namespace NodBot.Code
             UIPoint aTown = null, aPrev = null;
             bool seenT4 = false, seenT5 = false;
 
+            try
+            {
+
+
             while (true)
             {
                 token.ThrowIfCancellationRequested();
@@ -116,6 +122,11 @@ namespace NodBot.Code
                 await CheckForCombat();
                 if (aTown != null)
                     aPrev = aTown;
+            }
+            }
+            catch (Exception ex)
+            {
+                logger.error("wtf is happening");
             }
         }
 
@@ -191,8 +202,8 @@ namespace NodBot.Code
                     else if (p.Y > mTown4Min.Y && (p.Y - mTown4Min.Y) > 40) nodInputService.moveDown();
                     else
                     {
-                        if (p.X <= mTown4Min.X) nodInputService.moveLeft();
-                        else if (p.X >= mTown4Max.X) nodInputService.moveRight();
+                        if (p.X <= mTown4Min.X || Enumerable.Range(mTown4Min.X, mTown4Max.X).Contains(p.X)) nodInputService.moveLeft(); // if between min.x and max.x
+                        else if (p.X >= mTown4Max.X) nodInputService.moveRight(); // else if greater than max.x
                         else mTravelNorth = !mTravelNorth;
                     }
                 }

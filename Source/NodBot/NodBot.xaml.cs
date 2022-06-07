@@ -242,8 +242,8 @@ namespace NodBot
                     mLogger.info("MINING ON");
                     break;
                 case "option_garden":
-                    //Settings.RESOURCE_GARDEN = true;
-                    //ItemList.Instance.toggleGarden(true);
+                    Settings.RESOURCE_GARDEN = true;
+                    ItemList.Instance.toggleGarden(true);
                     mLogger.info("GARDEN ON");
                     break;
                 case "manage_inventory":
@@ -307,8 +307,8 @@ namespace NodBot
                     mLogger.info("MANAGE INVENTORY OFF");
                     break;
                 case "option_garden":
-                    //Settings.RESOURCE_GARDEN = false;
-                    //ItemList.Instance.toggleGarden(false);
+                    Settings.RESOURCE_GARDEN = false;
+                    ItemList.Instance.toggleGarden(false);
                     mLogger.info("GARDEN OFF");
                     break;
             }
@@ -551,10 +551,10 @@ namespace NodBot
                         mCurrentSequence = new SeqGrind(cts, mLogger, progressKillCount, progressChestCount);
                         await mCurrentSequence.Start();
                     }
-                    else if (grindOption == 2 || grindOption == 3)
+                    else if (grindOption == 1 || grindOption == 2)
                     {
                         mCurrentSequence = new SeqTownWalk(cts, mLogger);
-                        await ((SeqTownWalk)mCurrentSequence).Start(grindOption == 3);
+                        await ((SeqTownWalk)mCurrentSequence).Start(grindOption == 2);
                     }
                 });
             }
